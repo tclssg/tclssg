@@ -6,11 +6,21 @@ pages="content/pages"
 static="content/static"
 output="output"
 
-rm -r $output/*
+if [ "$1" == "init" ]; then
+    echo Creating directories...
+    mkdir -p $pages
+    mkdir -p $static
+    mkdir -p $output
+    exit 0
+fi
 
-mkdir -p $pages
-mkdir -p $static
-mkdir -p $output
+
+if [ ! -d $pages -o ! -d $static -o ! -d $output ]; then
+    echo Error. Run $0 init first.
+    exit 1
+fi
+
+rm -r $output/*
 
 markdown_to_html() {
     output_file=$output/$(basename $1 | sed -e "s/.md$//").html
