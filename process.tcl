@@ -1,11 +1,13 @@
 #!/usr/bin/env tclsh
-# A basic static website generator in shell script
-# Copyright (C) 2013, 2014 Danyil Bohdan, see the file LICENSE
+# A static website generator in Tcl.
+# Copyright (C) 2013, 2014 Danyil Bohdan.
+# This code is released under the terms of the MIT license. See the file
+# LICENSE for details.
 
 package require fileutil
 package require textutil::expander
 
-# Helper procs
+# Returns the content of file fname.
 proc read-file {fname {binary 0}} {
     set fpvar [open $fname r]
     if {$binary} {
@@ -16,6 +18,7 @@ proc read-file {fname {binary 0}} {
     return $content
 }
 
+# Save content to file fname.
 proc write-file {fname content {binary 0}} {
     set fpvar [open $fname w]
     if {$binary} {
@@ -25,13 +28,14 @@ proc write-file {fname content {binary 0}} {
     close $fpvar
 }
 
+# Transform a path relative to fromDir into the same path relative to toDir.
 proc replace-path-root {path fromDir toDir} {
     file join $toDir \
               [::fileutil::relative $fromDir [file dirname $path]] \
               [file tail $path]
 }
 
-# Core
+# Set up template interpreter and expander.
 proc interp-up {websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
@@ -46,11 +50,12 @@ proc interp-up {websiteConfig} {
     }
 }
 
+# Tear down template interpreter.
 proc interp-down {} {
     interp delete templateInterp
 }
 
-# Convert raw Markdown to HTML using an external processor.
+# Convert raw Markdown to HTML using an external Markdown processor.
 proc markdown-to-html {markdown} {
     upvar 1 scriptConfig scriptConfig
 
@@ -62,7 +67,7 @@ proc template-subst {template rawContent websiteConfig} {
 
     interp-up $websiteConfig
 
-    # Macroexpand content and then convert is from Markdown to HTML.
+    # Macroexpand content then convert it from Markdown to HTML.
     set content [markdown-to-html [::exp expand $rawContent]]
     # Expand template with content substituted in.
     interp eval templateInterp [format {set {%s} {%s}} content $content]
@@ -73,11 +78,14 @@ proc template-subst {template rawContent websiteConfig} {
     return $result
 }
 
-proc markdown-file-to-html {inputFile \
-                            inputDir \
-                            templateDir \
-                            outputDir \
-                            websiteConfig} {
+# Process the page inputFile (a file containing Markdown + template code).
+# put its rendered content into a template under the same path relative to
+# outputDir that inputFile is relative to inputDir.
+proc page-file-to-html {inputFile \
+                        inputDir \
+                        templateDir \
+                        outputDir \
+                        websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
     set template \
@@ -99,19 +107,19 @@ proc markdown-file-to-html {inputFile \
     write-file $outputFile $output
 }
 
+# Process input files in inputDir to produce static website in outputDir.
 proc compile-website {inputDir outputDir websiteConfig} {
     upvar 1 scriptConfig scriptConfig
-    # Del outputDir/*?
 
     # Process page files.
     foreach file [fileutil::findByPattern $inputDir -glob *.md] {
-        markdown-file-to-html $file \
-                              [file join $inputDir \
-                                         $scriptConfig(contentDirName)] \
-                              [file join $inputDir \
-                                         $scriptConfig(templateDirName)] \
-                              $outputDir \
-                              $websiteConfig
+        page-file-to-html $file \
+                          [file join $inputDir \
+                                     $scriptConfig(contentDirName)] \
+                          [file join $inputDir \
+                                     $scriptConfig(templateDirName)] \
+                          $outputDir \
+                          $websiteConfig
     }
 
     # Copy static files verbatim.
