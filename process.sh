@@ -1,4 +1,7 @@
 #!/bin/sh
+# A basic static website generator in shell script
+# Copyright (C) 2013 Danyil Bohdan, see the file LICENSE
+
 markdown="perl scripts/Markdown_1.0.1/Markdown.pl"
 header="templates/header.html"
 footer="templates/footer.html"
@@ -8,7 +11,7 @@ static="$content/static"
 output="$content/output"
 
 markdown_to_html() {
-    output_file=$output/$(basename $1 | sed -e "s/.md$//").html
+    output_file=$output/$(basename $1 | sed -e "s/.md$/.html/")
     echo processing $1 into $output_file
     cat $header > $output_file
     $markdown $1 | sed -e "s/^/            /" >> $output_file
@@ -30,7 +33,7 @@ init() {
 }
 
 compile_website() {
-    # If $output is not empty...
+    # If the directory $output is not empty...
     if [ "$(ls -A $output)" ]; then
         rm -vr $output/*
     fi
@@ -40,12 +43,13 @@ compile_website() {
     done
 
     cp -vR $static/* $output/
+    
+    #zip $content/output.zip $output/*
 }
 
 if [ "$1" == "init" ]; then
     init
 fi
-
 
 if [ ! -d $pages -o ! -d $static -o ! -d $output ]; then
     echo Error. Run $0 init first.
