@@ -3,12 +3,13 @@
 # Copyright (C) 2013, 2014 Danyil Bohdan, see the file LICENSE
 
 package require fileutil
+package require textutil::expander
 
 # Helper procs
 proc read-file {fname {binary 0}} {
     set fpvar [open $fname r]
     if {$binary} {
-        fconfigure $fpvar -translation binary
+        fscriptConfigure $fpvar -translation binary
     }
     set content [read $fpvar]
     close $fpvar
@@ -18,27 +19,37 @@ proc read-file {fname {binary 0}} {
 proc write-file {fname content {binary 0}} {
     set fpvar [open $fname w]
     if {$binary} {
-        fconfigure $fpvar -translation binary
+        fscriptConfigure $fpvar -translation binary
     }
     puts -nonewline $fpvar $content
     close $fpvar
 }
 
-proc switch-path {path fromDir toDir} {
+proc replace-path-root {path fromDir toDir} {
     file join $toDir \
               [::fileutil::relative $fromDir [file dirname $path]] \
               [file tail $path]
 }
 
 # Core
-proc markdown-to-html {inputFile inputDir templateDir outputDir} {
-    upvar 1 config config
+proc template-subst {template rawContent websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
 
-    set header [read-file [file join $templateDir $config(headerFileName)]]
-    set footer [read-file [file join $templateDir $config(footerFileName)]]
+    interp eval templateInterp [format {set {%s} {%s}} content $rawContent]
+
+    return [::exp expand $template]
+}
+
+proc markdown-to-html {inputFile inputDir templateDir outputDir websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
+
+    set template \
+        [read-file \
+            [file join $templateDir $scriptConfig(templateFileName)]]
+
     set outputFile \
         [file rootname \
-            [switch-path $inputFile $inputDir $outputDir]].html
+            [replace-path-root $inputFile $inputDir $outputDir]].html
     set subdir [file dirname $outputFile]
 
     if {![file isdir $subdir]} {
@@ -47,28 +58,30 @@ proc markdown-to-html {inputFile inputDir templateDir outputDir} {
     }
 
     puts "processing markdown file $inputFile into $outputFile"
-    set content [read-file "| $config(markdownProcessor) $inputFile"]
-    write-file $outputFile [concat $header $content $footer]
+    set content [read-file "| $scriptConfig(markdownProcessor) $inputFile"]
+    set output [template-subst $template $content $websiteConfig]
+    write-file $outputFile $output
 }
 
-proc compile-website {inputDir outputDir} {
-    upvar 1 config config
+proc compile-website {inputDir outputDir websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
     # Del outputDir/*?
 
     # Process Markdown.
     foreach file [fileutil::findByPattern $inputDir -glob *.md] {
         markdown-to-html $file \
-                         [file join $inputDir $config(contentDirName)] \
-                         [file join $inputDir $config(templateDirName)] \
-                         $outputDir
+                         [file join $inputDir $scriptConfig(contentDirName)] \
+                         [file join $inputDir $scriptConfig(templateDirName)] \
+                         $outputDir \
+                         $websiteConfig
     }
 
     # Copy static files verbatim.
-    foreach file [fileutil::find [file join $inputDir $config(staticDirName)]] {
+    foreach file [fileutil::find [file join $inputDir $scriptConfig(staticDirName)]] {
         if {[file isfile $file]} {
             set destFile \
-                [switch-path $file \
-                             [file join $inputDir $config(staticDirName)] \
+                [replace-path-root $file \
+                             [file join $inputDir $scriptConfig(staticDirName)] \
                              $outputDir]
             puts "copying static file $file to $destFile"
             file copy -force $file $destFile
@@ -95,18 +108,33 @@ if {[lindex $argv 0] eq "init"} {
 }
 
 proc main {} {
-    set config(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
+    set scriptConfig(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
 
-    set config(contentDirName) pages
-    set config(templateDirName) templates
-    set config(staticDirName) static
-    set config(headerFileName) header.html
-    set config(footerFileName) footer.html
+    set scriptConfig(contentDirName) pages
+    set scriptConfig(templateDirName) templates
+    set scriptConfig(staticDirName) static
+    set scriptConfig(templateFileName) template.html
 
-    set config(sourceDir) [file join data input]
-    set config(destDir) [file join data output]
+    set scriptConfig(sourceDir) [file join data input]
+    set scriptConfig(destDir) [file join data output]
 
-    compile-website $config(sourceDir) $config(destDir)
+    set scriptConfig(templateBrackets) {<% %>}
+
+    set websiteConfig {websiteTitle {Danyil Bohdan}}
+
+    # Create safe interpreter and expander for templates. Those are global.
+    interp create -safe templateInterp
+    dict for {key value} $websiteConfig {
+        interp eval templateInterp [format {set {%s} {%s}} $key $value]
+    }
+    ::textutil::expander exp
+    ::exp evalcmd {interp eval templateInterp}
+    ::exp setbrackets {*}$scriptConfig(templateBrackets)
+
+    compile-website \
+        $scriptConfig(sourceDir) \
+        $scriptConfig(destDir) \
+        $websiteConfig
 }
 
 main
