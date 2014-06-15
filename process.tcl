@@ -32,15 +32,52 @@ proc replace-path-root {path fromDir toDir} {
 }
 
 # Core
+proc interp-up {websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
+
+    # Create safe interpreter and expander for templates. Those are global.
+    interp create -safe templateInterp
+    dict for {key value} $websiteConfig {
+        interp eval templateInterp [format {set {%s} {%s}} $key $value]
+    }
+    if {![catch {::textutil::expander exp}]} {
+        ::exp evalcmd {interp eval templateInterp}
+        ::exp setbrackets {*}$scriptConfig(templateBrackets)
+    }
+}
+
+proc interp-down {} {
+    interp delete templateInterp
+}
+
+# Convert raw Markdown to HTML using an external processor.
+proc markdown-to-html {markdown} {
+    upvar 1 scriptConfig scriptConfig
+
+    exec -- {*}$scriptConfig(markdownProcessor) << $markdown
+}
+
 proc template-subst {template rawContent websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
-    interp eval templateInterp [format {set {%s} {%s}} content $rawContent]
+    interp-up $websiteConfig
 
-    return [::exp expand $template]
+    # Macroexpand content and then convert is from Markdown to HTML.
+    set content [markdown-to-html [::exp expand $rawContent]]
+    # Expand template with content substituted in.
+    interp eval templateInterp [format {set {%s} {%s}} content $content]
+    set result [::exp expand $template]
+
+    interp-down
+
+    return $result
 }
 
-proc markdown-to-html {inputFile inputDir templateDir outputDir websiteConfig} {
+proc markdown-file-to-html {inputFile \
+                            inputDir \
+                            templateDir \
+                            outputDir \
+                            websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
     set template \
@@ -58,8 +95,7 @@ proc markdown-to-html {inputFile inputDir templateDir outputDir websiteConfig} {
     }
 
     puts "processing markdown file $inputFile into $outputFile"
-    set content [read-file "| $scriptConfig(markdownProcessor) $inputFile"]
-    set output [template-subst $template $content $websiteConfig]
+    set output [template-subst $template [read-file $inputFile] $websiteConfig]
     write-file $outputFile $output
 }
 
@@ -67,21 +103,24 @@ proc compile-website {inputDir outputDir websiteConfig} {
     upvar 1 scriptConfig scriptConfig
     # Del outputDir/*?
 
-    # Process Markdown.
+    # Process page files.
     foreach file [fileutil::findByPattern $inputDir -glob *.md] {
-        markdown-to-html $file \
-                         [file join $inputDir $scriptConfig(contentDirName)] \
-                         [file join $inputDir $scriptConfig(templateDirName)] \
-                         $outputDir \
-                         $websiteConfig
+        markdown-file-to-html $file \
+                              [file join $inputDir \
+                                         $scriptConfig(contentDirName)] \
+                              [file join $inputDir \
+                                         $scriptConfig(templateDirName)] \
+                              $outputDir \
+                              $websiteConfig
     }
 
     # Copy static files verbatim.
-    foreach file [fileutil::find [file join $inputDir $scriptConfig(staticDirName)]] {
+    foreach file [fileutil::find \
+                     [file join $inputDir $scriptConfig(staticDirName)]] {
         if {[file isfile $file]} {
             set destFile \
                 [replace-path-root $file \
-                             [file join $inputDir $scriptConfig(staticDirName)] \
+                             [file join $inputDir $scriptConfig(staticDirName)]\
                              $outputDir]
             puts "copying static file $file to $destFile"
             file copy -force $file $destFile
@@ -90,6 +129,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
 }
 
 proc main {argv} {
+    # Configuration.
     set scriptConfig(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
 
     set scriptConfig(contentDirName) pages
@@ -104,6 +144,7 @@ proc main {argv} {
 
     set websiteConfig {websiteTitle {Danyil Bohdan}}
 
+    # init command.
     if {[lindex $argv 0] eq "init"} {
         foreach dir [list $scriptConfig(contentDirName) \
                           $scriptConfig(templateDirName) \
@@ -111,30 +152,8 @@ proc main {argv} {
             file mkdir [file join $scriptConfig(sourceDir) $dir]
         }
         file mkdir $scriptConfig(destDir)
-        #init() {
-            #echo Creating directories...
-            #mkdir -p $content
-            #mkdir -p $pages
-            #mkdir -p $static
-            #mkdir -p $output
-            #cd $content
-            #if [ ! -d .git ]; then
-                #echo output/\* > .gitignore
-                #git init
-            #fi
-            #exit 0
-        #}
         exit
     }
-
-    # Create safe interpreter and expander for templates. Those are global.
-    interp create -safe templateInterp
-    dict for {key value} $websiteConfig {
-        interp eval templateInterp [format {set {%s} {%s}} $key $value]
-    }
-    ::textutil::expander exp
-    ::exp evalcmd {interp eval templateInterp}
-    ::exp setbrackets {*}$scriptConfig(templateBrackets)
 
     compile-website \
         $scriptConfig(sourceDir) \
