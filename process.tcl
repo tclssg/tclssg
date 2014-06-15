@@ -24,21 +24,21 @@ proc write-file {fname content {binary 0}} {
     close $fpvar
 }
 
-proc chpath {inputFile inputDir outputDir} {
-    file join $outputDir \
-              [::fileutil::relative $inputDir [file dirname $inputFile]] \
-              [file tail $inputFile]
+proc switch-path {path fromDir toDir} {
+    file join $toDir \
+              [::fileutil::relative $fromDir [file dirname $path]] \
+              [file tail $path]
 }
 
 # Core
 proc markdown-to-html {inputFile inputDir templateDir outputDir} {
-    global config
+    upvar 1 config config
 
     set header [read-file [file join $templateDir $config(headerFileName)]]
     set footer [read-file [file join $templateDir $config(footerFileName)]]
     set outputFile \
         [file rootname \
-            [chpath $inputFile $inputDir $outputDir]].html
+            [switch-path $inputFile $inputDir $outputDir]].html
     set subdir [file dirname $outputFile]
 
     if {![file isdir $subdir]} {
@@ -52,7 +52,7 @@ proc markdown-to-html {inputFile inputDir templateDir outputDir} {
 }
 
 proc compile-website {inputDir outputDir} {
-    global config
+    upvar 1 config config
     # Del outputDir/*?
 
     # Process Markdown.
@@ -67,9 +67,9 @@ proc compile-website {inputDir outputDir} {
     foreach file [fileutil::find [file join $inputDir $config(staticDirName)]] {
         if {[file isfile $file]} {
             set destFile \
-              [chpath $file \
-                      [file join $inputDir $config(staticDirName)] \
-                      $outputDir]
+                [switch-path $file \
+                             [file join $inputDir $config(staticDirName)] \
+                             $outputDir]
             puts "copying static file $file to $destFile"
             file copy -force $file $destFile
         }
@@ -94,15 +94,19 @@ if {[lindex $argv 0] eq "init"} {
     #}
 }
 
-set config(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
+proc main {} {
+    set config(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
 
-set config(contentDirName) pages
-set config(templateDirName) templates
-set config(staticDirName) static
-set config(headerFileName) header.html
-set config(footerFileName) footer.html
+    set config(contentDirName) pages
+    set config(templateDirName) templates
+    set config(staticDirName) static
+    set config(headerFileName) header.html
+    set config(footerFileName) footer.html
 
-set config(sourceDir) [file join data input]
-set config(destDir) [file join data output]
+    set config(sourceDir) [file join data input]
+    set config(destDir) [file join data output]
 
-compile-website $config(sourceDir) $config(destDir)
+    compile-website $config(sourceDir) $config(destDir)
+}
+
+main
