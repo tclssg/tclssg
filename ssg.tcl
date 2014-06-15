@@ -136,7 +136,17 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 }
 
-proc main {argv} {
+proc load-config {sourceDir} {
+    upvar 1 scriptConfig scriptConfig
+    upvar 1 websiteConfig websiteConfig
+
+    set websiteConfig \
+        [read-file \
+            [file join $sourceDir $scriptConfig(websiteConfigFileName)]]
+    puts "Loaded config file:\n$websiteConfig\n"
+}
+
+proc main {argv0 argv} {
     # Configuration.
     set scriptConfig(markdownProcessor) \
         {perl scripts/Markdown_1.0.1/Markdown.pl}
@@ -152,10 +162,6 @@ proc main {argv} {
     set sourceDir [lindex $argv 1]
     set destDir [lindex $argv 2]
 
-    set websiteConfig \
-        [read-file \
-            [file join $sourceDir $scriptConfig(websiteConfigFileName)]]
-    puts "Loaded config file:\n$websiteConfig\n"
     # init command.
     switch -exact -- [lindex $argv 0] {
         init {
@@ -165,9 +171,25 @@ proc main {argv} {
                 file mkdir [file join $scriptConfig(sourceDir) $dir]
             }
             file mkdir $scriptConfig(destDir)
+            # touch website.conf
             exit 0
         }
+        build {
+            load-config $sourceDir
+
+            if {[file isdir $sourceDir]} {
+                compile-website \
+                    $sourceDir \
+                    $destDir \
+                    $websiteConfig
+            } else {
+                puts "couldn't access directory \"$sourceDir\""
+                exit 1
+            }
+        }
         upload-copy {
+            load-config $sourceDir
+
             set uploadDest [dict get $websiteConfig uploadDestCopy]
 
             foreach file [fileutil::find $destDir {file isfile}] {
@@ -184,18 +206,11 @@ proc main {argv} {
             puts "not implemented"
             exit 1
         }
-        build {
-            if {[file isdir $sourceDir]} {
-                compile-website \
-                    $sourceDir \
-                    $destDir \
-                    $websiteConfig
-            } else {
-                puts "couldn't access directory \"$sourceDir\""
-                exit 1
-            }
+        default {
+            puts [concat "usage: $argv0 (init|build|upload-copy|upload-ftp) " \
+                         "sourceDir destDir"]
         }
     }
 }
 
-main $argv
+main $argv0 $argv
