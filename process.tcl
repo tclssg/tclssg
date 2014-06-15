@@ -89,25 +89,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 }
 
-if {[lindex $argv 0] eq "init"} {
-    puts "not implemented"
-    exit 1
-    #init() {
-        #echo Creating directories...
-        #mkdir -p $content
-        #mkdir -p $pages
-        #mkdir -p $static
-        #mkdir -p $output
-        #cd $content
-        #if [ ! -d .git ]; then
-            #echo output/\* > .gitignore
-            #git init
-        #fi
-        #exit 0
-    #}
-}
-
-proc main {} {
+proc main {argv} {
     set scriptConfig(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
 
     set scriptConfig(contentDirName) pages
@@ -121,6 +103,29 @@ proc main {} {
     set scriptConfig(templateBrackets) {<% %>}
 
     set websiteConfig {websiteTitle {Danyil Bohdan}}
+
+    if {[lindex $argv 0] eq "init"} {
+        foreach dir [list $scriptConfig(contentDirName) \
+                          $scriptConfig(templateDirName) \
+                          $scriptConfig(staticDirName)] {
+            file mkdir [file join $scriptConfig(sourceDir) $dir]
+        }
+        file mkdir $scriptConfig(destDir)
+        #init() {
+            #echo Creating directories...
+            #mkdir -p $content
+            #mkdir -p $pages
+            #mkdir -p $static
+            #mkdir -p $output
+            #cd $content
+            #if [ ! -d .git ]; then
+                #echo output/\* > .gitignore
+                #git init
+            #fi
+            #exit 0
+        #}
+        exit
+    }
 
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
@@ -137,4 +142,4 @@ proc main {} {
         $websiteConfig
 }
 
-main
+main $argv
