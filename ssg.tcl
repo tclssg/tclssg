@@ -138,41 +138,63 @@ proc compile-website {inputDir outputDir websiteConfig} {
 
 proc main {argv} {
     # Configuration.
-    set scriptConfig(markdownProcessor) {perl scripts/Markdown_1.0.1/Markdown.pl}
+    set scriptConfig(markdownProcessor) \
+        {perl scripts/Markdown_1.0.1/Markdown.pl}
 
     set scriptConfig(contentDirName) pages
     set scriptConfig(templateDirName) templates
     set scriptConfig(staticDirName) static
-    set scriptConfig(templateFileName) template.html
+    set scriptConfig(templateFileName) default.thtml
     set scriptConfig(websiteConfigFileName) website.conf
 
     set scriptConfig(templateBrackets) {<% %>}
 
-    set sourceDir [lindex $argv 0]
-    set destDir [lindex $argv 1]
+    set sourceDir [lindex $argv 1]
+    set destDir [lindex $argv 2]
+
     set websiteConfig \
         [read-file \
             [file join $sourceDir $scriptConfig(websiteConfigFileName)]]
-
+    puts "Loaded config file:\n$websiteConfig\n"
     # init command.
-    if {[lindex $argv 0] eq "init"} {
-        foreach dir [list $scriptConfig(contentDirName) \
-                          $scriptConfig(templateDirName) \
-                          $scriptConfig(staticDirName)] {
-            file mkdir [file join $scriptConfig(sourceDir) $dir]
+    switch -exact -- [lindex $argv 0] {
+        init {
+            foreach dir [list $scriptConfig(contentDirName) \
+                              $scriptConfig(templateDirName) \
+                              $scriptConfig(staticDirName)] {
+                file mkdir [file join $scriptConfig(sourceDir) $dir]
+            }
+            file mkdir $scriptConfig(destDir)
+            exit 0
         }
-        file mkdir $scriptConfig(destDir)
-        exit
-    }
+        upload-copy {
+            set uploadDest [dict get $websiteConfig uploadDestCopy]
 
-    if {[file isdir $sourceDir]} {
-        compile-website \
-            $sourceDir \
-            $destDir \
-            $websiteConfig
-    } else {
-        puts "couldn't access directory \"$sourceDir\""
-        exit 1
+            foreach file [fileutil::find $destDir {file isfile}] {
+                set destFile [replace-path-root $file $destDir $uploadDest]
+                puts "copying $file to $destFile"
+                if {![file isdir [file dirname $destFile]]} {
+                    file mkdir [file dirname $destFile]
+                }
+                file copy -force $file $destFile
+            }
+            exit 0
+        }
+        upload-ftp {
+            puts "not implemented"
+            exit 1
+        }
+        build {
+            if {[file isdir $sourceDir]} {
+                compile-website \
+                    $sourceDir \
+                    $destDir \
+                    $websiteConfig
+            } else {
+                puts "couldn't access directory \"$sourceDir\""
+                exit 1
+            }
+        }
     }
 }
 
