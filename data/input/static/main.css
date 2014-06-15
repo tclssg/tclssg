@@ -1,0 +1,64 @@
+body {
+    color: black; 
+    background-color: white;
+    font-family: Times New Roman, times;
+    font-size: 28px;
+}
+
+div#container {
+    margin-left: 15px;
+    margin-right: auto;
+    #width: 800px;
+}
+
+input, textarea {
+    font-family: Times New Roman, times;
+    font-size: 20px;
+}
+
+h1#title {
+    text-align: center;
+ /* text-transform:uppercase;
+    font-size: 250%; */
+    font-weight: bold;
+}
+
+h2 {
+    text-indent: 0px;
+ /* font-size: 175%; */
+    font-weight: bold; 
+}
+
+h2.entrytitle {
+ /* padding-left: 25px;    
+    padding-right: 25px; */
+}
+
+h3 {
+    text-indent: 0px; 
+ /* font-size: 150%; */
+    font-weight: bold;
+}
+
+h4 {
+    text-indent: 0px; 
+ /* font-size: 125%; */
+    font-weight: bold;      
+}
+
+a {
+    text-decoration: none;
+    color: #0000FF;
+}
+
+a:hover {
+    color: #000066;
+}
+
+a:active {
+    color: red;
+}
+
+a:visited {
+    color: #581C90;
+}
