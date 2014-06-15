@@ -144,13 +144,15 @@ proc main {argv} {
     set scriptConfig(templateDirName) templates
     set scriptConfig(staticDirName) static
     set scriptConfig(templateFileName) template.html
-
-    set scriptConfig(sourceDir) [file join data input]
-    set scriptConfig(destDir) [file join data output]
+    set scriptConfig(websiteConfigFileName) website.conf
 
     set scriptConfig(templateBrackets) {<% %>}
 
-    set websiteConfig {websiteTitle {Danyil Bohdan}}
+    set sourceDir [lindex $argv 0]
+    set destDir [lindex $argv 1]
+    set websiteConfig \
+        [read-file \
+            [file join $sourceDir $scriptConfig(websiteConfigFileName)]]
 
     # init command.
     if {[lindex $argv 0] eq "init"} {
@@ -163,10 +165,15 @@ proc main {argv} {
         exit
     }
 
-    compile-website \
-        $scriptConfig(sourceDir) \
-        $scriptConfig(destDir) \
-        $websiteConfig
+    if {[file isdir $sourceDir]} {
+        compile-website \
+            $sourceDir \
+            $destDir \
+            $websiteConfig
+    } else {
+        puts "couldn't access directory \"$sourceDir\""
+        exit 1
+    }
 }
 
 main $argv
