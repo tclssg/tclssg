@@ -6,8 +6,11 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
+        <div id="sidebar">
+        <pre><% clock seconds %><% lindex $pageIndex %></pre>
+        </div>
         <div id="container">
-		<% lindex $content %>
+        <% lindex $content %>
         </div><!-- #container -->
     </body>
 </html>

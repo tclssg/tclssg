@@ -5,6 +5,7 @@
 # LICENSE for details.
 
 package require fileutil
+package require textutil
 package require textutil::expander
 
 # Returns the content of file fname.
@@ -30,9 +31,15 @@ proc write-file {fname content {binary 0}} {
 
 # Transform a path relative to fromDir into the same path relative to toDir.
 proc replace-path-root {path fromDir toDir} {
-    file join $toDir \
-              [::fileutil::relative $fromDir [file dirname $path]] \
-              [file tail $path]
+    # string map here is aack to fix /./ making printed log ugly.
+    string map {/./ /} \
+        [file join $toDir \
+            [::fileutil::relative $fromDir [file dirname $path]] \
+            [file tail $path]]
+}
+
+proc interp-set {name value} {
+    interp eval templateInterp [format {set {%s} {%s}} $name $value]
 }
 
 # Set up template interpreter and expander.
@@ -42,7 +49,7 @@ proc interp-up {websiteConfig} {
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
     dict for {key value} $websiteConfig {
-        interp eval templateInterp [format {set {%s} {%s}} $key $value]
+        interp-set $key $value
     }
     if {![catch {::textutil::expander exp}]} {
         ::exp evalcmd {interp eval templateInterp}
@@ -67,10 +74,21 @@ proc template-subst {template rawContent websiteConfig} {
 
     interp-up $websiteConfig
 
+    set cookedContent {}
+
+    foreach line [split $rawContent \n] {
+        # Provide alternative syntax for just setting variables.
+        if {[string index $line 0] == "!"} {
+            interp-set [lindex $line 1] [lindex $line 2]
+        } else {
+            set cookedContent "$cookedContent$line\n"
+        }
+    }
+
     # Macroexpand content then convert it from Markdown to HTML.
-    set content [markdown-to-html [::exp expand $rawContent]]
+    set cookedContent [markdown-to-html [::exp expand $cookedContent]]
     # Expand template with content substituted in.
-    interp eval templateInterp [format {set {%s} {%s}} content $content]
+    interp-set content $cookedContent
     set result [::exp expand $template]
 
     interp-down
@@ -82,19 +100,11 @@ proc template-subst {template rawContent websiteConfig} {
 # put its rendered content into a template under the same path relative to
 # outputDir that inputFile is relative to inputDir.
 proc page-file-to-html {inputFile \
-                        inputDir \
-                        templateDir \
-                        outputDir \
+                        template \
+                        outputFile \
                         websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
-    set template \
-        [read-file \
-            [file join $templateDir $scriptConfig(templateFileName)]]
-
-    set outputFile \
-        [file rootname \
-            [replace-path-root $inputFile $inputDir $outputDir]].html
     set subdir [file dirname $outputFile]
 
     if {![file isdir $subdir]} {
@@ -102,7 +112,7 @@ proc page-file-to-html {inputFile \
         file mkdir $subdir
     }
 
-    puts "processing markdown file $inputFile into $outputFile"
+    puts "processing page file $inputFile into $outputFile"
     set output [template-subst $template [read-file $inputFile] $websiteConfig]
     write-file $outputFile $output
 }
@@ -111,14 +121,35 @@ proc page-file-to-html {inputFile \
 proc compile-website {inputDir outputDir websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
+    set contentDir [file join $inputDir $scriptConfig(contentDirName)]
+
+    # Build page index.
+    set fileList {}
+    set pageIndex {}
+    foreach file [fileutil::findByPattern $contentDir -glob *.md] {
+        lappend fileList $file
+        lappend fileList [
+            file rootname [
+                replace-path-root $file $contentDir $outputDir
+            ]
+        ].html
+        lappend pageIndex [
+            file rootname [replace-path-root $file $contentDir {}]
+        ].html
+    }
+    puts $inputDir
+    dict set websiteConfig pageIndex $pageIndex
     # Process page files.
-    foreach file [fileutil::findByPattern $inputDir -glob *.md] {
+    foreach {file outputFile} $fileList {
+        set template \
+            [read-file \
+                [file join $inputDir \
+                           $scriptConfig(templateDirName) \
+                           $scriptConfig(templateFileName)]]
+
         page-file-to-html $file \
-                          [file join $inputDir \
-                                     $scriptConfig(contentDirName)] \
-                          [file join $inputDir \
-                                     $scriptConfig(templateDirName)] \
-                          $outputDir \
+                          $template \
+                          $outputFile \
                           $websiteConfig
     }
 
@@ -143,7 +174,7 @@ proc load-config {sourceDir} {
     set websiteConfig \
         [read-file \
             [file join $sourceDir $scriptConfig(websiteConfigFileName)]]
-    puts "Loaded config file:\n$websiteConfig\n"
+    puts "Loaded config file:\n[textutil::indent $websiteConfig {    }]\n"
 }
 
 proc main {argv0 argv} {
