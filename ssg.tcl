@@ -48,6 +48,7 @@ proc interp-up {websiteConfig} {
 
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
+    interp alias templateInterp replace-path-root {} replace-path-root
     dict for {key value} $websiteConfig {
         interp-set $key $value
     }
@@ -69,6 +70,7 @@ proc markdown-to-html {markdown} {
     exec -- {*}$scriptConfig(markdownProcessor) << $markdown
 }
 
+# Make HTML out of content plus template.
 proc template-subst {template rawContent websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
@@ -125,7 +127,6 @@ proc compile-website {inputDir outputDir websiteConfig} {
 
     # Build page index.
     set fileList {}
-    set pageIndex {}
     foreach file [fileutil::findByPattern $contentDir -glob *.md] {
         lappend fileList $file
         lappend fileList [
@@ -133,12 +134,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 replace-path-root $file $contentDir $outputDir
             ]
         ].html
-        lappend pageIndex [
-            file rootname [replace-path-root $file $contentDir {}]
-        ].html
     }
-    puts $inputDir
-    dict set websiteConfig pageIndex $pageIndex
     # Process page files.
     foreach {file outputFile} $fileList {
         set template \
@@ -147,6 +143,19 @@ proc compile-website {inputDir outputDir websiteConfig} {
                            $scriptConfig(templateDirName) \
                            $scriptConfig(templateFileName)]]
 
+        set pageIndex {}
+        foreach {___ otherOutputFile} $fileList {
+            lappend pageIndex [
+                ::fileutil::relative [
+                    file dirname $outputFile
+                ] $otherOutputFile
+            ]
+        }
+        dict set websiteConfig pageIndex $pageIndex
+        dict set websiteConfig fileName [
+            ::fileutil::relative $outputDir $outputFile
+        ]
+
         page-file-to-html $file \
                           $template \
                           $outputFile \
@@ -154,8 +163,9 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 
     # Copy static files verbatim.
-    foreach file [fileutil::find \
-                     [file join $inputDir $scriptConfig(staticDirName)]] {
+    foreach file [
+        fileutil::find [file join $inputDir $scriptConfig(staticDirName)]
+    ] {
         if {[file isfile $file]} {
             set destFile \
                 [replace-path-root $file \

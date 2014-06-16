@@ -6,9 +6,14 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
+        <% lindex "This is $fileName." %>
         <div id="sidebar">
-        <pre><% clock seconds %><% lindex $pageIndex %></pre>
-        </div>
+        <ul><% set a {}
+            foreach page $pageIndex {
+                set a [concat $a "<li><a href=\"$page\">$page</a></li>"]
+            }
+            lindex $a %></ul>
+        </div><!-- #sidebar -->
         <div id="container">
         <% lindex $content %>
         </div><!-- #container -->
