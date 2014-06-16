@@ -9,7 +9,7 @@
         <% lindex "This is $fileName." %>
         <div id="sidebar">
         <ul><% set a {}
-            foreach page $pageIndex {
+            foreach page $pageLinks {
                 set a [concat $a "<li><a href=\"$page\">$page</a></li>"]
             }
             lindex $a %></ul>

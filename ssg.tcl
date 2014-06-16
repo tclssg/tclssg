@@ -31,11 +31,14 @@ proc write-file {fname content {binary 0}} {
 
 # Transform a path relative to fromDir into the same path relative to toDir.
 proc replace-path-root {path fromDir toDir} {
-    # string map here is aack to fix /./ making printed log ugly.
-    string map {/./ /} \
-        [file join $toDir \
-            [::fileutil::relative $fromDir [file dirname $path]] \
-            [file tail $path]]
+    # string map here is a hack to fix /./ making printed logs ugly.
+    string map {/./ /} [
+        file join $toDir [
+            ::fileutil::relative $fromDir [file dirname $path]
+        ] [
+            file tail $path
+        ]
+    ]
 }
 
 proc interp-set {name value} {
@@ -101,10 +104,7 @@ proc template-subst {template rawContent websiteConfig} {
 # Process the page inputFile (a file containing Markdown + template code).
 # put its rendered content into a template under the same path relative to
 # outputDir that inputFile is relative to inputDir.
-proc page-file-to-html {inputFile \
-                        template \
-                        outputFile \
-                        websiteConfig} {
+proc page-file-to-html {inputFile template outputFile websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
     set subdir [file dirname $outputFile]
@@ -137,29 +137,28 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
     # Process page files.
     foreach {file outputFile} $fileList {
-        set template \
-            [read-file \
-                [file join $inputDir \
-                           $scriptConfig(templateDirName) \
-                           $scriptConfig(templateFileName)]]
+        set template [
+            read-file [
+                file join $inputDir \
+                          $scriptConfig(templateDirName) \
+                          $scriptConfig(templateFileName) \
+            ]
+        ]
 
-        set pageIndex {}
+        set pageLinks {}
         foreach {___ otherOutputFile} $fileList {
-            lappend pageIndex [
+            lappend pageLinks [
                 ::fileutil::relative [
                     file dirname $outputFile
                 ] $otherOutputFile
             ]
         }
-        dict set websiteConfig pageIndex $pageIndex
+        dict set websiteConfig pageLinks $pageLinks
         dict set websiteConfig fileName [
             ::fileutil::relative $outputDir $outputFile
         ]
 
-        page-file-to-html $file \
-                          $template \
-                          $outputFile \
-                          $websiteConfig
+        page-file-to-html $file $template $outputFile $websiteConfig
     }
 
     # Copy static files verbatim.
@@ -167,10 +166,11 @@ proc compile-website {inputDir outputDir websiteConfig} {
         fileutil::find [file join $inputDir $scriptConfig(staticDirName)]
     ] {
         if {[file isfile $file]} {
-            set destFile \
-                [replace-path-root $file \
-                             [file join $inputDir $scriptConfig(staticDirName)]\
-                             $outputDir]
+            set destFile [
+                replace-path-root $file [
+                    file join $inputDir $scriptConfig(staticDirName)
+                ] $outputDir
+            ]
             puts "copying static file $file to $destFile"
             file copy -force $file $destFile
         }
@@ -181,9 +181,11 @@ proc load-config {sourceDir} {
     upvar 1 scriptConfig scriptConfig
     upvar 1 websiteConfig websiteConfig
 
-    set websiteConfig \
-        [read-file \
-            [file join $sourceDir $scriptConfig(websiteConfigFileName)]]
+    set websiteConfig [
+        read-file [
+            file join $sourceDir $scriptConfig(websiteConfigFileName)
+        ]
+    ]
     puts "Loaded config file:\n[textutil::indent $websiteConfig {    }]\n"
 }
 
@@ -206,9 +208,11 @@ proc main {argv0 argv} {
     # init command.
     switch -exact -- [lindex $argv 0] {
         init {
-            foreach dir [list $scriptConfig(contentDirName) \
-                              $scriptConfig(templateDirName) \
-                              $scriptConfig(staticDirName)] {
+            foreach dir [
+                list $scriptConfig(contentDirName) \
+                     $scriptConfig(templateDirName) \
+                     $scriptConfig(staticDirName)
+            ] {
                 file mkdir [file join $scriptConfig(sourceDir) $dir]
             }
             file mkdir $scriptConfig(destDir)
@@ -219,10 +223,7 @@ proc main {argv0 argv} {
             load-config $sourceDir
 
             if {[file isdir $sourceDir]} {
-                compile-website \
-                    $sourceDir \
-                    $destDir \
-                    $websiteConfig
+                compile-website $sourceDir $destDir $websiteConfig
             } else {
                 puts "couldn't access directory \"$sourceDir\""
                 exit 1
