@@ -6,14 +6,15 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <% lindex "This is $fileName." %>
-        <div id="sidebar">
-        <ul><% set a {}
-            foreach page $pageLinks {
-                set a [concat $a "<li><a href=\"$page\">$page</a></li>"]
+        <%  set a {}
+            if {[dict-default-get 0 $variables blogEntry]} {
+                set a [concat $a {<div id="sidebar"><ul>}]
+                foreach page $pageLinks {
+                    set a [concat $a "<li><a href=\"$page\">$page</a></li>"]
+                }
+                set a [concat $a {</ul></div><!-- sidebar -->}]
             }
-            lindex $a %></ul>
-        </div><!-- #sidebar -->
+            lindex $a %>
         <div id="container">
         <% lindex $content %>
         </div><!-- #container -->

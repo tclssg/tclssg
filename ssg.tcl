@@ -41,20 +41,35 @@ proc replace-path-root {path fromDir toDir} {
     ]
 }
 
+proc dict-default-get {default dictionary args} {
+    if {[dict exists $dictionary {*}$args]} {
+        dict get $dictionary {*}$args
+    } else {
+        return $default
+    }
+}
+
 proc interp-set {name value} {
     interp eval templateInterp [format {set {%s} {%s}} $name $value]
 }
 
+proc interp-inject {dictionary} {
+    dict for {key value} $dictionary {
+        interp-set $key $value
+    }
+}
+
 # Set up template interpreter and expander.
-proc interp-up {websiteConfig} {
+proc interp-up {} {
     upvar 1 scriptConfig scriptConfig
 
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
-    interp alias templateInterp replace-path-root {} replace-path-root
-    dict for {key value} $websiteConfig {
-        interp-set $key $value
+
+    foreach command {replace-path-root dict-default-get} {
+        interp alias templateInterp $command {} $command
     }
+
     if {![catch {::textutil::expander exp}]} {
         ::exp evalcmd {interp eval templateInterp}
         ::exp setbrackets {*}$scriptConfig(templateBrackets)
@@ -73,29 +88,39 @@ proc markdown-to-html {markdown} {
     exec -- {*}$scriptConfig(markdownProcessor) << $markdown
 }
 
-# Make HTML out of content plus template.
-proc template-subst {template rawContent websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
-
-    interp-up $websiteConfig
-
-    set cookedContent {}
-
+proc get-metadata-variables {rawContent} {
+    set result {}
     foreach line [split $rawContent \n] {
         # Provide alternative syntax for just setting variables.
         if {[string index $line 0] == "!"} {
-            interp-set [lindex $line 1] [lindex $line 2]
-        } else {
-            set cookedContent "$cookedContent$line\n"
+            dict set result [lindex $line 1] [lindex $line 2]
+        }
+    }
+    return $result
+}
+
+# Make HTML out of content plus template.
+proc template-subst {template pageData websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
+
+
+    set choppedContent {}
+
+    foreach line [split [dict get $pageData rawContent] \n] {
+        # Provide alternative syntax for just setting variables.
+        if {[string index $line 0] != "!"} {
+            set choppedContent "$choppedContent$line\n"
         }
     }
 
+    interp-up
+    interp-inject $websiteConfig
+    interp-inject $pageData
     # Macroexpand content then convert it from Markdown to HTML.
-    set cookedContent [markdown-to-html [::exp expand $cookedContent]]
+    set cookedContent [markdown-to-html [::exp expand $choppedContent]]
     # Expand template with content substituted in.
     interp-set content $cookedContent
     set result [::exp expand $template]
-
     interp-down
 
     return $result
@@ -104,8 +129,11 @@ proc template-subst {template rawContent websiteConfig} {
 # Process the page inputFile (a file containing Markdown + template code).
 # put its rendered content into a template under the same path relative to
 # outputDir that inputFile is relative to inputDir.
-proc page-file-to-html {inputFile template outputFile websiteConfig} {
+proc page-to-html {pageData template websiteConfig} {
     upvar 1 scriptConfig scriptConfig
+
+    set inputFile [dict get $pageData inputFile]
+    set outputFile [dict get $pageData outputFile]
 
     set subdir [file dirname $outputFile]
 
@@ -115,7 +143,9 @@ proc page-file-to-html {inputFile template outputFile websiteConfig} {
     }
 
     puts "processing page file $inputFile into $outputFile"
-    set output [template-subst $template [read-file $inputFile] $websiteConfig]
+    set output [
+        template-subst $template $pageData $websiteConfig
+    ]
     write-file $outputFile $output
 }
 
@@ -126,31 +156,47 @@ proc compile-website {inputDir outputDir websiteConfig} {
     set contentDir [file join $inputDir $scriptConfig(contentDirName)]
 
     # Build page index.
-    set fileList {}
+    set staticWebsite {}
     foreach file [fileutil::findByPattern $contentDir -glob *.md] {
-        lappend fileList $file
-        lappend fileList [
+        dict set staticWebsite $file inputFile $file
+        dict set staticWebsite $file outputFile [
             file rootname [
                 replace-path-root $file $contentDir $outputDir
             ]
         ].html
-    }
-    # Process page files.
-    foreach {file outputFile} $fileList {
-        set template [
-            read-file [
-                file join $inputDir \
-                          $scriptConfig(templateDirName) \
-                          $scriptConfig(templateFileName) \
+        dict set staticWebsite $file rawContent [read-file $file]
+        dict set staticWebsite $file variables [
+            get-metadata-variables [
+                dict get $staticWebsite $file rawContent
             ]
         ]
+        dict set staticWebsite $file pageTitle [
+            dict-default-get {} $staticWebsite $file variables pageTitle
+        ]
+    }
 
+    # Read template for $inputDir. Can later be made per-directory or
+    # metadata-based.
+    set template [
+        read-file [
+            file join $inputDir \
+                      $scriptConfig(templateDirName) \
+                      $scriptConfig(templateFileName) \
+        ]
+    ]
+
+    # Process page files.
+    dict for {file pageData} $staticWebsite {
+        # Links to other page relative to the current.
+        set outputFile [dict get $staticWebsite $file outputFile]
         set pageLinks {}
-        foreach {___ otherOutputFile} $fileList {
+        dict for {otherFile otherMetadata} $staticWebsite {
             lappend pageLinks [
                 ::fileutil::relative [
                     file dirname $outputFile
-                ] $otherOutputFile
+                ] [
+                    dict get $otherMetadata outputFile
+                ]
             ]
         }
         dict set websiteConfig pageLinks $pageLinks
@@ -158,7 +204,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ::fileutil::relative $outputDir $outputFile
         ]
 
-        page-file-to-html $file $template $outputFile $websiteConfig
+        page-to-html $pageData $template $websiteConfig
     }
 
     # Copy static files verbatim.
@@ -177,6 +223,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 }
 
+# Load website configuration file from directory.
 proc load-config {sourceDir} {
     upvar 1 scriptConfig scriptConfig
     upvar 1 websiteConfig websiteConfig
