@@ -193,7 +193,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict set websiteConfig pages $pages
 
     # Process page files into HTML output.
-    dict for {file pageData} $pages {
+    dict for {file ___} $pages {
         # Links to other page relative to the current.
         set outputFile [dict get $pages $file outputFile]
         set pageLinks {}
@@ -206,15 +206,15 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 ]
             ]
             lappend pageLinks [
-                dict-default-get {} $otherMetadata pageTitle
+                dict-default-get {} $otherMetadata variables pageTitle
             ]
         }
-        dict set websiteConfig pageLinks $pageLinks
+        dict set pages $file pageLinks $pageLinks
         dict set websiteConfig fileName [
             ::fileutil::relative $outputDir $outputFile
         ]
 
-        page-to-html $pageData $template $websiteConfig
+        page-to-html [dict get $pages $file] $template $websiteConfig
     }
 
     # Copy static files verbatim.
