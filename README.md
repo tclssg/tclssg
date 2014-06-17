@@ -26,6 +26,7 @@ uploadDestCopy {/tmp/dest}
 uploadDestFTP {ftp://ftp.univ.kiev.ua/incoming/upload/dotcomtest}
 expandMacrosInPages 0
 charset utf-8
+indexPage {data/input/pages/index.md}
 
 Per-page variables
 ------------------
@@ -33,5 +34,7 @@ pageTitle
 hideTitle
 blogEntry
 hideFromList
+hideSidebar
+hideTagCloud
 date
 tags

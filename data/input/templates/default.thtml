@@ -11,36 +11,52 @@
                     lindex "$pageTitle | $websiteTitle"
                 }
             %></title>
-        <link rel="stylesheet" href="main.css">
+        <link rel="stylesheet" href="<% lindex $rootDirLink/main.css %>">
     </head>
     <body>
         <%  # Helper procs.
-            proc format-link {id link} {
-                upvar 1 pages pages
-                set title [dict-default-get $link $pages $id variables pageTitle]
+            proc format-link {id {customTitle ""}} {
+                upvar 1 pages pages pageLinks pageLinks
+                set link [dict get $pageLinks $id]
+                if {$customTitle ne ""} {
+                    set title $customTitle
+                } else {
+                    set title [dict-default-get $link $pages $id variables pageTitle]
+                }
                 return "<li><a href=\"$link\">$title</a></li>"
             }
-        %><% # Blog tag list.
-            set tagCloud {<div id="tags"><dl>}
-            foreach {tag ids} [dict-default-get {} $pages tags] {
-                append tagCloud "<dt>$tag</dt><dd><ul>"
-                foreach id $ids {
-                    set link [dict get $pageLinks $id]
-                    append tagCloud [format-link $id $link]
-                }
-                append tagCloud "</ul></dd>"
+        %><% # Link back to index.
+            if {[info exists indexPage] && $currentPageId ne $indexPage} {
+                lindex "<div id=\"index-link\">[format-link $indexPage]</div>"
+            } else {
+                lindex ""
             }
-            append tagCloud {</dl></div><!-- tags -->}
+        %><% # Blog tag list.
+            set tagCloud {}
+            if {[dict-default-get 0 $variables blogEntry] && \
+                ![dict-default-get 0 $variables hideTagCloud]} {
+                append tagCloud {<div id="tags"><dl>}
+                foreach {tag ids} [dict-default-get {} $pages tags] {
+                    append tagCloud "<dt>$tag</dt><dd><ul>"
+                    foreach id $ids {
+                        set link [dict get $pageLinks $id]
+                        append tagCloud [format-link $id]
+                    }
+                    append tagCloud "</ul></dd>"
+                }
+                append tagCloud {</dl></div><!-- tags -->}
+            }
             lindex $tagCloud
         %><% # Blog sidebar.
             set sidebar {}
-            if {[dict-default-get 0 $variables blogEntry]} {
+            if {[dict-default-get 0 $variables blogEntry] && \
+                ![dict-default-get 0 $variables hideSidebar]} {
                 append sidebar {<div id="sidebar"><ul>}
-                foreach {id link} $pageLinks {
+                foreach {id ___} $pageLinks {
                     # Only add links to other blog entries.
                     if {[dict-default-get 0 $pages $id variables blogEntry] && \
                         ![dict-default-get 0 $pages $id variables hideFromList]} {
-                        append sidebar [format-link $id $link]
+                        append sidebar [format-link $id]
                     }
                 }
                 append sidebar {</ul></div><!-- sidebar -->}

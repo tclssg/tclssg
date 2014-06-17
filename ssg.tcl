@@ -232,9 +232,12 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ]
         }
         dict set pages $file pageLinks $pageLinks
-        dict set websiteConfig fileName [
-            ::fileutil::relative $outputDir $outputFile
+        dict set pages $file rootDirLink [
+            ::fileutil::relative [
+                file dirname $outputFile
+            ] $outputDir
         ]
+        dict set websiteConfig currentPageId $file
 
         page-to-html [dict get $pages $file] $template $websiteConfig
     }
