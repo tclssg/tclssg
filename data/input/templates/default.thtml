@@ -2,19 +2,32 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title><% if {[info exists pageTitle]} { lindex "$pageTitle | $websiteTitle" } else { lindex $websiteTitle } %></title>
+        <title><%
+                set pageTitle [dict-default-get {} $variables pageTitle]
+                set hideTitle [dict-default-get 0 $variables hideTitle]
+                if {$hideTitle || ($pageTitle == "")} {
+                    lindex $websiteTitle
+                } else {
+                    lindex "$pageTitle | $websiteTitle"
+                }
+            %></title>
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <%  set a {}
+        <%
+            set a {}
             if {[dict-default-get 0 $variables blogEntry]} {
                 set a [concat $a {<div id="sidebar"><ul>}]
-                foreach page $pageLinks {
-                    set a [concat $a "<li><a href=\"$page\">$page</a></li>"]
+                foreach {link title} $pageLinks {
+                    if {$title eq ""} {
+                        set title $link
+                    }
+                    set a [concat $a "<li><a href=\"$link\">$title</a></li>"]
                 }
                 set a [concat $a {</ul></div><!-- sidebar -->}]
             }
-            lindex $a %>
+            lindex $a
+        %>
         <div id="container">
         <% lindex $content %>
         </div><!-- #container -->

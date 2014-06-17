@@ -49,6 +49,15 @@ proc dict-default-get {default dictionary args} {
     }
 }
 
+proc get-default {varName default} {
+    upvar 1 $varName var
+    if {[uplevel 1 "info exists $varName"]} {
+        return $var
+    } else {
+        return $default
+    }
+}
+
 proc interp-set {name value} {
     interp eval templateInterp [format {set {%s} {%s}} $name $value]
 }
@@ -66,7 +75,7 @@ proc interp-up {} {
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
 
-    foreach command {replace-path-root dict-default-get} {
+    foreach command {replace-path-root dict-default-get get-default} {
         interp alias templateInterp $command {} $command
     }
 
@@ -103,9 +112,7 @@ proc get-metadata-variables {rawContent} {
 proc template-subst {template pageData websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
-
     set choppedContent {}
-
     foreach line [split [dict get $pageData rawContent] \n] {
         # Provide alternative syntax for just setting variables.
         if {[string index $line 0] != "!"} {
@@ -115,6 +122,7 @@ proc template-subst {template pageData websiteConfig} {
 
     interp-up
     interp-inject $websiteConfig
+    # Page data overrides website config.
     interp-inject $pageData
     # Macroexpand content then convert it from Markdown to HTML.
     set cookedContent [markdown-to-html [::exp expand $choppedContent]]
@@ -155,23 +163,20 @@ proc compile-website {inputDir outputDir websiteConfig} {
 
     set contentDir [file join $inputDir $scriptConfig(contentDirName)]
 
-    # Build page index.
-    set staticWebsite {}
+    # Build page data.
+    set pages {}
     foreach file [fileutil::findByPattern $contentDir -glob *.md] {
-        dict set staticWebsite $file inputFile $file
-        dict set staticWebsite $file outputFile [
+        dict set pages $file inputFile $file
+        dict set pages $file outputFile [
             file rootname [
                 replace-path-root $file $contentDir $outputDir
             ]
         ].html
-        dict set staticWebsite $file rawContent [read-file $file]
-        dict set staticWebsite $file variables [
+        dict set pages $file rawContent [read-file $file]
+        dict set pages $file variables [
             get-metadata-variables [
-                dict get $staticWebsite $file rawContent
+                dict get $pages $file rawContent
             ]
-        ]
-        dict set staticWebsite $file pageTitle [
-            dict-default-get {} $staticWebsite $file variables pageTitle
         ]
     }
 
@@ -185,18 +190,23 @@ proc compile-website {inputDir outputDir websiteConfig} {
         ]
     ]
 
-    # Process page files.
-    dict for {file pageData} $staticWebsite {
+    dict set websiteConfig pages $pages
+
+    # Process page files into HTML output.
+    dict for {file pageData} $pages {
         # Links to other page relative to the current.
-        set outputFile [dict get $staticWebsite $file outputFile]
+        set outputFile [dict get $pages $file outputFile]
         set pageLinks {}
-        dict for {otherFile otherMetadata} $staticWebsite {
+        dict for {otherFile otherMetadata} $pages {
             lappend pageLinks [
                 ::fileutil::relative [
                     file dirname $outputFile
                 ] [
                     dict get $otherMetadata outputFile
                 ]
+            ]
+            lappend pageLinks [
+                dict-default-get {} $otherMetadata pageTitle
             ]
         }
         dict set websiteConfig pageLinks $pageLinks
