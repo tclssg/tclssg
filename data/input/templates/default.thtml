@@ -14,13 +14,16 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <%
+        <%  # Blog sidebar.
             set a {}
             if {[dict-default-get 0 $variables blogEntry]} {
                 set a [concat $a {<div id="sidebar"><ul>}]
                 foreach {id link} $pageLinks {
-                    set title [dict-default-get $link $pages $id variables pageTitle]
-                    set a [concat $a "<li><a href=\"$link\">$title</a></li>"]
+                    # Only add links to other blog entries.
+                    if {[dict-default-get 0 $pages $id variables blogEntry]} {
+                        set title [dict-default-get $link $pages $id variables pageTitle]
+                        set a [concat $a "<li><a href=\"$link\">$title</a></li>"]
+                    }
                 }
                 set a [concat $a {</ul></div><!-- sidebar -->}]
             }
