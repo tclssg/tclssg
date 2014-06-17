@@ -198,15 +198,13 @@ proc compile-website {inputDir outputDir websiteConfig} {
         set outputFile [dict get $pages $file outputFile]
         set pageLinks {}
         dict for {otherFile otherMetadata} $pages {
-            lappend pageLinks [
+            # pageLinks maps page id (= input FN for not) to relative link to it.
+            lappend pageLinks $otherFile [
                 ::fileutil::relative [
                     file dirname $outputFile
                 ] [
                     dict get $otherMetadata outputFile
                 ]
-            ]
-            lappend pageLinks [
-                dict-default-get {} $otherMetadata variables pageTitle
             ]
         }
         dict set pages $file pageLinks $pageLinks
