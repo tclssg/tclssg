@@ -25,8 +25,7 @@
                 set a [concat $a {</ul></div><!-- sidebar -->}]
             }
             lindex $a
-        %>
-        <div id="container">
+        %><div id="container">
         <% lindex $content %>
         </div><!-- #container -->
     </body>

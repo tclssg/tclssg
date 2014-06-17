@@ -4,6 +4,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
+package require Tcl 8.5
 package require fileutil
 package require textutil
 package require textutil::expander
@@ -41,6 +42,8 @@ proc replace-path-root {path fromDir toDir} {
     ]
 }
 
+# Return a value from dictionary like dict get would if it is there.
+# Otherwise return the default value.
 proc dict-default-get {default dictionary args} {
     if {[dict exists $dictionary {*}$args]} {
         dict get $dictionary {*}$args
@@ -49,6 +52,7 @@ proc dict-default-get {default dictionary args} {
     }
 }
 
+# If $varName exists return its value else return the default value.
 proc get-default {varName default} {
     upvar 1 $varName var
     if {[uplevel 1 "info exists $varName"]} {
@@ -58,10 +62,13 @@ proc get-default {varName default} {
     }
 }
 
+# Set variable $name to $value in the template interpreter.
 proc interp-set {name value} {
     interp eval templateInterp [format {set {%s} {%s}} $name $value]
 }
 
+# Set variable $key to $value in the template interpreter for each key-value
+# pair in a dictionary.
 proc interp-inject {dictionary} {
     dict for {key value} $dictionary {
         interp-set $key $value
@@ -97,10 +104,10 @@ proc markdown-to-html {markdown} {
     exec -- {*}$scriptConfig(markdownProcessor) << $markdown
 }
 
+# Get variables set in page using the "! variable value" syntax.
 proc get-metadata-variables {rawContent} {
     set result {}
     foreach line [split $rawContent \n] {
-        # Provide alternative syntax for just setting variables.
         if {[string index $line 0] == "!"} {
             dict set result [lindex $line 1] [lindex $line 2]
         }
@@ -114,7 +121,7 @@ proc template-subst {template pageData websiteConfig} {
 
     set choppedContent {}
     foreach line [split [dict get $pageData rawContent] \n] {
-        # Provide alternative syntax for just setting variables.
+        # Skip lines that set variables.
         if {[string index $line 0] != "!"} {
             set choppedContent "$choppedContent$line\n"
         }
@@ -125,7 +132,10 @@ proc template-subst {template pageData websiteConfig} {
     # Page data overrides website config.
     interp-inject $pageData
     # Macroexpand content then convert it from Markdown to HTML.
-    set cookedContent [markdown-to-html [::exp expand $choppedContent]]
+    if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
+        set choppedContent [::exp expand $choppedContent]
+    }
+    set cookedContent [markdown-to-html $choppedContent]
     # Expand template with content substituted in.
     interp-set content $cookedContent
     set result [::exp expand $template]

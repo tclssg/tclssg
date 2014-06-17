@@ -1,5 +1,8 @@
 all: build
 
+init:
+	./ssg.tcl init data/input data/output
+
 build:
 	./ssg.tcl build data/input data/output
 
