@@ -278,10 +278,26 @@ proc main {argv0 argv} {
                      $scriptConfig(templateDirName) \
                      $scriptConfig(staticDirName)
             ] {
-                file mkdir [file join $scriptConfig(sourceDir) $dir]
+                file mkdir [file join $sourceDir $dir]
             }
-            file mkdir $scriptConfig(destDir)
-            # touch website.conf
+            file mkdir $destDir
+
+            set websiteConfigFile [
+                file join $sourceDir $scriptConfig(websiteConfigFileName)
+            ]
+
+            proc write-file-if-not-there {file content} {
+                if {![file isfile $file]} {
+                    write-file $file $content
+                }
+            }
+
+            write-file-if-not-there $websiteConfigFile \
+                                    "websiteTitle {SSG Test}\n"
+            write-file-if-not-there [
+                file join $sourceDir $scriptConfig(contentDirName) index.md
+            ] "Hello!\n=====\nThis is a sample page."
+
             exit 0
         }
         build {
