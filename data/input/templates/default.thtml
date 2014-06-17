@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=<% get-default charset UTF-8 %>">
         <title><%
                 set pageTitle [dict-default-get {} $variables pageTitle]
                 set hideTitle [dict-default-get 0 $variables hideTitle]
@@ -14,20 +14,38 @@
         <link rel="stylesheet" href="main.css">
     </head>
     <body>
-        <%  # Blog sidebar.
-            set a {}
+        <%  # Helper procs.
+            proc format-link {id link} {
+                upvar 1 pages pages
+                set title [dict-default-get $link $pages $id variables pageTitle]
+                return "<li><a href=\"$link\">$title</a></li>"
+            }
+        %><% # Blog tag list.
+            set tagCloud {<div id="tags"><dl>}
+            foreach {tag ids} [dict-default-get {} $pages tags] {
+                append tagCloud "<dt>$tag</dt><dd><ul>"
+                foreach id $ids {
+                    set link [dict get $pageLinks $id]
+                    append tagCloud [format-link $id $link]
+                }
+                append tagCloud "</ul></dd>"
+            }
+            append tagCloud {</dl></div><!-- tags -->}
+            lindex $tagCloud
+        %><% # Blog sidebar.
+            set sidebar {}
             if {[dict-default-get 0 $variables blogEntry]} {
-                set a [concat $a {<div id="sidebar"><ul>}]
+                append sidebar {<div id="sidebar"><ul>}
                 foreach {id link} $pageLinks {
                     # Only add links to other blog entries.
-                    if {[dict-default-get 0 $pages $id variables blogEntry]} {
-                        set title [dict-default-get $link $pages $id variables pageTitle]
-                        set a [concat $a "<li><a href=\"$link\">$title</a></li>"]
+                    if {[dict-default-get 0 $pages $id variables blogEntry] && \
+                        ![dict-default-get 0 $pages $id variables hideFromList]} {
+                        append sidebar [format-link $id $link]
                     }
                 }
-                set a [concat $a {</ul></div><!-- sidebar -->}]
+                append sidebar {</ul></div><!-- sidebar -->}
             }
-            lindex $a
+            lindex $sidebar
         %><div id="container">
         <% lindex $content %>
         </div><!-- #container -->

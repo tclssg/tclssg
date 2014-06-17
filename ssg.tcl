@@ -5,6 +5,7 @@
 # LICENSE for details.
 
 package require Tcl 8.5
+package require struct
 package require fileutil
 package require textutil
 package require textutil::expander
@@ -54,9 +55,8 @@ proc dict-default-get {default dictionary args} {
 
 # If $varName exists return its value else return the default value.
 proc get-default {varName default} {
-    upvar 1 $varName var
-    if {[uplevel 1 "info exists $varName"]} {
-        return $var
+    if {[interp eval templateInterp "info exists $varName"]} {
+        return [interp eval templateInterp "set $varName"]
     } else {
         return $default
     }
@@ -131,7 +131,7 @@ proc template-subst {template pageData websiteConfig} {
     interp-inject $websiteConfig
     # Page data overrides website config.
     interp-inject $pageData
-    # Macroexpand content then convert it from Markdown to HTML.
+    # Macroexpand content if needed then convert it from Markdown to HTML.
     if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
         set choppedContent [::exp expand $choppedContent]
     }
@@ -167,6 +167,17 @@ proc page-to-html {pageData template websiteConfig} {
     write-file $outputFile $output
 }
 
+# Generate tag list in the format of dict tag -> {id id id...}.
+proc tag-list {pages} {
+    set tags {}
+    dict for {page pageData} $pages {
+        foreach tag [dict-default-get {} $pageData variables tags] {
+            dict lappend tags $tag $page
+        }
+    }
+    return $tags
+}
+
 # Process input files in inputDir to produce static website in outputDir.
 proc compile-website {inputDir outputDir websiteConfig} {
     upvar 1 scriptConfig scriptConfig
@@ -182,6 +193,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 replace-path-root $file $contentDir $outputDir
             ]
         ].html
+        # May want to change this preloading behavior for very large websites.
         dict set pages $file rawContent [read-file $file]
         dict set pages $file variables [
             get-metadata-variables [
@@ -201,6 +213,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     ]
 
     dict set websiteConfig pages $pages
+    dict set websiteConfig pages tags [tag-list $pages]
 
     # Process page files into HTML output.
     dict for {file ___} $pages {
@@ -208,7 +221,8 @@ proc compile-website {inputDir outputDir websiteConfig} {
         set outputFile [dict get $pages $file outputFile]
         set pageLinks {}
         dict for {otherFile otherMetadata} $pages {
-            # pageLinks maps page id (= input FN for not) to relative link to it.
+            # pageLinks maps page id (= input FN for not) to relative link to
+            # it.
             lappend pageLinks $otherFile [
                 ::fileutil::relative [
                     file dirname $outputFile
