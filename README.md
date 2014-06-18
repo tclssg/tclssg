@@ -5,7 +5,8 @@ A static website generator written in Tcl for danyilbohdan.com.
 
 To use `ssg-tcl` you'll need Tcl 8.5 and Tcllib.
 
-Generates blogs. All blog entries have a sidebar.
+Generates blogs. All blog entries have a sidebar. Relative links.
+Tags. HTML5.
 
 Usage
 -----
@@ -30,11 +31,15 @@ indexPage {data/input/pages/index.md}
 
 Per-page variables
 ------------------
-pageTitle
-hideTitle
-blogEntry
-hideFromList
-hideSidebar
-hideTagCloud
+Single lines.
+
+pageTitle {Some title}
+hideTitle 0/1 -- hides from <title> and <article>
+blogEntry 0/1
+hideFromList 0/1
+hideSidebar 0/1
+hideTagCloud 0/1
+hideFooter 0/1
 date
-tags
+tags {tag1 tag2 {tag three with multiple words} {tag four} tag-five}
+headExtra {<link rel="stylesheet" href="./contact.css">}

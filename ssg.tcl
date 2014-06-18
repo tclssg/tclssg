@@ -82,7 +82,8 @@ proc interp-up {} {
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
 
-    foreach command {replace-path-root dict-default-get get-default} {
+    foreach command {replace-path-root dict-default-get get-default \
+                     textutil::indent} {
         interp alias templateInterp $command {} $command
     }
 
@@ -106,10 +107,18 @@ proc markdown-to-html {markdown} {
 
 # Get variables set in page using the "! variable value" syntax.
 proc get-metadata-variables {rawContent} {
+    global errorInfo
     set result {}
     foreach line [split $rawContent \n] {
         if {[string index $line 0] == "!"} {
-            dict set result [lindex $line 1] [lindex $line 2]
+            if {[catch {dict set result [lindex $line 1] [lindex $line 2]}]} {
+                puts "error: syntax error when setting page variable: '$line'"
+                puts "$errorInfo"
+                exit 1
+            }
+            if {[llength $line] > 3} {
+                puts "warning: trailing data after variable value: '$line'"
+            }
         }
     }
     return $result
@@ -313,7 +322,7 @@ proc main {argv0 argv} {
                                     "websiteTitle {SSG Test}\n"
             write-file-if-not-there [
                 file join $sourceDir $scriptConfig(contentDirName) index.md
-            ] "Hello!\n=====\nThis is a sample page."
+            ] "! pageTitle {Hello, World!}\nThis is a sample page."
 
             exit 0
         }

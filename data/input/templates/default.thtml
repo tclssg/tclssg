@@ -3,8 +3,8 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=<% get-default charset UTF-8 %>">
         <title><%
-                set pageTitle [dict-default-get {} $variables pageTitle]
-                set hideTitle [dict-default-get 0 $variables hideTitle]
+                set pageTitle [dict-default-get {} $pages $currentPageId variables pageTitle]
+                set hideTitle [dict-default-get 0 $pages $currentPageId variables hideTitle]
                 if {$hideTitle || ($pageTitle == "")} {
                     lindex $websiteTitle
                 } else {
@@ -12,10 +12,11 @@
                 }
             %></title>
         <link rel="stylesheet" href="<% lindex $rootDirLink/main.css %>">
+        <% lindex [dict-default-get {} $pages $currentPageId variables headExtra] %>
     </head>
     <body>
         <%  # Helper procs.
-            proc format-link {id {customTitle ""}} {
+            proc format-link {id {li 1} {customTitle ""}} {
                 upvar 1 pages pages pageLinks pageLinks
                 set link [dict get $pageLinks $id]
                 if {$customTitle ne ""} {
@@ -23,19 +24,39 @@
                 } else {
                     set title [dict-default-get $link $pages $id variables pageTitle]
                 }
-                return "<li><a href=\"$link\">$title</a></li>"
+                set linkHTML "<a href=\"$link\">$title</a>"
+                if {$li} {
+                    set linkHTML "<li>$linkHTML</li>"
+                }
+                return $linkHTML
             }
-        %><% # Link back to index.
+        %>
+
+        <% # Link back to index.
             if {[info exists indexPage] && $currentPageId ne $indexPage} {
-                lindex "<div id=\"index-link\">[format-link $indexPage]</div>"
+                lindex "<header id=\"index-link\">[format-link $indexPage 0]</header>"
             } else {
                 lindex ""
             }
-        %><% # Blog tag list.
+        %>
+
+        <article>
+        <% # Page title.
+            set title [dict-default-get {} $pages $currentPageId variables pageTitle]
+            if {$title ne "" && ![dict-default-get 0 $pages $currentPageId variables hideTitle]} {
+                lindex "<header id=\"page-title\"><h2>$title</h2></header>"
+            } else {
+                lindex ""
+            }
+        %>
+        <% textutil::indent $content {        } %>
+        </article>
+
+        <% # Blog tag list.
             set tagCloud {}
-            if {[dict-default-get 0 $variables blogEntry] && \
-                ![dict-default-get 0 $variables hideTagCloud]} {
-                append tagCloud {<div id="tags"><dl>}
+            if {[dict-default-get 0 $pages $currentPageId variables blogEntry] && \
+                ![dict-default-get 0 $pages $currentPageId variables hideTagCloud]} {
+                append tagCloud {<nav id="tags"><dl>}
                 foreach {tag ids} [dict-default-get {} $pages tags] {
                     append tagCloud "<dt>$tag</dt><dd><ul>"
                     foreach id $ids {
@@ -44,14 +65,16 @@
                     }
                     append tagCloud "</ul></dd>"
                 }
-                append tagCloud {</dl></div><!-- tags -->}
+                append tagCloud {</dl></nav><!-- tags -->}
             }
             lindex $tagCloud
-        %><% # Blog sidebar.
+        %>
+
+        <% # Blog sidebar.
             set sidebar {}
-            if {[dict-default-get 0 $variables blogEntry] && \
-                ![dict-default-get 0 $variables hideSidebar]} {
-                append sidebar {<div id="sidebar"><ul>}
+            if {[dict-default-get 0 $pages $currentPageId variables blogEntry] && \
+                ![dict-default-get 0 $pages $currentPageId variables hideSidebar]} {
+                append sidebar {<nav id="sidebar"><ul>}
                 foreach {id ___} $pageLinks {
                     # Only add links to other blog entries.
                     if {[dict-default-get 0 $pages $id variables blogEntry] && \
@@ -59,11 +82,21 @@
                         append sidebar [format-link $id]
                     }
                 }
-                append sidebar {</ul></div><!-- sidebar -->}
+                append sidebar {</ul></nav><!-- sidebar -->}
             }
             lindex $sidebar
-        %><div id="container">
-        <% lindex $content %>
-        </div><!-- #container -->
+        %>
+
+
+        <footer>
+        <% # Footer.
+            set footer {<div id="footer">}
+            if {![dict-default-get 0 $pages $currentPageId variables hideFooter]} {
+                append footer {Powered by ssg-tcl}
+            }
+            append footer {</div>}
+            lindex $footer
+        %>
+        </footer>
     </body>
 </html>
