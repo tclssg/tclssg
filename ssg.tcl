@@ -53,15 +53,6 @@ proc dict-default-get {default dictionary args} {
     }
 }
 
-# If $varName exists return its value else return the default value.
-proc get-default {varName default} {
-    if {[interp eval templateInterp "info exists $varName"]} {
-        return [interp eval templateInterp "set $varName"]
-    } else {
-        return $default
-    }
-}
-
 # Trim indentation in multiline quoted text. Unlike textutil::undent this
 # removes lines at the beginning and the end of the text that were turned blank
 # by the unindentation.
@@ -105,6 +96,22 @@ proc ltrim {list {emptyRegExp "^$"}} {
     ]
 }
 
+proc slugify {text} {
+    string trim [
+        regsub -all {[^[:alnum:]]+} [string tolower $text] "-"
+    ] "-"
+}
+
+# If $varName exists return its value in the interpreter templateInterp
+# else return the default value.
+proc get-default {varName default} {
+    if {[interp eval templateInterp "info exists $varName"]} {
+        return [interp eval templateInterp "set $varName"]
+    } else {
+        return $default
+    }
+}
+
 # Set variable $name to $value in the template interpreter.
 proc interp-set {name value} {
     interp eval templateInterp [format {set {%s} {%s}} $name $value]
@@ -126,7 +133,7 @@ proc interp-up {} {
     interp create -safe templateInterp
 
     foreach command {replace-path-root dict-default-get get-default \
-                     textutil::indent} {
+                     textutil::indent slugify} {
         interp alias templateInterp $command {} $command
     }
 

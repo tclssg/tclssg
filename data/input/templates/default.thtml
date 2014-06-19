@@ -1,10 +1,37 @@
-<!DOCTYPE html>
+<%
+
+# Helper procs.
+
+proc page-variable-default-get {default varName {pageId {}}} {
+    global pages
+    global currentPageId
+    if {$pageId eq ""} {
+        set pageId $currentPageId
+    }
+    dict-default-get $default $pages $pageId variables $varName
+}
+
+proc format-link {id {li 1} {customTitle ""}} {
+    upvar 1 pages pages pageLinks pageLinks
+    set link [dict get $pageLinks $id]
+    if {$customTitle ne ""} {
+        set title $customTitle
+    } else {
+        set title [page-variable-default-get $link pageTitle $id]
+    }
+    set linkHTML "<a href=\"$link\">$title</a>"
+    if {$li} {
+        set linkHTML "<li>$linkHTML</li>"
+    }
+    return $linkHTML
+}
+%><!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=<% get-default charset UTF-8 %>">
         <title><%
-                set pageTitle [dict-default-get {} $pages $currentPageId variables pageTitle]
-                set hideTitle [dict-default-get 0 $pages $currentPageId variables hideTitle]
+                set pageTitle [page-variable-default-get {} pageTitle]
+                set hideTitle [page-variable-default-get 0 hideTitle]
                 if {$hideTitle || ($pageTitle == "")} {
                     lindex $websiteTitle
                 } else {
@@ -12,26 +39,10 @@
                 }
             %></title>
         <link rel="stylesheet" href="<% lindex $rootDirLink/main.css %>">
-        <% lindex [dict-default-get {} $pages $currentPageId variables headExtra] %>
+        <% lindex [page-variable-default-get {} headExtra] %>
     </head>
     <body>
         <div id="wrapper">
-        <%  # Helper procs.
-            proc format-link {id {li 1} {customTitle ""}} {
-                upvar 1 pages pages pageLinks pageLinks
-                set link [dict get $pageLinks $id]
-                if {$customTitle ne ""} {
-                    set title $customTitle
-                } else {
-                    set title [dict-default-get $link $pages $id variables pageTitle]
-                }
-                set linkHTML "<a href=\"$link\">$title</a>"
-                if {$li} {
-                    set linkHTML "<li>$linkHTML</li>"
-                }
-                return $linkHTML
-            }
-        %>
 
         <% # Link back to index.
             if {[info exists indexPage] && $currentPageId ne $indexPage} {
@@ -43,16 +54,16 @@
 
         <article>
         <% # Page title.
-            set title [dict-default-get {} $pages $currentPageId variables pageTitle]
-            if {$title ne "" && ![dict-default-get 0 $pages $currentPageId variables hideTitle]} {
+            set title [page-variable-default-get {} pageTitle]
+            if {$title ne "" && ![page-variable-default-get 0 hideTitle]} {
                 lindex "<header id=\"page-title\"><h2>$title</h2></header>"
             } else {
                 lindex ""
             }
         %>
         <% # Date.
-            set date [dict-default-get {} $pages $currentPageId variables date]
-            if {$date ne "" && ![dict-default-get 0 $pages $currentPageId variables hideDate]} {
+            set date [page-variable-default-get {} date]
+            if {$date ne "" && ![page-variable-default-get 0 hideDate]} {
                 lindex "<header id=\"date\">$date</header>"
             } else {
                 lindex ""
@@ -67,15 +78,15 @@
             if {[get-default tagPage {}] ne ""} {
                 set tagPageLink [dict get $pageLinks $tagPage]
             }
-            if {[dict-default-get 0 $pages $currentPageId variables blogEntry] && \
-                ![dict-default-get 0 $pages $currentPageId variables hidePostTags]} {
+            if {[page-variable-default-get 0 blogEntry] && \
+                ![page-variable-default-get 0 hidePostTags]} {
                 append tagList {<nav id="tags"><ul>}
-                set postTags [dict-default-get {} $pages $currentPageId variables tags]
+                set postTags [page-variable-default-get {} tags]
                 foreach tag [lrange $postTags 0 end-1 ] {
-                    append tagList "<li><a href=\"$tagPageLink#$tag\">$tag</a>, </li>"
+                    append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a>, </li>"
                 }
                 set tag [lindex $postTags end]
-                append tagList "<li><a href=\"$tagPageLink#$tag\">$tag</a></li>"
+                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
                 append tagList {</ul></nav><!-- tags -->}
             }
             lindex $tagList
@@ -83,13 +94,13 @@
 
         <% # Blog sidebar.
             set sidebar {}
-            if {[dict-default-get 0 $pages $currentPageId variables blogEntry] && \
-                ![dict-default-get 0 $pages $currentPageId variables hideSidebar]} {
+            if {[page-variable-default-get 0 blogEntry] && \
+                ![page-variable-default-get 0 hideSidebar]} {
                 append sidebar {<nav id="sidebar"><ul>}
                 foreach {id ___} $pageLinks {
                     # Only add links to other blog entries.
-                    if {[dict-default-get 0 $pages $id variables blogEntry] && \
-                        ![dict-default-get 0 $pages $id variables hideFromList]} {
+                    if {[page-variable-default-get 0 blogEntry $id] && \
+                        ![page-variable-default-get 0 hideFromList $id]} {
                         append sidebar [format-link $id]
                     }
                 }
@@ -100,10 +111,10 @@
 
         <% # Blog tag cloud. For each tag it links to pages that are tagged with it.
             set tagCloud {}
-            if {[dict-default-get 0 $pages $currentPageId variables showTagCloud]} {
+            if {[page-variable-default-get 0 showTagCloud]} {
                 append tagCloud {<nav id="tag-cloud"><dl>}
                 foreach {tag ids} [dict-default-get {} $pages tags] {
-                    append tagCloud "<dt id=\"$tag\">$tag</a></dt><dd><ul>"
+                    append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
                     foreach id $ids {
                         set link [dict get $pageLinks $id]
                         append tagCloud [format-link $id]
@@ -121,7 +132,7 @@
             if {[get-default copyright {}] ne ""} {
                 append footer "<div id=\"copyright\">$copyright</div>"
             }
-            if {![dict-default-get 0 $pages $currentPageId variables hideFooter]} {
+            if {![page-variable-default-get 0 hideFooter]} {
                 append footer {<div id="powered-by">Powered by ssg-tcl</div>}
             }
             lindex $footer
