@@ -15,6 +15,7 @@
         <% lindex [dict-default-get {} $pages $currentPageId variables headExtra] %>
     </head>
     <body>
+        <div id="wrapper">
         <%  # Helper procs.
             proc format-link {id {li 1} {customTitle ""}} {
                 upvar 1 pages pages pageLinks pageLinks
@@ -49,25 +50,35 @@
                 lindex ""
             }
         %>
+        <% # Date.
+            set date [dict-default-get {} $pages $currentPageId variables date]
+            if {$date ne "" && ![dict-default-get 0 $pages $currentPageId variables hideDate]} {
+                lindex "<header id=\"date\">$date</header>"
+            } else {
+                lindex ""
+            }
+        %>
         <% textutil::indent $content {        } %>
         </article>
 
-        <% # Blog tag list.
-            set tagCloud {}
-            if {[dict-default-get 0 $pages $currentPageId variables blogEntry] && \
-                ![dict-default-get 0 $pages $currentPageId variables hideTagCloud]} {
-                append tagCloud {<nav id="tags"><dl>}
-                foreach {tag ids} [dict-default-get {} $pages tags] {
-                    append tagCloud "<dt>$tag</dt><dd><ul>"
-                    foreach id $ids {
-                        set link [dict get $pageLinks $id]
-                        append tagCloud [format-link $id]
-                    }
-                    append tagCloud "</ul></dd>"
-                }
-                append tagCloud {</dl></nav><!-- tags -->}
+        <% # Page tag list.
+            set tagList {}
+            set tagPageLink {}
+            if {[get-default tagPage {}] ne ""} {
+                set tagPageLink [dict get $pageLinks $tagPage]
             }
-            lindex $tagCloud
+            if {[dict-default-get 0 $pages $currentPageId variables blogEntry] && \
+                ![dict-default-get 0 $pages $currentPageId variables hidePostTags]} {
+                append tagList {<nav id="tags"><ul>}
+                set postTags [dict-default-get {} $pages $currentPageId variables tags]
+                foreach tag [lrange $postTags 0 end-1 ] {
+                    append tagList "<li><a href=\"$tagPageLink#$tag\">$tag</a>, </li>"
+                }
+                set tag [lindex $postTags end]
+                append tagList "<li><a href=\"$tagPageLink#$tag\">$tag</a></li>"
+                append tagList {</ul></nav><!-- tags -->}
+            }
+            lindex $tagList
         %>
 
         <% # Blog sidebar.
@@ -87,16 +98,35 @@
             lindex $sidebar
         %>
 
+        <% # Blog tag cloud. For each tag it links to pages that are tagged with it.
+            set tagCloud {}
+            if {[dict-default-get 0 $pages $currentPageId variables showTagCloud]} {
+                append tagCloud {<nav id="tag-cloud"><dl>}
+                foreach {tag ids} [dict-default-get {} $pages tags] {
+                    append tagCloud "<dt id=\"$tag\">$tag</a></dt><dd><ul>"
+                    foreach id $ids {
+                        set link [dict get $pageLinks $id]
+                        append tagCloud [format-link $id]
+                    }
+                    append tagCloud "</ul></dd>"
+                }
+                append tagCloud {</dl></nav><!-- tag-cloud -->}
+            }
+            lindex $tagCloud
+        %>
 
         <footer>
         <% # Footer.
-            set footer {<div id="footer">}
-            if {![dict-default-get 0 $pages $currentPageId variables hideFooter]} {
-                append footer {Powered by ssg-tcl}
+            set footer {}
+            if {[get-default copyright {}] ne ""} {
+                append footer "<div id=\"copyright\">$copyright</div>"
             }
-            append footer {</div>}
+            if {![dict-default-get 0 $pages $currentPageId variables hideFooter]} {
+                append footer {<div id="powered-by">Powered by ssg-tcl</div>}
+            }
             lindex $footer
         %>
         </footer>
+        </div>
     </body>
 </html>

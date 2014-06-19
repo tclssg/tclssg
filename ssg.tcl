@@ -62,6 +62,49 @@ proc get-default {varName default} {
     }
 }
 
+# Trim indentation in multiline quoted text. Unlike textutil::undent this
+# removes lines at the beginning and the end of the text that were turned blank
+# by the unindentation.
+proc trim-indentation {msg {whitespaceChars " "}} {
+    set msgLines [split $msg "\n"]
+    set maxLength [string length $msg]
+
+    set regExp [subst -nocommands {([$whitespaceChars]*)[^$whitespaceChars]}]
+
+    set indent [
+        tcl::mathfunc::min {*}[
+            struct::list mapfor x $msgLines {
+                if {[regexp $regExp $x match whitespace]} {
+                    string length $whitespace
+                } else {
+                    lindex $maxLength
+                }
+            }
+        ]
+    ]
+
+    return [
+        join [
+            ltrim [
+                struct::list mapfor x $msgLines {string range $x $indent end}
+            ]
+        ] "\n"
+    ]
+}
+
+# Remove empty items at the beginning and the end of a list.
+proc ltrim {list {emptyRegExp "^$"}} {
+    set first [lsearch -not -regexp $list $emptyRegExp]
+    set last [lsearch -not -regexp [lreverse $list] $emptyRegExp]
+    return [
+        if {$first == -1} {
+            list
+        } else {
+            lrange $list $first end-$last
+        }
+    ]
+}
+
 # Set variable $name to $value in the template interpreter.
 proc interp-set {name value} {
     interp eval templateInterp [format {set {%s} {%s}} $name $value]
@@ -302,7 +345,8 @@ proc main {argv0 argv} {
             foreach dir [
                 list $scriptConfig(contentDirName) \
                      $scriptConfig(templateDirName) \
-                     $scriptConfig(staticDirName)
+                     $scriptConfig(staticDirName) \
+                     [file join $scriptConfig(contentDirName) blog]
             ] {
                 file mkdir [file join $sourceDir $dir]
             }
@@ -318,12 +362,38 @@ proc main {argv0 argv} {
                 }
             }
 
-            write-file-if-not-there $websiteConfigFile \
-                                    "websiteTitle {SSG Test}\n"
-            write-file-if-not-there [
+            set indexPageFile [
                 file join $sourceDir $scriptConfig(contentDirName) index.md
-            ] "! pageTitle {Hello, World!}\nThis is a sample page."
+            ]
+            set blogIndexPageFile [
+                file join $sourceDir $scriptConfig(contentDirName) blog index.md
+            ]
 
+            write-file-if-not-there $websiteConfigFile [
+                subst -nocommands [
+                    trim-indentation {
+                        websiteTitle {SSG Test}
+                        indexPage {$indexPageFile}
+                        tagPage {$blogIndexPageFile}
+                    }
+                ]
+            ]
+            write-file-if-not-there $indexPageFile [
+                trim-indentation {
+                    ! pageTitle {Hello, World!}
+                    This is a sample page.
+                }
+            ]
+            write-file-if-not-there $blogIndexPageFile [
+                trim-indentation {
+                    ! blogEntry 1
+                    ! hideFromList 1
+                    ! hideTitle 1
+                    ! showTagCloud 1
+                    ! hidePostTags 1
+                    This is your blog's index tag.
+                }
+            ]
             exit 0
         }
         build {

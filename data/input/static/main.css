@@ -1,23 +1,74 @@
 html, body {
     margin-top: 0;
     color: black;
-    background-color: #f0f0f0;
+    background-color: white;
     font-family: Times New Roman, times;
     font-size: 28px;
     height: 100%;
 }
 
-header#index-link {
-    float: left;
+h2 {
+    font-size: 28px;
+}
+
+div#wrapper {
+    width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    div#wrapper {
+        margin-left: 5px;
+        width: 100%;
+    }
 }
 
 header#index-link a:before {
     content: "↩ ";
 }
 
-header#page-title {
+article {
+    width: 100%;
+}
+
+nav, footer, header#index-link, header#date {
+    font-size: 24px;
+}
+
+nav#sidebar li, nav#tag-cloud li {
+    list-style: square;
+
+}
+
+nav#tags ul li {
+    display: inline;
+    margin-right: 0.3em;
+}
+
+header#date {
+    font-weight: bold;
+}
+
+nav#tags ul:before {
+    font-weight: bold;
+    content: 'Tagged: ';
+}
+
+nav#tags ul li {
+    margin: 0;
+}
+
+nav#tag-cloud dl dt a {
+    color: black;
+}
+
+footer {
+    margin-left: auto;
     margin-right: auto;
-    width: 800px;
+    width: 100%;
+    clear: both;
+    text-align: center;
 }
 
 input, textarea {
