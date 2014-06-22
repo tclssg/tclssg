@@ -120,3 +120,30 @@ proc dict-format {dictionary {formatString "%s %s\n"}} {
     }
     return $result
 }
+
+# Sort dictionary by (nested) value index.
+proc dict-sort {dictionary \
+                index \
+                {default 0} \
+                {lsortOptions {}} \
+                {lambda {x {lindex $x}}}} {
+    set lp {}
+    dict for {key value} $dictionary {
+        lappend lp [
+            list $key $value [
+                apply $lambda [
+                    dict-default-get $default $value {*}$index
+                ]
+            ]
+        ]
+    }
+    return [
+        concat {*}[
+            struct::list mapfor x [
+                lsort -index 2 {*}$lsortOptions $lp
+            ] {
+                lrange $x 0 1
+            }
+        ]
+    ]
+}

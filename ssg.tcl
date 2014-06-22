@@ -114,9 +114,9 @@ proc template-subst {template pageData websiteConfig} {
     return $result
 }
 
-# Process the page inputFile (a file containing Markdown + template code).
-# put its rendered content into a template under the same path relative to
-# outputDir that inputFile is relative to inputDir.
+# Process the raw content of a page supplied in pageData (which can contain
+# Markdown plus template code if enabled), substitute the result into a template
+# and save in the file specified under key outputFile in pageData.
 proc page-to-html {pageData template websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
@@ -182,7 +182,10 @@ proc compile-website {inputDir outputDir websiteConfig} {
         ]
     ]
 
-    dict set websiteConfig pages $pages
+    # Sort pages by date.
+    dict set websiteConfig pages [
+        dict-sort $pages {variables date} 0 -decreasing
+    ]
     dict set websiteConfig pages tags [tag-list $pages]
 
     # Process page files into HTML output.
@@ -261,6 +264,8 @@ proc main {argv0 argv} {
     set scriptConfig(staticDirName) static
     set scriptConfig(templateFileName) default.thtml
     set scriptConfig(websiteConfigFileName) website.conf
+    set scriptConfig(defaultSourceDir) [file join "data" "input"]
+    set scriptConfig(defaultDestDir) [file join "data" "output"]
 
     set scriptConfig(templateBrackets) {<% %>}
 
@@ -269,12 +274,13 @@ proc main {argv0 argv} {
 
     # Defaults for sourceDir and destDir.
     if {$sourceDir eq ""} {
-        set sourceDir [file join "data" "input"]
+        set sourceDir $scriptConfig(defaultSourceDir)
     }
     if {$destDir eq ""} {
-        set destDir [file join "data" "output"]
+        set destDir $scriptConfig(defaultDestDir)
     }
-    # init command.
+
+    # Commands.
     switch -exact -- [lindex $argv 0] {
         init {
             foreach dir [
@@ -392,7 +398,7 @@ proc main {argv0 argv} {
                     puts "creating directory $dir"
                     ::ftp::MkDir $conn $dir
                 }
-                puts "copying $file to $destFile"
+                puts "uploading $file as $destFile"
                 if {![::ftp::Put $conn $file $destFile]} {
                     puts "upload error: $errorInfo"
                     exit 1
@@ -404,11 +410,14 @@ proc main {argv0 argv} {
             set websiteConfig [load-config $sourceDir]
 
             # Open the index page in the default browser.
-            # Currently this is just for Linux.
+            # Currently this is written just for Linux.
             exec -- xdg-open [
                 file rootname [
                     replace-path-root [
-                        dict-default-get safsa.md $websiteConfig indexPage
+                        dict-default-get [
+                            file join $sourceDir $scriptConfig(contentDirName) \
+                                      index.md
+                        ] $websiteConfig indexPage
                     ] [
                         file join $sourceDir $scriptConfig(contentDirName)
                     ] $destDir
@@ -416,9 +425,24 @@ proc main {argv0 argv} {
             ].html
         }
         default {
-            puts [concat "usage: $argv0 (init|build|upload-copy|" \
-                         "upload-ftp|open) " \
-                         {[sourceDir [destDir]]}]
+            puts [
+                subst -nocommands [
+                    trim-indentation {
+                        usage: $argv0 <command> [sourceDir [destDir]]
+
+                        The possible commands are:
+                            init        create project skeleton
+                            build       build static website
+                            clean       delete files in destDir
+                            upload-copy copy files to destination set in config
+                            upload-ftp  upload files to FTP server set in config
+                            open        open index page in the default browser
+
+                        sourceDir defaults to "$scriptConfig(defaultSourceDir)"
+                        destDir defaults to "$scriptConfig(defaultDestDir)"
+                    }
+                ]
+            ]
         }
     }
 }

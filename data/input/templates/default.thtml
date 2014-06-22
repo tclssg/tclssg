@@ -97,7 +97,7 @@ proc format-link {id {li 1} {customTitle ""}} {
             if {[page-variable-default-get 0 blogEntry] && \
                 ![page-variable-default-get 0 hideSidebar]} {
                 append sidebar {<nav id="sidebar"><ul>}
-                foreach {id ___} $pageLinks {
+                foreach {id ___} $pages {
                     # Only add links to other blog entries.
                     if {[page-variable-default-get 0 blogEntry $id] && \
                         ![page-variable-default-get 0 hideFromList $id]} {
