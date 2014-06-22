@@ -8,7 +8,7 @@ To use `ssg-tcl` you'll need Tcl 8.5 and Tcllib.
 Generates blogs. All blog entries have a sidebar. Relative links.
 Tags. HTML5.
 
-FTP upload.
+FTP uploading.
 
 Usage
 -----
@@ -25,8 +25,11 @@ Website settings
 ----------------
 * websiteTitle {Danyil Bohdan}
 * url {http://danyilbohdan.com/}
-* uploadDestCopy {/tmp/dest}
-* uploadDestFTP {ftp://ftp.univ.kiev.ua/incoming/upload/dotcomtest}
+* uploadFtpServer {ftp.univ.kiev.ua}
+* uploadFtpPort 21
+* uploadFtpPath {incoming/upload/dotcomtest}
+* uploadFtpUser {anonymous}
+* uploadFtpPassword {a@b}
 * expandMacrosInPages 0
 * charset utf-8
 * indexPage {data/input/pages/index.md}

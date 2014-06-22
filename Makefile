@@ -6,8 +6,11 @@ init:
 build:
 	./ssg.tcl build data/input data/output
 
+clean:
+	rm -r data/output
+
 upload:
-	./ssg.tcl upload-copy data/input data/output
+	./ssg.tcl upload-ftp data/input data/output
 
 open:
-	firefox data/output/index.html
+	xdg-open data/output/index.html

@@ -350,6 +350,7 @@ proc main {argv0 argv} {
             load-config $sourceDir
 
             package require ftp
+            global errorInfo
 
             set conn [
                 ::ftp::Open [
@@ -358,12 +359,13 @@ proc main {argv0 argv} {
                     dict get $websiteConfig uploadFtpUser
                 ] [
                     dict get $websiteConfig uploadFtpPassword
+                ] -port [
+                    dict-default-get 21 $websiteConfig uploadFtpPort
                 ] -mode passive
             ]
             set uploadFtpPath [dict get $websiteConfig uploadFtpPath]
 
             ::ftp::Type $conn binary
-            puts [::ftp::NList $conn]
 
             foreach file [fileutil::find $destDir {file isfile}] {
                 set destFile [replace-path-root $file $destDir $uploadFtpPath]
@@ -375,7 +377,10 @@ proc main {argv0 argv} {
                     ::ftp::MkDir $conn $dir
                 }
                 puts "copying $file to $destFile"
-                ::ftp::Put $conn $file $destFile
+                if {![::ftp::Put $conn $file $destFile]} {
+                    puts "upload error: $errorInfo"
+                    exit 1
+                }
             }
             ::ftp::Close $conn
         }
