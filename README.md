@@ -19,7 +19,11 @@ Usage
 
     make build (or just make)
 
+    make clean
+
     make upload
+
+    make open
 
 Website settings
 ----------------

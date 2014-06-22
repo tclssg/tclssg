@@ -231,13 +231,14 @@ proc compile-website {inputDir outputDir websiteConfig} {
 # Load website configuration file from directory.
 proc load-config {sourceDir} {
     upvar 1 scriptConfig scriptConfig
-    upvar 1 websiteConfig websiteConfig
 
     set websiteConfig [
         read-file [
             file join $sourceDir $scriptConfig(websiteConfigFileName)
         ]
     ]
+
+    # Show loaded config to user (without the password values).
     puts "Loaded config file:"
     puts [
         textutil::indent [
@@ -246,6 +247,8 @@ proc load-config {sourceDir} {
             ]
         ] {    }
     ]
+
+    return $websiteConfig
 }
 
 proc main {argv0 argv} {
@@ -264,6 +267,13 @@ proc main {argv0 argv} {
     set sourceDir [lindex $argv 1]
     set destDir [lindex $argv 2]
 
+    # Defaults for sourceDir and destDir.
+    if {$sourceDir eq ""} {
+        set sourceDir [file join "data" "input"]
+    }
+    if {$destDir eq ""} {
+        set destDir [file join "data" "output"]
+    }
     # init command.
     switch -exact -- [lindex $argv 0] {
         init {
@@ -322,7 +332,7 @@ proc main {argv0 argv} {
             exit 0
         }
         build {
-            load-config $sourceDir
+            set websiteConfig [load-config $sourceDir]
 
             if {[file isdir $sourceDir]} {
                 compile-website $sourceDir $destDir $websiteConfig
@@ -331,8 +341,14 @@ proc main {argv0 argv} {
                 exit 1
             }
         }
+        clean {
+            foreach file [fileutil::find $destDir {file isfile}] {
+                puts "deleting $file"
+                file delete $file
+            }
+        }
         upload-copy {
-            load-config $sourceDir
+            set websiteConfig [load-config $sourceDir]
 
             set uploadDest [dict get $websiteConfig uploadCopyPath]
 
@@ -347,7 +363,7 @@ proc main {argv0 argv} {
             exit 0
         }
         upload-ftp {
-            load-config $sourceDir
+            set websiteConfig [load-config $sourceDir]
 
             package require ftp
             global errorInfo
@@ -384,9 +400,25 @@ proc main {argv0 argv} {
             }
             ::ftp::Close $conn
         }
+        open {
+            set websiteConfig [load-config $sourceDir]
+
+            # Open the index page in the default browser.
+            # Currently this is just for Linux.
+            exec -- xdg-open [
+                file rootname [
+                    replace-path-root [
+                        dict-default-get safsa.md $websiteConfig indexPage
+                    ] [
+                        file join $sourceDir $scriptConfig(contentDirName)
+                    ] $destDir
+                ]
+            ].html
+        }
         default {
-            puts [concat "usage: $argv0 (init|build|upload-copy|upload-ftp) " \
-                         "sourceDir destDir"]
+            puts [concat "usage: $argv0 (init|build|upload-copy|" \
+                         "upload-ftp|open) " \
+                         {[sourceDir [destDir]]}]
         }
     }
 }
