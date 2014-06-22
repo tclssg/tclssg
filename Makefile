@@ -8,3 +8,6 @@ build:
 
 upload:
 	./ssg.tcl upload-copy data/input data/output
+
+open:
+	firefox data/output/index.html
