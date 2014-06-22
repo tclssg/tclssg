@@ -89,8 +89,34 @@ proc ltrim {list {emptyRegExp "^$"}} {
     ]
 }
 
+# Format text for URL slug. E.g., "Hello, World!" becomes "hello-world".
 proc slugify {text} {
     string trim [
         regsub -all {[^[:alnum:]]+} [string tolower $text] "-"
     ] "-"
+}
+
+# Return dictionary with values replaced with stars for every key with
+# "password" in its name.
+proc obscure-password-values {dictionary} {
+    set result {}
+    dict for {key value} $dictionary {
+        dict set result $key [
+            if {[string match -nocase *password* $key]} {
+                lindex {***}
+            } else {
+                lindex $value
+            }
+        ]
+    }
+    return $result
+}
+
+# Format dictionary for printing.
+proc dict-format {dictionary {formatString "%s %s\n"}} {
+    set result {}
+    dict for {key value} $dictionary {
+        append result [format $formatString $key $value]
+    }
+    return $result
 }

@@ -8,6 +8,8 @@ To use `ssg-tcl` you'll need Tcl 8.5 and Tcllib.
 Generates blogs. All blog entries have a sidebar. Relative links.
 Tags. HTML5.
 
+FTP upload.
+
 Usage
 -----
 

@@ -238,7 +238,14 @@ proc load-config {sourceDir} {
             file join $sourceDir $scriptConfig(websiteConfigFileName)
         ]
     ]
-    puts "Loaded config file:\n[textutil::indent $websiteConfig {    }]\n"
+    puts "Loaded config file:"
+    puts [
+        textutil::indent [
+            dict-format [
+                obscure-password-values $websiteConfig
+            ]
+        ] {    }
+    ]
 }
 
 proc main {argv0 argv} {
@@ -327,7 +334,7 @@ proc main {argv0 argv} {
         upload-copy {
             load-config $sourceDir
 
-            set uploadDest [dict get $websiteConfig uploadDestCopy]
+            set uploadDest [dict get $websiteConfig uploadCopyPath]
 
             foreach file [fileutil::find $destDir {file isfile}] {
                 set destFile [replace-path-root $file $destDir $uploadDest]
@@ -340,8 +347,37 @@ proc main {argv0 argv} {
             exit 0
         }
         upload-ftp {
-            puts "not implemented"
-            exit 1
+            load-config $sourceDir
+
+            package require ftp
+
+            set conn [
+                ::ftp::Open [
+                    dict get $websiteConfig uploadFtpServer
+                ] [
+                    dict get $websiteConfig uploadFtpUser
+                ] [
+                    dict get $websiteConfig uploadFtpPassword
+                ] -mode passive
+            ]
+            set uploadFtpPath [dict get $websiteConfig uploadFtpPath]
+
+            ::ftp::Type $conn binary
+            puts [::ftp::NList $conn]
+
+            foreach file [fileutil::find $destDir {file isfile}] {
+                set destFile [replace-path-root $file $destDir $uploadFtpPath]
+                set dir [file dirname $destFile]
+                if {[ftp::Cd $conn $dir]} {
+                    ftp::Cd $conn /
+                } else {
+                    puts "creating directory $dir"
+                    ::ftp::MkDir $conn $dir
+                }
+                puts "copying $file to $destFile"
+                ::ftp::Put $conn $file $destFile
+            }
+            ::ftp::Close $conn
         }
         default {
             puts [concat "usage: $argv0 (init|build|upload-copy|upload-ftp) " \
