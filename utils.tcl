@@ -1,4 +1,4 @@
-# tclssg, a static website generator in Tcl.
+# Tclssg, a static website generator.
 # Copyright (C) 2013, 2014 Danyil Bohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.

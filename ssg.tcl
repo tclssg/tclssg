@@ -1,5 +1,5 @@
 #!/usr/bin/env tclsh
-# tclssg, a static website generator in Tcl.
+# Tclssg, a static website generator.
 # Copyright (C) 2013, 2014 Danyil Bohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
@@ -264,8 +264,8 @@ proc main {argv0 argv} {
     set scriptConfig(templateFileName) default.thtml
     set scriptConfig(websiteConfigFileName) website.conf
     set scriptConfig(skeletonDir) [file join $scriptLocation skeleton]
-    set scriptConfig(defaultSourceDir) [file join "data" "input"]
-    set scriptConfig(defaultDestDir) [file join "data" "output"]
+    set scriptConfig(defaultSourceDir) [file join "website" "input"]
+    set scriptConfig(defaultDestDir) [file join "website" "output"]
 
     set scriptConfig(templateBrackets) {<% %>}
 
