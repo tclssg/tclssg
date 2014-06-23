@@ -30,6 +30,7 @@ header#index-link a:before {
 
 article {
     width: 100%;
+    padding-bottom: 35px;
 }
 
 nav, footer, header#index-link, header#date {
@@ -41,13 +42,30 @@ nav#sidebar li, nav#tag-cloud li {
 
 }
 
+
+nav#sidebar:before {
+    font-weight: bold;
+    content: 'Blog archive';
+}
+
 nav#tags ul li {
     display: inline;
     margin-right: 0.3em;
 }
 
+header#page-title h2 {
+    margin-top: 25px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+header#page-title + header#date {
+    padding-top: 15px;
+}
+
 header#date {
     font-weight: bold;
+    padding-top: 25px;
 }
 
 nav#tags ul:before {
@@ -58,8 +76,39 @@ nav#tags ul:before {
 nav#tags ul li {
     margin: 0;
 }
+
+nav#tag-cloud:before {
+    font-weight: bold;
+    content: 'Blog tags';
+}
+
+nav#tag-cloud dl {
+    width: 100%;
+}
+
 nav#tag-cloud dl dt a {
     color: black;
+}
+
+nav#tag-cloud dl dt {
+    float:left;
+    clear: both;
+    width: 10%;
+    text-align: right;
+}
+
+nav#tag-cloud dl dd {
+    float:left;
+    margin: 0;
+    padding: 0;
+}
+
+nav#tag-cloud dl dd ul {
+    padding-left: 20px;
+}
+
+nav#tag-cloud dl dd ul li {
+    display: inline-block;
 }
 
 footer {

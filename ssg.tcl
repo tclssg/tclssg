@@ -1,5 +1,5 @@
 #!/usr/bin/env tclsh
-# ssg-tcl, a static website generator in Tcl.
+# tclssg, a static website generator in Tcl.
 # Copyright (C) 2013, 2014 Danyil Bohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
@@ -255,7 +255,8 @@ proc load-config {sourceDir} {
 }
 
 proc main {argv0 argv} {
-    # Configuration.
+    # Configuration that is generally not supposed to vary from website to
+    # website.
     set scriptConfig(markdownProcessor) \
         {perl scripts/Markdown_1.0.1/Markdown.pl}
 
@@ -269,6 +270,7 @@ proc main {argv0 argv} {
 
     set scriptConfig(templateBrackets) {<% %>}
 
+    # Get directories to operate on.
     set sourceDir [lindex $argv 1]
     set destDir [lindex $argv 2]
 
@@ -280,7 +282,7 @@ proc main {argv0 argv} {
         set destDir $scriptConfig(defaultDestDir)
     }
 
-    # Commands.
+    # Execute command.
     switch -exact -- [lindex $argv 0] {
         init {
             foreach dir [
@@ -309,6 +311,9 @@ proc main {argv0 argv} {
             set blogIndexPageFile [
                 file join $sourceDir $scriptConfig(contentDirName) blog index.md
             ]
+            set blogTestPageFile [
+                file join $sourceDir $scriptConfig(contentDirName) blog test.md
+            ]
 
             write-file-if-not-there $websiteConfigFile [
                 subst -nocommands [
@@ -323,16 +328,28 @@ proc main {argv0 argv} {
                 trim-indentation {
                     ! pageTitle {Hello, World!}
                     This is a sample page.
+
+                    [Blog](blog/index.html).
                 }
             ]
             write-file-if-not-there $blogIndexPageFile [
                 trim-indentation {
+                    ! pageTitle Blog
                     ! blogEntry 1
                     ! hideFromList 1
                     ! hideTitle 1
                     ! showTagCloud 1
                     ! hidePostTags 1
-                    This is your blog's index tag.
+                    This is your blog's index page.
+                }
+            ]
+            write-file-if-not-there $blogTestPageFile [
+                trim-indentation {
+                    ! pageTitle {Test page}
+                    ! blogEntry 1
+                    ! tags {test}
+                    Lorem ipsum reprehenderit ullamco deserunt sit eiusmod
+                    ut minim in id voluptate proident enim eu aliqua sit.
                 }
             ]
             exit 0
@@ -434,9 +451,10 @@ proc main {argv0 argv} {
                             init        create project skeleton
                             build       build static website
                             clean       delete files in destDir
-                            upload-copy copy files to destination set in config
-                            upload-ftp  upload files to FTP server set in config
-                            open        open index page in the default browser
+                            upload-copy copy result to location set in config
+                            upload-ftp  upload result to FTP server set in
+                                        config
+                            open        open index page in default browser
 
                         sourceDir defaults to "$scriptConfig(defaultSourceDir)"
                         destDir defaults to "$scriptConfig(defaultDestDir)"

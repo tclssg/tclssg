@@ -1,4 +1,4 @@
-# ssg-tcl, a static website generator in Tcl.
+# tclssg, a static website generator in Tcl.
 # Copyright (C) 2013, 2014 Danyil Bohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
@@ -122,9 +122,9 @@ proc dict-format {dictionary {formatString "%s %s\n"}} {
 }
 
 # Sort the keys of a dictionary of dictionaries by value index. The index can
-# be one or more key names. TODO: value {}. Optionally set default value for
-# keys that are missing the index, pass option to lsort or applying lambda to
-# each value.
+# be one or more key names. TODO: sort by value itself if index is {}.
+# Optionally set default value for keys that are missing the index, pass
+# option to lsort or applying lambda to each value.
 proc dict-sort {dictionary \
                 index \
                 {default 0} \
