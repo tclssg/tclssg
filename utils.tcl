@@ -150,3 +150,25 @@ proc dict-sort {dictionary \
         ]
     ]
 }
+
+# Copy all files form fromDir to toDir displaying feedback to
+# the user.
+proc copy-files {fromDir toDir {overwrite 0}} {
+    foreach file [fileutil::find $fromDir {file isfile}] {
+        set destFile [replace-path-root $file $fromDir $toDir]
+        if {[file exists $destFile]} {
+            if {$overwrite} {
+                puts "overwriting $destFile with $file"
+                file copy -force $file $destFile
+            } else {
+                puts "skipped copying $file to $destFile: file exists"
+            }
+        } else {
+            puts "copying $file to $destFile"
+            if {![file isdir [file dirname $destFile]]} {
+                file mkdir [file dirname $destFile]
+            }
+            file copy $file $destFile
+        }
+    }
+}

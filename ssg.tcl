@@ -10,9 +10,6 @@ package require fileutil
 package require textutil
 package require textutil::expander
 
-# Utility functions.
-source utils.tcl
-
 # If $varName exists return its value in the interpreter templateInterp
 # else return the default value.
 proc get-default {varName default} {
@@ -219,19 +216,9 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 
     # Copy static files verbatim.
-    foreach file [
-        fileutil::find [file join $inputDir $scriptConfig(staticDirName)]
-    ] {
-        if {[file isfile $file]} {
-            set destFile [
-                replace-path-root $file [
-                    file join $inputDir $scriptConfig(staticDirName)
-                ] $outputDir
-            ]
-            puts "copying static file $file to $destFile"
-            file copy -force $file $destFile
-        }
-    }
+    copy-files [
+      file join $inputDir $scriptConfig(staticDirName)
+    ] $outputDir 1
 }
 
 # Load website configuration file from directory.
@@ -257,40 +244,26 @@ proc load-config {sourceDir} {
     return $websiteConfig
 }
 
-
-proc copy-files {fromDir toDir {overwrite 0}} {
-    foreach file [fileutil::find $fromDir {file isfile}] {
-        set destFile [replace-path-root $file $fromDir $toDir]
-        if {[file exists $destFile]} {
-            if {$overwrite} {
-                puts "overwriting $file with $destFile"
-                file copy -force $file $destFile
-            } else {
-                puts "skipped copying $file to $destFile: file exists"
-            }
-        } else {
-            puts "copying $file to $destFile"
-            if {![file isdir [file dirname $destFile]]} {
-                file mkdir [file dirname $destFile]
-            }
-            file copy $file $destFile
-        }
-    }
-}
-
-
 proc main {argv0 argv} {
     # Configuration that is generally not supposed to vary from website to
     # website.
-    set scriptConfig(markdownProcessor) \
-        {perl scripts/Markdown_1.0.1/Markdown.pl}
+    set scriptLocation [file dirname $argv0]
+
+    # Utility functions.
+    source [file join $scriptLocation utils.tcl]
+
+    set scriptConfig(markdownProcessor) [
+        concat perl [
+            file join $scriptLocation scripts Markdown_1.0.1 Markdown.pl
+        ]
+    ]
 
     set scriptConfig(contentDirName) pages
     set scriptConfig(templateDirName) templates
     set scriptConfig(staticDirName) static
     set scriptConfig(templateFileName) default.thtml
     set scriptConfig(websiteConfigFileName) website.conf
-    set scriptConfig(skeletonDir) skeleton
+    set scriptConfig(skeletonDir) [file join $scriptLocation skeleton]
     set scriptConfig(defaultSourceDir) [file join "data" "input"]
     set scriptConfig(defaultDestDir) [file join "data" "output"]
 
@@ -323,7 +296,7 @@ proc main {argv0 argv} {
             file mkdir $destDir
 
             # Copy files.
-            copy-files $scriptConfig(skeletonDir) $sourceDir
+            copy-files $scriptConfig(skeletonDir) $sourceDir 0
             exit 0
         }
         build {
