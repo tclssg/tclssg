@@ -51,7 +51,7 @@ If you're not on Linux open `data/output/index.html` manually.
 Usage
 -----
 
-    usage: ./ssg.tcl <command> [sourceDir [destDir]]
+    usage: ./ssg.tcl <command> [sourceDir destDir]
 
 `sourceDir` specifies the directory where the input for tclssg is located. It defaults to `data/input` in the current directory.
 `destDir` us were the HTML is put. It defaults to `data/output`.
@@ -70,8 +70,6 @@ The default layout of the source directory is
     │   └── default.thtml <-- The website's layout
     │                         template (HTML + Tcl)
     └── website.conf <-- Configurating file.
-
-
 
 The possible commands are
 

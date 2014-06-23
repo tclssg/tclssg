@@ -257,6 +257,28 @@ proc load-config {sourceDir} {
     return $websiteConfig
 }
 
+
+proc copy-files {fromDir toDir {overwrite 0}} {
+    foreach file [fileutil::find $fromDir {file isfile}] {
+        set destFile [replace-path-root $file $fromDir $toDir]
+        if {[file exists $destFile]} {
+            if {$overwrite} {
+                puts "overwriting $file with $destFile"
+                file copy -force $file $destFile
+            } else {
+                puts "skipped copying $file to $destFile: file exists"
+            }
+        } else {
+            puts "copying $file to $destFile"
+            if {![file isdir [file dirname $destFile]]} {
+                file mkdir [file dirname $destFile]
+            }
+            file copy $file $destFile
+        }
+    }
+}
+
+
 proc main {argv0 argv} {
     # Configuration that is generally not supposed to vary from website to
     # website.
@@ -268,6 +290,7 @@ proc main {argv0 argv} {
     set scriptConfig(staticDirName) static
     set scriptConfig(templateFileName) default.thtml
     set scriptConfig(websiteConfigFileName) website.conf
+    set scriptConfig(skeletonDir) skeleton
     set scriptConfig(defaultSourceDir) [file join "data" "input"]
     set scriptConfig(defaultDestDir) [file join "data" "output"]
 
@@ -278,11 +301,12 @@ proc main {argv0 argv} {
     set destDir [lindex $argv 2]
 
     # Defaults for sourceDir and destDir.
-    if {$sourceDir eq ""} {
+    if {$sourceDir eq "" && $destDir eq ""} {
         set sourceDir $scriptConfig(defaultSourceDir)
-    }
-    if {$destDir eq ""} {
         set destDir $scriptConfig(defaultDestDir)
+    } elseif {$sourceDir eq "" || $destDir eq ""} {
+        puts "please specify both sourceDir and destDir or neither"
+        exit 1
     }
 
     # Execute command.
@@ -298,63 +322,8 @@ proc main {argv0 argv} {
             }
             file mkdir $destDir
 
-            set websiteConfigFile [
-                file join $sourceDir $scriptConfig(websiteConfigFileName)
-            ]
-
-            proc write-file-if-not-there {file content} {
-                if {![file isfile $file]} {
-                    write-file $file $content
-                }
-            }
-
-            set indexPageFile [
-                file join $sourceDir $scriptConfig(contentDirName) index.md
-            ]
-            set blogIndexPageFile [
-                file join $sourceDir $scriptConfig(contentDirName) blog index.md
-            ]
-            set blogTestPageFile [
-                file join $sourceDir $scriptConfig(contentDirName) blog test.md
-            ]
-
-            write-file-if-not-there $websiteConfigFile [
-                subst -nocommands [
-                    trim-indentation {
-                        websiteTitle {SSG Test}
-                        indexPage {$indexPageFile}
-                        tagPage {$blogIndexPageFile}
-                    }
-                ]
-            ]
-            write-file-if-not-there $indexPageFile [
-                trim-indentation {
-                    ! pageTitle {Hello, World!}
-                    This is a sample page.
-
-                    [Blog](blog/index.html).
-                }
-            ]
-            write-file-if-not-there $blogIndexPageFile [
-                trim-indentation {
-                    ! pageTitle Blog
-                    ! blogEntry 1
-                    ! hideFromList 1
-                    ! hideTitle 1
-                    ! showTagCloud 1
-                    ! hidePostTags 1
-                    This is your blog's index page.
-                }
-            ]
-            write-file-if-not-there $blogTestPageFile [
-                trim-indentation {
-                    ! pageTitle {Test page}
-                    ! blogEntry 1
-                    ! tags {test {a long tag with spaces}}
-                    Lorem ipsum reprehenderit ullamco deserunt sit eiusmod
-                    ut minim in id voluptate proident enim eu aliqua sit.
-                }
-            ]
+            # Copy files.
+            copy-files $scriptConfig(skeletonDir) $sourceDir
             exit 0
         }
         build {
@@ -378,14 +347,7 @@ proc main {argv0 argv} {
 
             set uploadDest [dict get $websiteConfig uploadCopyPath]
 
-            foreach file [fileutil::find $destDir {file isfile}] {
-                set destFile [replace-path-root $file $destDir $uploadDest]
-                puts "copying $file to $destFile"
-                if {![file isdir [file dirname $destFile]]} {
-                    file mkdir [file dirname $destFile]
-                }
-                file copy -force $file $destFile
-            }
+            copy-files $destDir $uploadDest 1
             exit 0
         }
         upload-ftp {
@@ -443,9 +405,9 @@ proc main {argv0 argv} {
             puts [
                 subst -nocommands [
                     trim-indentation {
-                        usage: $argv0 <command> [sourceDir [destDir]]
+                        usage: $argv0 <command> [sourceDir destDir]
 
-                        The possible commands are:
+                        Possible commands are:
                             init        create project skeleton
                             build       build static website
                             clean       delete files in destDir
