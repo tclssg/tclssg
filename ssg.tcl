@@ -157,17 +157,20 @@ proc compile-website {inputDir outputDir websiteConfig} {
     # Build page data.
     set pages {}
     foreach file [fileutil::findByPattern $contentDir -glob *.md] {
-        dict set pages $file inputFile $file
-        dict set pages $file outputFile [
+        set id [
+            ::fileutil::relative $contentDir $file
+        ]
+        dict set pages $id inputFile $file
+        dict set pages $id outputFile [
             file rootname [
                 replace-path-root $file $contentDir $outputDir
             ]
         ].html
         # May want to change this preloading behavior for very large websites.
-        dict set pages $file rawContent [read-file $file]
-        dict set pages $file variables [
+        dict set pages $id rawContent [read-file $file]
+        dict set pages $id variables [
             get-metadata-variables [
-                dict get $pages $file rawContent
+                dict get $pages $id rawContent
             ]
         ]
     }
@@ -189,13 +192,13 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict set websiteConfig pages tags [tag-list $pages]
 
     # Process page files into HTML output.
-    dict for {file ___} $pages {
+    dict for {id ___} $pages {
         # Links to other page relative to the current.
-        set outputFile [dict get $pages $file outputFile]
+        set outputFile [dict get $pages $id outputFile]
         set pageLinks {}
         dict for {otherFile otherMetadata} $pages {
-            # pageLinks maps page id (= input FN for not) to relative link to
-            # it.
+            # pageLinks maps page id (= input FN relative to $contentDir) to
+            # relative link to it.
             lappend pageLinks $otherFile [
                 ::fileutil::relative [
                     file dirname $outputFile
@@ -204,15 +207,15 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 ]
             ]
         }
-        dict set pages $file pageLinks $pageLinks
-        dict set pages $file rootDirLink [
+        dict set pages $id pageLinks $pageLinks
+        dict set pages $id rootDirLink [
             ::fileutil::relative [
                 file dirname $outputFile
             ] $outputDir
         ]
-        dict set websiteConfig currentPageId $file
+        dict set websiteConfig currentPageId $id
 
-        page-to-html [dict get $pages $file] $template $websiteConfig
+        page-to-html [dict get $pages $id] $template $websiteConfig
     }
 
     # Copy static files verbatim.
@@ -347,7 +350,7 @@ proc main {argv0 argv} {
                 trim-indentation {
                     ! pageTitle {Test page}
                     ! blogEntry 1
-                    ! tags {test}
+                    ! tags {test {a long tag with spaces}}
                     Lorem ipsum reprehenderit ullamco deserunt sit eiusmod
                     ut minim in id voluptate proident enim eu aliqua sit.
                 }
@@ -430,14 +433,9 @@ proc main {argv0 argv} {
             # Currently this is written just for Linux.
             exec -- xdg-open [
                 file rootname [
-                    replace-path-root [
-                        dict-default-get [
-                            file join $sourceDir $scriptConfig(contentDirName) \
-                                      index.md
-                        ] $websiteConfig indexPage
-                    ] [
-                        file join $sourceDir $scriptConfig(contentDirName)
-                    ] $destDir
+                    file join $destDir [
+                        dict-default-get index.md $websiteConfig indexPage
+                    ]
                 ]
             ].html
         }

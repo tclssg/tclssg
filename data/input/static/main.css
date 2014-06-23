@@ -42,10 +42,9 @@ nav#sidebar li, nav#tag-cloud li {
 
 }
 
-
 nav#sidebar:before {
     font-weight: bold;
-    content: 'Blog archive';
+    content: 'Blog posts';
 }
 
 nav#tags ul li {
@@ -131,7 +130,7 @@ h1, form {
 
 a {
     text-decoration: none;
-    color: #0000FF;
+    color: #0000ff;
 }
 
 a:hover {
@@ -143,5 +142,5 @@ a:active {
 }
 
 a:visited {
-    color: #581C90;
+    color: #581c90;
 }

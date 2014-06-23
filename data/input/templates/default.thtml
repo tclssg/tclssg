@@ -42,26 +42,21 @@ proc format-link {id {li 1} {customTitle ""}} {
         <% lindex [page-variable-default-get {} headExtra] %>
     </head>
     <body>
-        <div id="wrapper">
-
-        <% # Link back to index.
+        <div id="wrapper"><% # Link back to index.
             if {[info exists indexPage] && $currentPageId ne $indexPage} {
                 lindex "<header id=\"index-link\">[format-link $indexPage 0]</header>"
             } else {
                 lindex ""
             }
         %>
-
-        <article>
-        <% # Page title.
+        <article><% # Page title.
             set title [page-variable-default-get {} pageTitle]
             if {$title ne "" && ![page-variable-default-get 0 hideTitle]} {
                 lindex "<header id=\"page-title\"><h2>$title</h2></header>"
             } else {
                 lindex ""
             }
-        %>
-        <% # Date.
+        %><% # Date.
             set date [page-variable-default-get {} date]
             if {$date ne "" && ![page-variable-default-get 0 hideDate]} {
                 lindex "<header id=\"date\">$date</header>"
@@ -90,9 +85,7 @@ proc format-link {id {li 1} {customTitle ""}} {
                 }
             }
             lindex $tagList
-        %>
-        </article>
-
+        %></article>
         <% # Blog sidebar.
             set sidebar {}
             if {[page-variable-default-get 0 blogEntry] && \
@@ -109,7 +102,6 @@ proc format-link {id {li 1} {customTitle ""}} {
             }
             lindex $sidebar
         %>
-
         <% # Blog tag cloud. For each tag it links to pages that are tagged with it.
             set tagCloud {}
             if {[page-variable-default-get 0 showTagCloud]} {
@@ -130,9 +122,7 @@ proc format-link {id {li 1} {customTitle ""}} {
             }
             lindex $tagCloud
         %>
-
-        <footer>
-        <% # Footer.
+        <footer><% # Footer.
             set footer {}
             if {[get-default copyright {}] ne ""} {
                 append footer "<div id=\"copyright\">$copyright</div>"
@@ -141,8 +131,7 @@ proc format-link {id {li 1} {customTitle ""}} {
                 append footer {<div id="powered-by">Powered by tclssg</div>}
             }
             lindex $footer
-        %>
-        </footer>
+        %></footer>
         </div>
     </body>
 </html>
