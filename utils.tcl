@@ -121,7 +121,10 @@ proc dict-format {dictionary {formatString "%s %s\n"}} {
     return $result
 }
 
-# Sort dictionary by (nested) value index.
+# Sort the keys of a dictionary of dictionaries by value index. The index can
+# be one or more key names. TODO: value {}. Optionally set default value for
+# keys that are missing the index, pass option to lsort or applying lambda to
+# each value.
 proc dict-sort {dictionary \
                 index \
                 {default 0} \

@@ -80,14 +80,16 @@ proc format-link {id {li 1} {customTitle ""}} {
             }
             if {[page-variable-default-get 0 blogEntry] && \
                 ![page-variable-default-get 0 hidePostTags]} {
-                append tagList {<nav id="tags"><ul>}
                 set postTags [page-variable-default-get {} tags]
-                foreach tag [lrange $postTags 0 end-1 ] {
-                    append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a>, </li>"
+                if {[llength $postTags] > 0} {
+                    append tagList {<nav id="tags"><ul>}
+                    foreach tag [lrange $postTags 0 end-1 ] {
+                        append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a>, </li>"
+                    }
+                    set tag [lindex $postTags end]
+                    append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
+                    append tagList {</ul></nav><!-- tags -->}
                 }
-                set tag [lindex $postTags end]
-                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
-                append tagList {</ul></nav><!-- tags -->}
             }
             lindex $tagList
         %>
