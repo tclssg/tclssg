@@ -58,10 +58,10 @@ Usage
 
 Possible commands are
 
-* `init` — сreate new project from the default project skeleton
-* `build` — build static website in `destDir` based on data in `sourceDir`
+* `init` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory)
+* `build` — build a static website in `destDir` based on the data in `sourceDir`
 * `clean` — delete all files in `destDir`
-* `update`
+* `update` — replace static files and templates in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
 * `upload-copy` — copy files to the destination set in the configuration file (`website.conf`)
 * `upload-ftp` — upload files to FTP server set in in the configuration file
 * `open` — open index page in the default browser

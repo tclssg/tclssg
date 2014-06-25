@@ -152,21 +152,25 @@ proc dict-sort {dictionary \
 }
 
 # Copy all files form fromDir to toDir displaying feedback to
-# the user. If overwrite == 2 ask user whether to overwrite
+# the user. If overwrite == 2 prompt user whether to overwrite
 # each file.
 proc copy-files {fromDir toDir {overwrite 0}} {
+    set input {}
     foreach file [fileutil::find $fromDir {file isfile}] {
         set destFile [replace-path-root $file $fromDir $toDir]
         if {[file exists $destFile]} {
             if {$overwrite == 2} {
-                set input {}
-                while {$input ni {y n}} {
-                    puts "overwrite $destFile with $file? (y/n)"
-                    gets stdin input
+                if {$input ne "all"} {
+                    set input {}
+                    while {$input ni {y n all}} {
+                        puts "overwrite $destFile with $file? (y/n/all)"
+                        set input [string tolower [gets stdin]]
+                    }
                 }
             }
 
-            if {$overwrite == 1 || ($overwrite == 2 && $input eq "y")} {
+            if {$overwrite == 1 || \
+                ($overwrite == 2 && $input in {y all})} {
                 puts "overwriting $destFile with $file"
                 file copy -force $file $destFile
             } else {

@@ -301,7 +301,7 @@ proc main {argv0 argv} {
             }
             file mkdir $destDir
 
-            # Copy files.
+            # Copy project skeleton.
             copy-files $scriptConfig(skeletonDir) $sourceDir 0
             exit 0
         }
@@ -322,10 +322,11 @@ proc main {argv0 argv} {
             }
         }
         update {
-            foreach dir [
-                list $scriptConfig(templateDirName) \
-                     $scriptConfig(staticDirName) \
+            foreach {dir descr} [
+                list $scriptConfig(templateDirName) templates \
+                     $scriptConfig(staticDirName) {static files} \
             ] {
+                puts "updating $descr"
                 copy-files [
                     file join $scriptConfig(skeletonDir) $dir
                 ] [
