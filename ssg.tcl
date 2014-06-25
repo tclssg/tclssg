@@ -170,6 +170,11 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 dict get $pages $id rawContent
             ]
         ]
+        dict set pages $id variables dateUnix [
+            incr-clock-scan [
+                dict-default-get {} $pages $id variables date
+            ]
+        ]
     }
 
     # Read template for $inputDir. Can later be made per-directory or
@@ -184,7 +189,8 @@ proc compile-website {inputDir outputDir websiteConfig} {
 
     # Sort pages by date.
     dict set websiteConfig pages [
-        dict-sort $pages {variables date} 0 -decreasing
+        dict-sort $pages {variables dateUnix} 0 \
+                  {-decreasing}
     ]
     dict set websiteConfig pages tags [tag-list $pages]
 
@@ -315,6 +321,18 @@ proc main {argv0 argv} {
                 file delete $file
             }
         }
+        update {
+            foreach dir [
+                list $scriptConfig(templateDirName) \
+                     $scriptConfig(staticDirName) \
+            ] {
+                copy-files [
+                    file join $scriptConfig(skeletonDir) $dir
+                ] [
+                    file join $sourceDir $dir
+                ] 2
+            }
+        }
         upload-copy {
             set websiteConfig [load-config $sourceDir]
 
@@ -384,6 +402,9 @@ proc main {argv0 argv} {
                             init        create project skeleton
                             build       build static website
                             clean       delete files in destDir
+                            update      selectively replace templates and static
+                                        files in sourceDir with those of
+                                        project skeleton
                             upload-copy copy result to location set in config
                             upload-ftp  upload result to FTP server set in
                                         config

@@ -61,6 +61,7 @@ Possible commands are
 * `init` — сreate new project from the default project skeleton
 * `build` — build static website in `destDir` based on data in `sourceDir`
 * `clean` — delete all files in `destDir`
+* `update`
 * `upload-copy` — copy files to the destination set in the configuration file (`website.conf`)
 * `upload-ftp` — upload files to FTP server set in in the configuration file
 * `open` — open index page in the default browser
@@ -100,10 +101,10 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 | uploadFtpPath | `{htdocs}` | |
 | uploadFtpUser | `{user}` | |
 | uploadFtpPassword | `{password}` | |
-| expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. Disabled by default for speed. |
+| expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. |
 | charset | `utf-8` | Page character set. |
 | indexPage | `{index.md}` | The page all other pages link back to. |
-| tagsPage | `{blog/index.md}` | The page that tags link to. Enable `showTagCloud` on that page. |
+| tagsPage | `{blog/index.md}` | The page that tags link to. Enable `showTagCloud` on it. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
 All 0/1 settings default to `0`.
@@ -118,14 +119,14 @@ Single lines. Format: a separate lines per variable that say
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | pageTitle | `{Some title}` | |
-| hideTitle | 0/1          | Hides page title from from `<title>` tag and the article title. The page title will when only be used for sidebar/tag cloud links to the page. |
+| hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
 | blogEntry | 0/1 | If this is set to 1 the page will show in the blog post list. |
-| hideFromSidebar | 0/1 | |
-| hideSidebar | 0/1 | |
-| hidePostTags | 0/1 | |
-| hideFooter | 0/1 | |
-| showTagCloud | 0/1 | |
-| date | `2014-06-23` | |
+| hideFromSidebar | 0/1 | Unlists the page the sidebar. |
+| hideSidebar | 0/1 | Hide the sidebar *on the page.* |
+| hidePostTags | 0/1 | Hide whatever tags a blog has. |
+| hideFooter | 0/1 | Disable the "Powered by" footer. |
+| showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
+| date | `2014`, `20140623`, `2014-06-23`, `2014-06-23 14:35` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, dots and `T` are ignored except between, so ``2014-06-23T14:35:01` is the same as `20140623143501`. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | |
 
@@ -181,6 +182,8 @@ Sample session
     uploading data/output/main.css as danyilbohdan.com/main.css
     uploading data/output/contact.css as danyilbohdan.com/contact.css
     uploading data/output/blog/index.html as danyilbohdan.com/blog/index.html
+
+The password value is automatically replaced with "***" in Tclssg log output.
 
 License
 -------

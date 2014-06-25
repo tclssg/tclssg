@@ -128,7 +128,7 @@ proc format-link {id {li 1} {customTitle ""}} {
                 append footer "<div id=\"copyright\">$copyright</div>"
             }
             if {![page-variable-default-get 0 hideFooter]} {
-                append footer {<div id="powered-by">Powered by tclssg</div>}
+                append footer {<div id="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
             }
             lindex $footer
         %></footer>

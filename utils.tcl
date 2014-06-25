@@ -152,12 +152,21 @@ proc dict-sort {dictionary \
 }
 
 # Copy all files form fromDir to toDir displaying feedback to
-# the user.
+# the user. If overwrite == 2 ask user whether to overwrite
+# each file.
 proc copy-files {fromDir toDir {overwrite 0}} {
     foreach file [fileutil::find $fromDir {file isfile}] {
         set destFile [replace-path-root $file $fromDir $toDir]
         if {[file exists $destFile]} {
-            if {$overwrite} {
+            if {$overwrite == 2} {
+                set input {}
+                while {$input ni {y n}} {
+                    puts "overwrite $destFile with $file? (y/n)"
+                    gets stdin input
+                }
+            }
+
+            if {$overwrite == 1 || ($overwrite == 2 && $input eq "y")} {
                 puts "overwriting $destFile with $file"
                 file copy -force $file $destFile
             } else {
@@ -171,4 +180,29 @@ proc copy-files {fromDir toDir {overwrite 0}} {
             file copy $file $destFile
         }
     }
+}
+
+# Try several formats for clock scan.
+proc incr-clock-scan {date {debug 0}} {
+    set date [regsub -all {[ :.T/]+} $date {-}]
+
+    set result {}
+    foreach format {
+        {%Y} {%Y-%m} {%Y-%m-%d}
+        {%Y-%m-%d-%H-%M}
+        {%Y-%m-%d-%H-%M-%S}
+    } {
+        if {$debug} {
+            puts "$format $date"
+        }
+        if {![catch {
+                set scan [clock scan $date -format $format]
+            }]} {
+            set result $scan
+            if {$debug} {
+                puts "MATCH"
+            }
+        }
+    }
+    return $result
 }
