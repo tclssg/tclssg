@@ -191,10 +191,12 @@ proc incremental-clock-scan {date {debug 0}} {
     set date [regsub -all {[ :.T/]+} $date {-}]
 
     set result {}
-    foreach format {
-        {%Y} {%Y-%m} {%Y-%m-%d}
-        {%Y-%m-%d-%H-%M}
-        {%Y-%m-%d-%H-%M-%S}
+    foreach {format padding} {
+        {%Y} {-01-01-00-00-00}
+        {%Y-%m} {-01-00-00-00}
+        {%Y-%m-%d} {-00-00-00}
+        {%Y-%m-%d-%H-%M} {-00}
+        {%Y-%m-%d-%H-%M-%S} {}
     } {
         if {$debug} {
             puts "$format $date"
@@ -202,9 +204,18 @@ proc incremental-clock-scan {date {debug 0}} {
         if {![catch {
                 set scan [clock scan $date -format $format]
             }]} {
-            set result $scan
+            # Work around unexpected treatment %Y and %Y-%m dates, see
+            # http://wiki.tcl.tk/2525.
+            set result [
+                clock scan [
+                    join [
+                        list $date $padding
+                    ] ""
+                ] -format {%Y-%m-%d-%H-%M-%S}
+            ]
             if {$debug} {
-                puts "MATCH"
+                puts "match"
+                puts $scan
             }
         }
     }

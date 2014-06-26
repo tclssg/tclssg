@@ -21,6 +21,11 @@ proc assertAllEqual args {
 }
 
 proc main {argv0 argv} {
+    set scriptLocation [file dirname $argv0]
+
+    # Utility functions.
+    source [file join $scriptLocation utils.tcl]
+
     # incremental-clock-scan
     assertAllEqual [
         incremental-clock-scan {2014-06-26 20:10}
@@ -32,6 +37,16 @@ proc main {argv0 argv} {
         incremental-clock-scan {2014/06/26 20:10}
     ] [
         clock scan {2014-06-26-20-10} -format {%Y-%m-%d-%H-%M}
+    ]
+
+    assertAllEqual [
+        incremental-clock-scan {2014}
+    ] [
+        incremental-clock-scan {2014-01}
+    ] [
+        incremental-clock-scan {2014-01-01 00:00:00}
+    ] [
+        clock scan {2014-01-01} -format {%Y-%m-%d}
     ]
 
     # slugify
@@ -51,7 +66,7 @@ proc main {argv0 argv} {
     assertAllEqual [
         replace-path-root a/b/c/d/e/f a x
     ] [
-        replace-path-root a/b/c/d/e/f a/b/c x/b/c
+        replace-path-root a/b/./c/d/e/f a/b/c x/b/c
     ] "x/b/c/d/e/f"
 
     assertAllEqual [
@@ -65,7 +80,7 @@ proc main {argv0 argv} {
         dict-default-get -1 {someKey testValue} someKey
     ] [
         dict-default-get -1 {someKey {anotherKey testValue}} \
-                          someKey anotherKey
+                         someKey anotherKey
     ] "testValue"
 
     # dict-sort

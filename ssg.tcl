@@ -287,13 +287,13 @@ proc interp-source-dirs {dirs fileName} {
 }
 
 proc main {argv0 argv} {
-    # Configuration that is generally not supposed to vary from website to
-    # website.
     set scriptLocation [file dirname $argv0]
 
     # Utility functions.
     source [file join $scriptLocation utils.tcl]
 
+    # Configuration that is generally not supposed to vary from website to
+    # website.
     set scriptConfig(markdownProcessor) [
         concat perl [
             file join $scriptLocation scripts Markdown_1.0.1 Markdown.pl
