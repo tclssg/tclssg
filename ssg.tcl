@@ -187,7 +187,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ]
         ]
         dict set pages $id variables dateUnix [
-            incr-clock-scan [
+            incremental-clock-scan [
                 dict-default-get {} $pages $id variables date
             ]
         ]

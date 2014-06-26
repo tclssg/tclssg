@@ -48,6 +48,18 @@ Once you have the requirements installed clone this repository, `cd` into it the
 
 This will create a new website project in the directory `website/input`, build it in `website/output` and open the result in the browser. If you're not on Linux instead of running `./ssg.tcl open` open `website/output/index.html` manually.
 
+Concepts
+--------
+
+Page
+Index
+Blog index
+Template
+Config file
+Variable
+Static file
+Output
+
 Usage
 -----
 
@@ -60,7 +72,7 @@ Possible commands are
 
 * `init` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
 
-**NOTE:** `init` copies the template files into `sourceDir/templates` so that you may customize them. If you are fine with having the default page layout for the HTML output delete `sourceDir/templates` to use the template from the project skeleton. E.g., run
+**NOTE:** `init` copies the template files into a subdirectory named `templates` in `sourceDir` so that you may customize them. If you are fine with having the default page layout for the HTML output delete `$sourceDir/templates` to use the template from the project skeleton. E.g., run
 
     ./ssg.tcl init
     rm -r ./website/templates
@@ -139,9 +151,9 @@ Per-page variables alter setting for just the page they are set on. They are set
 | hidePostTags | 0/1 | Hide whatever tags a blog has. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
-| date | `2014`, `20140623`, `2014-06-23`, `2014-06-23 14:35` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so ``2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | |
-| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | |
+| date | `2014`, `20140623`, `2014-06-23`, `2014-06-23 14:35` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
+| tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
+| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>` |
 
 Like with website settings all 0/1 settings default to `0`.
 

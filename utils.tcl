@@ -187,7 +187,7 @@ proc copy-files {fromDir toDir {overwrite 0}} {
 }
 
 # Try several formats for clock scan.
-proc incr-clock-scan {date {debug 0}} {
+proc incremental-clock-scan {date {debug 0}} {
     set date [regsub -all {[ :.T/]+} $date {-}]
 
     set result {}
