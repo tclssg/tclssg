@@ -34,16 +34,31 @@ proc interp-inject {dictionary} {
 }
 
 # Set up template interpreter and expander.
-proc interp-up {} {
+proc interp-up {inputDir} {
     upvar 1 scriptConfig scriptConfig
 
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
 
-    foreach command {replace-path-root dict-default-get get-default \
-                     textutil::indent slugify} {
+    foreach command {replace-path-root dict-default-get  \
+                     get-default textutil::indent slugify
+                     choose-dir interp-source puts} {
         interp alias templateInterp $command {} $command
     }
+    foreach builtIn {source} {
+        interp expose templateInterp $builtIn
+    }
+
+    # Allow templates to source Tcl files with directory failover.
+    interp alias templateInterp interp-source {} interp-source-dirs [
+        list [
+            file join $inputDir \
+                      $scriptConfig(templateDirName)
+        ] [
+            file join $scriptConfig(skeletonDir) \
+                      $scriptConfig(templateDirName)
+        ]
+    ]
 
     if {![catch {::textutil::expander exp}]} {
         ::exp evalcmd {interp eval templateInterp}
@@ -94,7 +109,7 @@ proc template-subst {template pageData websiteConfig} {
         }
     }
 
-    interp-up
+    interp-up [dict get $websiteConfig inputDir]
     interp-inject $websiteConfig
     # Page data overrides website config.
     interp-inject $pageData
@@ -149,6 +164,7 @@ proc tag-list {pages} {
 proc compile-website {inputDir outputDir websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
+    dict set websiteConfig inputDir $inputDir
     set contentDir [file join $inputDir $scriptConfig(contentDirName)]
 
     # Build page data.
@@ -177,14 +193,21 @@ proc compile-website {inputDir outputDir websiteConfig} {
         ]
     }
 
-    # Read template for $inputDir. Can later be made per-directory or
-    # metadata-based.
-    set template [
-        read-file [
-            file join $inputDir \
-                      $scriptConfig(templateDirName) \
-                      $scriptConfig(templateFileName) \
+    # Read template for $inputDir or scriptConfig(skeletonDir. Can later be made
+    # per-directory or metadata-based.
+    set templateFile [
+        choose-dir $scriptConfig(templateFileName) [
+            list [
+                file join $inputDir \
+                          $scriptConfig(templateDirName)
+            ] [
+                file join $scriptConfig(skeletonDir) \
+                          $scriptConfig(templateDirName)
+            ]
         ]
+    ]
+    set template [
+        read-file $templateFile
     ]
 
     # Sort pages by date.
@@ -248,6 +271,19 @@ proc load-config {sourceDir} {
     ]
 
     return $websiteConfig
+}
+
+# Source fileName into templateInterp from the first directory out of dirs where
+# it exists.
+proc interp-source-dirs {dirs fileName} {
+    set command [
+        subst -nocommands {
+            source [
+                choose-dir $fileName {$dirs}
+            ]
+        }
+    ]
+    interp eval templateInterp $command
 }
 
 proc main {argv0 argv} {

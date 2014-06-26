@@ -210,3 +210,15 @@ proc incr-clock-scan {date {debug 0}} {
     }
     return $result
 }
+
+# Find the first directory dir in list dirs in which path exists.
+# Return path prefixed with dir.
+proc choose-dir {path dirs} {
+    foreach dir $dirs {
+        set fullPath [file join $dir $path]
+        if {[file exists $fullPath]} {
+            return $fullPath
+        }
+    }
+    error "$path not found in [join $dirs {, }]"
+}
