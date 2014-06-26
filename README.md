@@ -58,30 +58,42 @@ Usage
 
 Possible commands are
 
-* `init` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory)
-* `build` — build a static website in `destDir` based on the data in `sourceDir`
-* `clean` — delete all files in `destDir`
+* `init` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
+
+**NOTE:** `init` copies the template files into `sourceDir/templates` so that you may customize them. If you are fine with having the default page layout for the HTML output delete `sourceDir/templates` to use the template from the project skeleton. E.g., run
+
+    ./ssg.tcl init
+    rm -r ./website/templates
+
+ This will eliminate the need to update your project's template when Tclssg is updated.
+
+* `build` — build a static website in `destDir` based on the data in `sourceDir`.
+* `clean` — delete all files in `destDir`.
 * `update` — replace static files and templates in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
-* `upload-copy` — copy files to the destination set in the configuration file (`website.conf`)
-* `upload-ftp` — upload files to FTP server set in in the configuration file
-* `open` — open index page in the default browser
+* `upload-copy` — copy files to the destination set in the configuration file (`website.conf`).
+
+**NOTE:** This can be used, e.g., if your build machine is your web server or if you have the server's documents directory mounted as a local path.
+
+* `upload-ftp` — upload files to FTP server set in the configuration file.
+* `open` — open index page in the default browser.
 
 The default layout of the source directory is
 
     .
-    ├── pages <-- Markdown files from which HTML is generated
-    │   ├── blog <-- Blog posts
+    ├── pages <-- Markdown files from which HTML is generated.
+    │   ├── blog <-- Blog posts.
     │   │   └── index.md <-- Blog index page with tag list
-    │   │                    and links to blog posts
-    │   ├── index.md <-- Website index page
-    ├── static
+    │   │                    and links to blog posts.
+    │   ├── index.md <-- Website index page.
+    ├── static <-- Files copied verbatim to the output
+    │   │          directory.
     │   └── main.css
     ├── templates
     │   └── default.thtml <-- The website's layout
-    │                         template (HTML + Tcl)
-    └── website.conf <-- Configurating file
+    │                         template (HTML + Tcl).
+    └── website.conf <-- Configurating file.
 
-To customize your website you can edit its general settings in `website.conf` and the per-page settings in individual page files.
+Once you've initialized your website with `init` you customize it with general and per-page setting. Edit its general settings in `website.conf` and the per-page settings in the individual page files.
 
 Website settings
 ----------------
@@ -93,17 +105,17 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. |
+| websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say `Hello! | My Awesome Website`.  |
 | url | `{http://example.com/}` | Currently not used. |
-| uploadCopyPath | `{/var/www/}` | The location to copy the built static website to on command `upload-copy`.|
+| uploadCopyPath | `{/var/www/}` | The location to copy the built static website to on command `upload-copy`. |
 | uploadFtpServer | `{ftp.hosting.example.net}` | The server to upload the built static website to on command `upload-ftp`. |
-| uploadFtpPort | `21` | |
-| uploadFtpPath | `{htdocs}` | |
-| uploadFtpUser | `{user}` | |
-| uploadFtpPassword | `{password}` | |
+| uploadFtpPort | `21` | FTP port. |
+| uploadFtpPath | `{htdocs}` | The directory on the FTP server where to upload the static website. |
+| uploadFtpUser | `{user}` | FTP user name. |
+| uploadFtpPassword | `{password}` | FTP password. |
 | expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. |
 | charset | `utf-8` | Page character set. |
-| indexPage | `{index.md}` | The page all other pages link back to. |
+| indexPage | `{index.md}` | The page all other pages will have a link back to. |
 | tagsPage | `{blog/index.md}` | The page that tags link to. Enable `showTagCloud` on it. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
@@ -111,10 +123,11 @@ All 0/1 settings default to `0`.
 
 Per-page variables
 ------------------
-Single lines. Format: a separate lines per variable that say
+Per-page variables alter setting for just the page they are set on. They are set in the page source file (e.g., {index.md}), each one on a separate line that start with `!` (exclamation mark) and has the form of `! variableName {Value}`. Those lines are normally placed at the top of the page source file. Example usage:
 
     ! variableNameOne short_value
     ! variableNameTwo {A variable value with spaces.}
+    Lorem ipsum... (The rest of the page content follows.)
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -126,7 +139,7 @@ Single lines. Format: a separate lines per variable that say
 | hidePostTags | 0/1 | Hide whatever tags a blog has. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
-| date | `2014`, `20140623`, `2014-06-23`, `2014-06-23 14:35` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, dots and `T` are ignored except between, so ``2014-06-23T14:35:01` is the same as `20140623143501`. |
+| date | `2014`, `20140623`, `2014-06-23`, `2014-06-23 14:35` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so ``2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | |
 
@@ -158,12 +171,12 @@ Sample session
         expandMacrosInPages 0
         indexPage index.md
         tagPage blog/index.md
-    processing page file data/input/pages/contact.md into data/output/contact.html
-    processing page file data/input/pages/index.md into data/output/index.html
-    processing page file data/input/pages/total.md into data/output/total.html
-    processing page file data/input/pages/blog/index.md into data/output/blog/index.html
-    copying file data/input/static/main.css to data/output/main.css
-    copying file data/input/static/contact.css to data/output/contact.css
+    processing page file website/input/pages/contact.md into website/output/contact.html
+    processing page file website/input/pages/index.md into website/output/index.html
+    processing page file website/input/pages/total.md into website/output/total.html
+    processing page file website/input/pages/blog/index.md into website/output/blog/index.html
+    copying file website/input/static/main.css to website/output/main.css
+    copying file website/input/static/contact.css to website/output/contact.css
     $ ./ssg.tcl upload-ftp
     Loaded config file:
         websiteTitle Danyil Bohdan
@@ -176,12 +189,12 @@ Sample session
         expandMacrosInPages 0
         indexPage index.md
         tagPage blog/index.md
-    uploading data/output/index.html as danyilbohdan.com/index.html
-    uploading data/output/total.html as danyilbohdan.com/total.html
-    uploading data/output/contact.html as danyilbohdan.com/contact.html
-    uploading data/output/main.css as danyilbohdan.com/main.css
-    uploading data/output/contact.css as danyilbohdan.com/contact.css
-    uploading data/output/blog/index.html as danyilbohdan.com/blog/index.html
+    uploading website/output/index.html as danyilbohdan.com/index.html
+    uploading website/output/total.html as danyilbohdan.com/total.html
+    uploading website/output/contact.html as danyilbohdan.com/contact.html
+    uploading website/output/main.css as danyilbohdan.com/main.css
+    uploading website/output/contact.css as danyilbohdan.com/contact.css
+    uploading website/output/blog/index.html as danyilbohdan.com/blog/index.html
 
 The password value is automatically replaced with "***" in Tclssg log output.
 

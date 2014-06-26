@@ -1,6 +1,6 @@
 ! pageTitle Blog
 ! blogEntry 1
-! hideFromList 1
+! hideFromSidebar 1
 ! hideTitle 1
 ! showTagCloud 1
 ! hidePostTags 1
