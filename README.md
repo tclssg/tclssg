@@ -72,19 +72,20 @@ Possible commands are
 
 * `init` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
 
-**NOTE:** `init` copies the template files into a subdirectory named `templates` in `sourceDir` so that you may customize them. If you are fine with having the default page layout for the HTML output delete `$sourceDir/templates` to use the template from the project skeleton. E.g., run
+> **NOTE:** `init` copies the template files into a subdirectory named `templates` in `sourceDir` so that you may customize them. If you are fine with having the default page layout for the HTML output delete `$sourceDir/templates` to use the template from the project skeleton. E.g., run
 
-    ./ssg.tcl init
-    rm -r ./website/templates
+> `    ./ssg.tcl init`
 
- This will eliminate the need to update your project's template when Tclssg is updated.
+> `    rm -r ./website/templates`
+
+> This will eliminate the need to update your project's template when Tclssg is updated.
 
 * `build` — build a static website in `destDir` based on the data in `sourceDir`.
 * `clean` — delete all files in `destDir`.
 * `update` — replace static files and templates in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
 * `upload-copy` — copy files to the destination set in the configuration file (`website.conf`).
 
-**NOTE:** This can be used, e.g., if your build machine is your web server or if you have the server's documents directory mounted as a local path.
+> **NOTE:** This can be used, e.g., if your build machine is your web server or if you have the server's documents directory mounted as a local path.
 
 * `upload-ftp` — upload files to FTP server set in the configuration file.
 * `open` — open index page in the default browser.
@@ -119,7 +120,7 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say `Hello! | My Awesome Website`.  |
 | url | `{http://example.com/}` | Currently not used. |
-| destDir | `../output`, `/var/www/` | The default destination directory under which HTML output is produced. Relative paths are taken as relative to `sourceDir`. |
+| destDir | `../output`, `/var/www/` | The default destination directory under which HTML output is produced. Relative paths are taken as relative to `sourceDir` (as given on the command line). |
 | uploadCopyPath | `{/var/www/}` | The location to copy the built static website to on command `upload-copy`. |
 | uploadFtpServer | `{ftp.hosting.example.net}` | The server to upload the built static website to on command `upload-ftp`. |
 | uploadFtpPort | `21` | FTP port. |
