@@ -33,9 +33,9 @@ proc format-html-title {} {
     set pageTitle [page-variable-default-get {} pageTitle]
     set hideTitle [page-variable-default-get 0 hideTitle]
     if {$hideTitle || ($pageTitle == "")} {
-        lindex $websiteTitle
+        return $websiteTitle
     } else {
-        lindex "$pageTitle | $websiteTitle"
+        return "$pageTitle | $websiteTitle"
     }
 }
 
@@ -44,9 +44,9 @@ proc format-index-link {} {
     global indexPage
     global currentPageId
     if {[info exists indexPage] && $currentPageId ne $indexPage} {
-        lindex "<header id=\"index-link\">[format-link $indexPage 0]</header>"
+        return "<header id=\"index-link\">[format-link $indexPage 0]</header>"
     } else {
-        lindex ""
+        return ""
     }
 }
 
@@ -55,9 +55,9 @@ proc format-article-title {} {
     global pages
     set title [page-variable-default-get {} pageTitle]
     if {$title ne "" && ![page-variable-default-get 0 hideTitle]} {
-        lindex "<header id=\"page-title\"><h2>$title</h2></header>"
+        return "<header id=\"page-title\"><h2>$title</h2></header>"
     } else {
-        lindex ""
+        return ""
     }
 }
 
@@ -66,9 +66,9 @@ proc format-article-date {} {
     global pages
     set date [page-variable-default-get {} date]
     if {$date ne "" && ![page-variable-default-get 0 hideDate]} {
-        lindex "<header id=\"date\">$date</header>"
+        return "<header id=\"date\">$date</header>"
     } else {
-        lindex ""
+        return ""
     }
 }
 
@@ -94,7 +94,7 @@ proc format-article-tag-list {} {
             append tagList {</ul></nav><!-- tags -->}
         }
     }
-    lindex $tagList
+    return $tagList
 }
 
 proc format-sidebar {} {
@@ -113,7 +113,7 @@ proc format-sidebar {} {
         }
         append sidebar {</ul></nav><!-- sidebar -->}
     }
-    lindex $sidebar
+    return $sidebar
 }
 
 proc format-tag-cloud {} {
@@ -136,7 +136,7 @@ proc format-tag-cloud {} {
         }
         append tagCloud {</dl></nav><!-- tag-cloud -->}
     }
-    lindex $tagCloud
+    return $tagCloud
 }
 
 proc format-footer {} {
@@ -149,5 +149,5 @@ proc format-footer {} {
     if {![page-variable-default-get 0 hideFooter]} {
         append footer {<div id="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
     }
-    lindex $footer
+    return $footer
 }
