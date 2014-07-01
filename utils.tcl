@@ -27,7 +27,7 @@ proc write-file {fname content {binary 0}} {
 # Transform a path relative to fromDir into the same path relative to toDir.
 proc replace-path-root {path fromDir toDir} {
     # string map here is a hack to fix /./ making printed logs ugly.
-    string map {/./ /} [
+    fileutil::lexnormalize [
         file join $toDir [
             ::fileutil::relative $fromDir [file dirname $path]
         ] [
@@ -232,4 +232,8 @@ proc choose-dir {path dirs} {
         }
     }
     error "$path not found in [join $dirs {, }]"
+}
+
+proc path-is-relative? {path} {
+    return [catch {::fileutil::relative / $path}]
 }

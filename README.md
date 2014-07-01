@@ -63,10 +63,10 @@ Output
 Usage
 -----
 
-    usage: ./ssg.tcl <command> [sourceDir destDir]
+    usage: ./ssg.tcl <command> [sourceDir [destDir]]
 
 `sourceDir` specifies the directory where the input for Tclssg is located. It defaults to `website/input` in the current directory.
-`destDir` is where the HTML is put. It defaults to `website/output`.
+`destDir` is where the HTML is put. It defaults to `website/output` and can also be set in the configuration file in `sourceDir`.
 
 Possible commands are
 
@@ -119,6 +119,7 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say `Hello! | My Awesome Website`.  |
 | url | `{http://example.com/}` | Currently not used. |
+| destDir | `../output`, `/var/www/` | The default destination directory under which HTML output is produced. Relative paths are taken as relative to `sourceDir`. |
 | uploadCopyPath | `{/var/www/}` | The location to copy the built static website to on command `upload-copy`. |
 | uploadFtpServer | `{ftp.hosting.example.net}` | The server to upload the built static website to on command `upload-ftp`. |
 | uploadFtpPort | `21` | FTP port. |

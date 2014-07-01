@@ -251,7 +251,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
 }
 
 # Load website configuration file from directory.
-proc load-config {sourceDir} {
+proc load-config {sourceDir {verbose 1}} {
     upvar 1 scriptConfig scriptConfig
 
     set websiteConfig [
@@ -261,14 +261,16 @@ proc load-config {sourceDir} {
     ]
 
     # Show loaded config to user (without the password values).
-    puts "Loaded config file:"
-    puts [
-        textutil::indent [
-            dict-format [
-                obscure-password-values $websiteConfig
-            ]
-        ] {    }
-    ]
+    if {$verbose} {
+        puts "Loaded config file:"
+        puts [
+            textutil::indent [
+                dict-format [
+                    obscure-password-values $websiteConfig
+                ]
+            ] {    }
+        ]
+    }
 
     return $websiteConfig
 }
@@ -319,9 +321,33 @@ proc main {argv0 argv} {
     if {$sourceDir eq "" && $destDir eq ""} {
         set sourceDir $scriptConfig(defaultSourceDir)
         set destDir $scriptConfig(defaultDestDir)
-    } elseif {$sourceDir eq "" || $destDir eq ""} {
-        puts "please specify both sourceDir and destDir or neither"
-        exit 1
+    } elseif {$destDir eq ""} {
+        catch {
+            set destDir [
+                dict-default-get {} [
+                    load-config $sourceDir 0
+                ] destDir
+            ]
+            # Make relative path from config relative to sourceDir.
+            if {$destDir ne "" && [path-is-relative? $destDir]} {
+                set destDir [
+                    ::fileutil::lexnormalize [
+                        file join $sourceDir $destDir
+                    ]
+                ]
+            }
+        }
+        if {$destDir eq ""} {
+            puts [
+                trim-indentation {
+                    error: no destDir given.
+
+                    please either a) specify both sourceDir and destDir or
+                                  b) set destDir in your configuration file.
+                }
+            ]
+            exit 1
+        }
     }
 
     # Execute command.
@@ -433,7 +459,7 @@ proc main {argv0 argv} {
             puts [
                 subst -nocommands [
                     trim-indentation {
-                        usage: $argv0 <command> [sourceDir destDir]
+                        usage: $argv0 <command> [sourceDir [destDir]]
 
                         Possible commands are:
                             init        create project skeleton

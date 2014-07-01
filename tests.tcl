@@ -63,7 +63,7 @@ proc main {argv0 argv} {
         replace-path-root ./a/b/c/d/e/f ./a ./x
     ] [
         replace-path-root ./a/b/c/d/e/f ./a/b/c ./x/b/c
-    ] "./x/b/c/d/e/f"
+    ] "x/b/c/d/e/f"
 
     assert-all-equal [
         replace-path-root a/b/c/d/e/f a x
