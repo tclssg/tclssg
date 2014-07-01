@@ -12,7 +12,7 @@ source utils.tcl
 
 control::control assert enabled 1
 
-proc assertAllEqual args {
+proc assert-all-equal args {
     set prevArg [lindex $args 0]
     foreach arg [lrange $args 1 end] {
         control::assert {$arg eq $prevArg}
@@ -21,13 +21,15 @@ proc assertAllEqual args {
 }
 
 proc main {argv0 argv} {
+    puts "running tests..."
+
     set scriptLocation [file dirname $argv0]
 
-    # Utility functions.
+    # Import utility functions.
     source [file join $scriptLocation utils.tcl]
 
     # incremental-clock-scan
-    assertAllEqual [
+    assert-all-equal [
         incremental-clock-scan {2014-06-26 20:10}
     ] [
         incremental-clock-scan {2014-06-26T20:10}
@@ -39,7 +41,7 @@ proc main {argv0 argv} {
         clock scan {2014-06-26-20-10} -format {%Y-%m-%d-%H-%M}
     ]
 
-    assertAllEqual [
+    assert-all-equal [
         incremental-clock-scan {2014}
     ] [
         incremental-clock-scan {2014-01}
@@ -50,31 +52,31 @@ proc main {argv0 argv} {
     ]
 
     # slugify
-    assertAllEqual [
+    assert-all-equal [
         slugify "Hello, World!"
     ] [
         slugify "hello world"
     ] "hello-world"
 
     # replace-path-root
-    assertAllEqual [
+    assert-all-equal [
         replace-path-root ./a/b/c/d/e/f ./a ./x
     ] [
         replace-path-root ./a/b/c/d/e/f ./a/b/c ./x/b/c
     ] "./x/b/c/d/e/f"
 
-    assertAllEqual [
+    assert-all-equal [
         replace-path-root a/b/c/d/e/f a x
     ] [
         replace-path-root a/b/./c/d/e/f a/b/c x/b/c
     ] "x/b/c/d/e/f"
 
-    assertAllEqual [
+    assert-all-equal [
         replace-path-root /././././././././b / /a
     ] "/a/b"
 
     # dict-default-get
-    assertAllEqual [
+    assert-all-equal [
         dict-default-get testValue {} someKey
     ] [
         dict-default-get -1 {someKey testValue} someKey
@@ -84,11 +86,13 @@ proc main {argv0 argv} {
     ] "testValue"
 
     # dict-sort
-    assertAllEqual [
+    assert-all-equal [
         dict-sort {a {k 5} b {k 1} c {k 2}} k
     ] [
         dict-sort {a {k 5} b {k 1} c {k 2}} k 0 {} {x {lindex $x}}
     ] {b {k 1} c {k 2} a {k 5}}
+
+    puts "done."
 }
 
 main $argv0 $argv

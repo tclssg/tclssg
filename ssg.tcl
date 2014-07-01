@@ -296,7 +296,7 @@ proc main {argv0 argv} {
     # website.
     set scriptConfig(markdownProcessor) [
         concat perl [
-            file join $scriptLocation scripts Markdown_1.0.1 Markdown.pl
+            file join $scriptLocation external Markdown_1.0.1 Markdown.pl
         ]
     ]
 

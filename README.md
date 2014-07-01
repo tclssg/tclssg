@@ -143,7 +143,7 @@ Per-page variables alter setting for just the page they are set on. They are set
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| pageTitle | `{Some title}` | |
+| pageTitle | `{Some title}` | Title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar/tag cloud links to the page. |
 | hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
 | blogEntry | 0/1 | If this is set to 1 the page will show in the blog post list. |
 | hideFromSidebar | 0/1 | Unlists the page the sidebar. |
@@ -151,9 +151,9 @@ Per-page variables alter setting for just the page they are set on. They are set
 | hidePostTags | 0/1 | Hide whatever tags a blog has. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
-| date | `2014`, `20140623`, `2014-06-23`, `2014-06-23 14:35` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
+| date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
-| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>` |
+| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 
 Like with website settings all 0/1 settings default to `0`.
 
@@ -215,4 +215,4 @@ License
 
 MIT. See the file `LICENSE` for details.
 
-Tclssg includes a copy of Markdown 1.0.1, which is copyright (c) 2004, John Gruber, and is distributed under a three-clause BSD license. See `scripts/Markdown_1.0.1/License.text`.
+Tclssg includes a copy of Markdown 1.0.1, which is copyright (c) 2004, John Gruber, and is distributed under a three-clause BSD license. See `external/Markdown_1.0.1/License.text`.

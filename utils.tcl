@@ -215,7 +215,7 @@ proc incremental-clock-scan {date {debug 0}} {
             ]
             if {$debug} {
                 puts "match"
-                puts $scan
+                puts [clock format $scan]
             }
         }
     }
