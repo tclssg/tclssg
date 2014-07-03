@@ -193,10 +193,15 @@ proc compile-website {inputDir outputDir websiteConfig} {
         ]
     }
 
-    # Read template for $inputDir or scriptConfig(skeletonDir. Can later be made
-    # per-directory or metadata-based.
+    # Read template from $inputDir or scriptConfig(skeletonDir). The template is
+    # either the default (determined by $scriptConfig(templateFileName)) or the
+    # one specified in the configuration file. Can later be made per-directory
+    # or metadata-based.
     set templateFile [
-        choose-dir $scriptConfig(templateFileName) [
+        choose-dir [
+            dict-default-get $scriptConfig(templateFileName) \
+                             $websiteConfig templateFileName
+        ] [
             list [
                 file join $inputDir \
                           $scriptConfig(templateDirName)
@@ -396,15 +401,15 @@ proc main {argv0 argv} {
                 ] 2
             }
         }
-        upload-copy {
+        deploy-copy {
             set websiteConfig [load-config $sourceDir]
 
-            set uploadDest [dict get $websiteConfig uploadCopyPath]
+            set deployDest [dict get $websiteConfig deployCopyPath]
 
-            copy-files $destDir $uploadDest 1
+            copy-files $destDir $deployDest 1
             exit 0
         }
-        upload-ftp {
+        deploy-ftp {
             set websiteConfig [load-config $sourceDir]
 
             package require ftp
@@ -412,21 +417,21 @@ proc main {argv0 argv} {
 
             set conn [
                 ::ftp::Open [
-                    dict get $websiteConfig uploadFtpServer
+                    dict get $websiteConfig deployFtpServer
                 ] [
-                    dict get $websiteConfig uploadFtpUser
+                    dict get $websiteConfig deployFtpUser
                 ] [
-                    dict get $websiteConfig uploadFtpPassword
+                    dict get $websiteConfig deployFtpPassword
                 ] -port [
-                    dict-default-get 21 $websiteConfig uploadFtpPort
+                    dict-default-get 21 $websiteConfig deployFtpPort
                 ] -mode passive
             ]
-            set uploadFtpPath [dict get $websiteConfig uploadFtpPath]
+            set deployFtpPath [dict get $websiteConfig deployFtpPath]
 
             ::ftp::Type $conn binary
 
             foreach file [fileutil::find $destDir {file isfile}] {
-                set destFile [replace-path-root $file $destDir $uploadFtpPath]
+                set destFile [replace-path-root $file $destDir $deployFtpPath]
                 set dir [file dirname $destFile]
                 if {[ftp::Cd $conn $dir]} {
                     ftp::Cd $conn /
@@ -468,8 +473,8 @@ proc main {argv0 argv} {
                             update      selectively replace templates and static
                                         files in sourceDir with those of
                                         project skeleton
-                            upload-copy copy result to location set in config
-                            upload-ftp  upload result to FTP server set in
+                            deploy-copy copy result to location set in config
+                            deploy-ftp  upload result to FTP server set in
                                         config
                             open        open index page in default browser
 

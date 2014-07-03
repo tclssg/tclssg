@@ -9,7 +9,7 @@ Features
 * Mark up content with Markdown.
 * Produce plain old pages or blogs post. [1]
 * Tag blog posts. Put a tag cloud on your blog index.
-* Upload the resulting website over FTP with a single command.
+* Deploy the resulting website over FTP with a single command.
 * Embed Tcl code in HTML for templating. [2]
 * Generated links are all relative.
 * Output is valid HTML5 and CSS level 3.
@@ -51,14 +51,16 @@ This will create a new website project in the directory `website/input`, build i
 Concepts
 --------
 
-Page
-Index
-Blog index
-Template
-Config file
-Variable
-Static file
-Output
+| Concept | Explanation |
+|---------|-------------|
+| Page |  |
+| Index | |
+| Blog index | |
+| Template | |
+| Config file | |
+| Variable | |
+| Static file | |
+| Output | |
 
 Usage
 -----
@@ -83,11 +85,11 @@ Possible commands are
 * `build` — build a static website in `destDir` based on the data in `sourceDir`.
 * `clean` — delete all files in `destDir`.
 * `update` — replace static files and templates in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
-* `upload-copy` — copy files to the destination set in the configuration file (`website.conf`).
+* `deploy-copy` — copy files to the destination set in the configuration file (`website.conf`).
 
 > **NOTE:** This can be used, e.g., if your build machine is your web server or if you have the server's documents directory mounted as a local path.
 
-* `upload-ftp` — upload files to FTP server set in the configuration file.
+* `deploy-ftp` — deploy files to FTP server set in the configuration file.
 * `open` — open index page in the default browser.
 
 The default layout of the source directory is
@@ -118,15 +120,16 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say `Hello! | My Awesome Website`.  |
+| websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say "Hello! &#124; My Awesome Website".  |
 | url | `{http://example.com/}` | Currently not used. |
 | destDir | `../output`, `/var/www/` | The default destination directory under which HTML output is produced. Relative paths are taken as relative to `sourceDir` (as given on the command line). |
-| uploadCopyPath | `{/var/www/}` | The location to copy the built static website to on command `upload-copy`. |
-| uploadFtpServer | `{ftp.hosting.example.net}` | The server to upload the built static website to on command `upload-ftp`. |
-| uploadFtpPort | `21` | FTP port. |
-| uploadFtpPath | `{htdocs}` | The directory on the FTP server where to upload the static website. |
-| uploadFtpUser | `{user}` | FTP user name. |
-| uploadFtpPassword | `{password}` | FTP password. |
+| templateFileName | `x.thtml` | If none is specified then `default.thtml` is used. |
+| deployCopyPath | `{/var/www/}` | The location to copy the built static website to on command `deploy-copy`. |
+| deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the built static website to on command `deploy-ftp`. |
+| deployFtpPort | `21` | FTP port. |
+| deployFtpPath | `{htdocs}` | The directory on the FTP server where to deploy the static website. |
+| deployFtpUser | `{user}` | FTP user name. |
+| deployFtpPassword | `{password}` | FTP password. |
 | expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. |
 | charset | `utf-8` | Page character set. |
 | indexPage | `{index.md}` | The page all other pages will have a link back to. |
@@ -137,7 +140,7 @@ All 0/1 settings default to `0`.
 
 Per-page variables
 ------------------
-Per-page variables alter setting for just the page they are set on. They are set in the page source file (e.g., {index.md}), each one on a separate line that start with `!` (exclamation mark) and has the form of `! variableName {Value}`. Those lines are normally placed at the top of the page source file. Example usage:
+Per-page variables alter setting for just the page they are set on. They are set in the page source file (e.g., `{index.md}`), each one on a separate line that start with `!` (exclamation mark) and has the form of `! variableName {Value}`. Those lines are normally placed at the top of the page source file. Example usage:
 
     ! variableNameOne short_value
     ! variableNameTwo {A variable value with spaces.}
@@ -177,11 +180,11 @@ Sample session
     Loaded config file:
         websiteTitle Danyil Bohdan
         url http://danyilbohdan.com/
-        uploadCopyPath /tmp/dest
-        uploadFtpServer ftp.<webhost>.com
-        uploadFtpPath danyilbohdan.com
-        uploadFtpUser dbohdan
-        uploadFtpPassword ***
+        deployCopyPath /tmp/dest
+        deployFtpServer ftp.<webhost>.com
+        deployFtpPath danyilbohdan.com
+        deployFtpUser dbohdan
+        deployFtpPassword ***
         expandMacrosInPages 0
         indexPage index.md
         tagPage blog/index.md
@@ -191,15 +194,15 @@ Sample session
     processing page file website/input/pages/blog/index.md into website/output/blog/index.html
     copying file website/input/static/main.css to website/output/main.css
     copying file website/input/static/contact.css to website/output/contact.css
-    $ ./ssg.tcl upload-ftp
+    $ ./ssg.tcl deploy-ftp
     Loaded config file:
         websiteTitle Danyil Bohdan
         url http://danyilbohdan.com/
-        uploadCopyPath /tmp/dest
-        uploadFtpServer ftp.<webhost>.com
-        uploadFtpPath danyilbohdan.com
-        uploadFtpUser dbohdan
-        uploadFtpPassword ***
+        deployCopyPath /tmp/dest
+        deployFtpServer ftp.<webhost>.com
+        deployFtpPath danyilbohdan.com
+        deployFtpUser dbohdan
+        deployFtpPassword ***
         expandMacrosInPages 0
         indexPage index.md
         tagPage blog/index.md
