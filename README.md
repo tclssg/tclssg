@@ -132,7 +132,8 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 | deployFtpPassword | `{password}` | FTP password. |
 | expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. |
 | charset | `utf-8` | Page character set. |
-| indexPage | `{index.md}` | The page all other pages will have a link back to. |
+| indexPage | `{index.md}` | The page normal pages will have a link back to. |
+| blogIndexPage | `{blog/index.md}` | The page blog post pages will have a link back to. |
 | tagsPage | `{blog/index.md}` | The page that tags link to. Enable `showTagCloud` on it. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 

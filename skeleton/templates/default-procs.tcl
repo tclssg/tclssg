@@ -40,11 +40,21 @@ proc format-html-title {} {
 }
 
 proc format-index-link {} {
-    # Link back to index.
+    # Link back to index/blog index.
     global indexPage
+    global blogIndexPage
     global currentPageId
-    if {[info exists indexPage] && $currentPageId ne $indexPage} {
-        return "<header id=\"index-link\">[format-link $indexPage 0]</header>"
+    set pageToLinkBackTo $indexPage
+    if {[info exists blogIndexPage] &&
+        [page-variable-default-get 0 blogEntry] &&
+        $currentPageId ne $blogIndexPage} {
+        # Link from blog entries to the blog index page but link back to the
+        # index page from the blog index page.
+        set pageToLinkBackTo $blogIndexPage
+    }
+
+    if {$currentPageId ne $pageToLinkBackTo} {
+        return "<header id=\"index-link\">[format-link $pageToLinkBackTo 0]</header>"
     } else {
         return ""
     }
