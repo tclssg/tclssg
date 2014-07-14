@@ -318,9 +318,16 @@ proc main {argv0 argv} {
 
     set scriptConfig(templateBrackets) {<% %>}
 
-    # Get directories to operate on.
-    set sourceDir [lindex $argv 1]
-    set destDir [lindex $argv 2]
+
+    # Get command line options, including directories to operate on.
+    set command [unqueue argv]
+
+    set options {}
+    while {[lindex $argv 0] ne "--" && [string match -* [lindex $argv 0]]} {
+        lappend options [string trimleft [unqueue argv] -]
+    }
+    set sourceDir [unqueue argv]
+    set destDir [unqueue argv]
 
     # Defaults for sourceDir and destDir.
     if {$sourceDir eq "" && $destDir eq ""} {
@@ -356,7 +363,7 @@ proc main {argv0 argv} {
     }
 
     # Execute command.
-    switch -exact -- [lindex $argv 0] {
+    switch -exact -- $command {
         init {
             foreach dir [
                 list $scriptConfig(contentDirName) \
@@ -369,7 +376,14 @@ proc main {argv0 argv} {
             file mkdir $destDir
 
             # Copy project skeleton.
-            copy-files $scriptConfig(skeletonDir) $sourceDir 0
+            set skipRegExp [
+                if {"templates" in $options} {
+                    lindex {}
+                } else {
+                    lindex {.*templates.*}
+                }
+            ]
+            copy-files $scriptConfig(skeletonDir) $sourceDir 0 $skipRegExp
             exit 0
         }
         build {
@@ -464,10 +478,11 @@ proc main {argv0 argv} {
             puts [
                 subst -nocommands [
                     trim-indentation {
-                        usage: $argv0 <command> [sourceDir [destDir]]
+                        usage: $argv0 <command> [options] [sourceDir [destDir]]
 
                         Possible commands are:
                             init        create project skeleton
+                                --templates copy template files as well
                             build       build static website
                             clean       delete files in destDir
                             update      selectively replace templates and static

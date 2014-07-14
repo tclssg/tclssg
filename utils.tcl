@@ -151,12 +151,29 @@ proc dict-sort {dictionary \
     ]
 }
 
-# Copy all files form fromDir to toDir displaying feedback to
-# the user. If overwrite == 2 prompt user whether to overwrite
-# each file.
-proc copy-files {fromDir toDir {overwrite 0}} {
+# Remove first n elements from varName and return them.
+proc unqueue {varName {n 1}} {
+    upvar 1 $varName var
+    set result [lrange $var 0 [expr $n - 1]]
+    set var [lrange $var $n end]
+    return $result
+}
+
+
+# Copy all files form fromDir to toDir displaying feedback to the user. All
+# files matching skipRegExp are ignored. If overwrite == 2 prompt
+# user whether to overwrite each file.
+proc copy-files {fromDir toDir {overwrite 0} {skipRegExp ""}} {
+    set files [
+        struct::list filterfor x [
+            fileutil::find $fromDir {file isfile}
+        ] {
+            $skipRegExp eq "" || ![regexp -- $skipRegExp $x]
+        }
+    ]
+
     set input {}
-    foreach file [fileutil::find $fromDir {file isfile}] {
+    foreach file $files {
         set destFile [replace-path-root $file $fromDir $toDir]
         if {[file exists $destFile]} {
             if {$overwrite == 2} {

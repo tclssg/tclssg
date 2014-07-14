@@ -65,22 +65,18 @@ Concepts
 Usage
 -----
 
-    usage: ./ssg.tcl <command> [sourceDir [destDir]]
+    usage: ./ssg.tcl <command> [options] [sourceDir [destDir]]
 
 `sourceDir` specifies the directory where the input for Tclssg is located. It defaults to `website/input` in the current directory.
 `destDir` is where the HTML is put. It defaults to `website/output` and can also be set in the configuration file in `sourceDir`.
 
 Possible commands are
 
-* `init` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
+* `init [--templates]` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
 
-> **NOTE:** `init` copies the template files into a subdirectory named `templates` in `sourceDir` so that you may customize them. If you are fine with having the default page layout for the HTML output delete `$sourceDir/templates` to use the template from the project skeleton. E.g., run
+> **NOTE:** The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `sourceDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the pages' look using CSS.
 
-> `    ./ssg.tcl init`
-
-> `    rm -r ./website/templates`
-
-> This will eliminate the need to update your project's template when Tclssg is updated.
+>By default your project will use the page template from the project skeleton. Not keeping a separate copy of the template is a good idea because it means you won't have to update it manually when a new version of Tclssg introduces changes to templating (which at this point in development it can be expected to).
 
 * `build` — build a static website in `destDir` based on the data in `sourceDir`.
 * `clean` — delete all files in `destDir`.
