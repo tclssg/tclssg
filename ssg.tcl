@@ -299,8 +299,8 @@ proc main {argv0 argv} {
     # Utility functions.
     source [file join $scriptLocation utils.tcl]
 
-    # Configuration that is generally not supposed to vary from website to
-    # website.
+    # What follows is the xonfiguration that is generally not supposed to vary
+    # from website to website.
     set scriptConfig(markdownProcessor) [
         concat perl [
             file join $scriptLocation external Markdown_1.0.1 Markdown.pl
@@ -317,7 +317,6 @@ proc main {argv0 argv} {
     set scriptConfig(defaultOutputDir) [file join "website" "output"]
 
     set scriptConfig(templateBrackets) {<% %>}
-
 
     # Get command line options, including directories to operate on.
     set command [unqueue argv]

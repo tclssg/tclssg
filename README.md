@@ -59,7 +59,7 @@ Concepts
 | Blog index | A page all blog pages have a link back to at the top (by default). | |
 | Template | A file with Tcl code embedded in HTML markup. When pages are converted from Markdown to HTML their content is inserted into a template and rendered according to that templates logic (code). |
 | Config file | The file `website.conf` in the input directory that specifies the options that apply to a static website as a whole like the website title. |
-| Variable | When set in individual pages variables specify information about that one page. When set in the config file say somethings about the website as a whole. |
+| Variable | When set in a page file a variable specifies a setting for that individual page. When set in the config file a variable specifies a setting for the website as a whole. |
 | Static file | The files that should be copied verbatim from a subdirectory in the input directory (`inputDir/static`) to the output directory. |
 | Output | The HTML files created by Tclssg based on the content in the input directory plus the static files. It is placed in the output directory `outputDir`. |
 
@@ -144,19 +144,27 @@ Per-page variables alter setting for just the page they are set on. They are set
     ! variableNameTwo {A variable value with spaces.}
     Lorem ipsum... (The rest of the page content follows.)
 
+Variable that can be set on any page:
+
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | pageTitle | `{Some title}` | Title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar/tag cloud links to the page. |
 | hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
-| blogEntry | 0/1 | If this is set to 1 the page will show in the blog post list. |
-| hideFromSidebar | 0/1 | Unlists the page the sidebar. |
-| hideSidebar | 0/1 | Hide the sidebar *on the page.* |
-| hidePostTags | 0/1 | Hide whatever tags a blog has. |
-| hideFooter | 0/1 | Disable the "Powered by" footer. |
-| showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
+| blogEntry | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
+
+Variables that have meaning only for blog posts:
+
+| Variable name | Example value(s) | Description |
+|---------------|------------------|-------------|
+| hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
+| hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
+| hidePostTags | 0/1 | Don't show whatever tags a blog post has. |
+| showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
+| hidePrevNextLinks | 0/1 | Hide previous and next blog post links. |
+| hideFooter | 0/1 | Disable the "Powered by" footer. |
+| tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
 
 Like with website settings all 0/1 settings default to `0`.
 

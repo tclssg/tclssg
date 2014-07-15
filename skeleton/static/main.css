@@ -47,11 +47,6 @@ nav#sidebar:before {
     content: 'Blog posts';
 }
 
-nav#tags ul li {
-    display: inline;
-    margin-right: 0.3em;
-}
-
 header#page-title h2 {
     margin-top: 25px;
     margin-bottom: 0;
@@ -67,13 +62,13 @@ header#date {
     padding-top: 25px;
 }
 
+nav#tags ul li {
+    display: inline;
+}
+
 nav#tags ul:before {
     font-weight: bold;
     content: 'Tagged: ';
-}
-
-nav#tags ul li {
-    margin: 0;
 }
 
 nav#tag-cloud:before {
@@ -108,6 +103,27 @@ nav#tag-cloud dl dd ul {
 
 nav#tag-cloud dl dd ul li {
     display: inline-block;
+}
+
+nav#prev-next {
+    display: inline-block;
+    width: 100%;
+}
+
+nav#prev-next #previous {
+    float: left;
+}
+
+nav#prev-next #next {
+    float: right;
+}
+
+nav#prev-next #previous a:before {
+    content: "← ";
+}
+
+nav#prev-next #next a:after {
+    content: " →";
 }
 
 footer {

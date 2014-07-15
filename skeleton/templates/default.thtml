@@ -16,6 +16,7 @@ interp-source default-procs.tcl
         <% textutil::indent $content {        } %>
         <% format-article-tag-list %></article>
         <% format-sidebar %>
+        <% format-prev-next-links %>
         <% format-tag-cloud %>
         <footer><% format-footer %></footer>
         </div>

@@ -126,6 +126,38 @@ proc format-sidebar {} {
     return $sidebar
 }
 
+proc format-prev-next-links {} {
+    # Blog "next" and "previous" blog post links.
+    global pages
+    global currentPageId
+    set links {}
+
+    if {[page-variable-default-get 0 blogEntry] && \
+        ![page-variable-default-get 0 hidePrevNextLinks]} {
+        set pageIds {}
+        foreach {id ___} $pages {
+            # Only have links to other blog entries.
+            if {[page-variable-default-get 0 blogEntry $id] && \
+                ![page-variable-default-get 0 hideFromSidebar $id]} {
+                lappend pageIds $id
+            }
+        }
+
+        set currentPageIndex [lsearch -exact $pageIds $currentPageId]
+        append links {<nav id="prev-next">}
+        set prevPage [lindex $pageIds [expr $currentPageIndex - 1]]
+        set nextPage [lindex $pageIds [expr $currentPageIndex + 1]]
+        if {$prevPage ne ""} {
+            append links "<span id=\"previous\">[format-link $prevPage 0]</span>"
+        }
+        if {$nextPage ne ""} {
+            append links "<span id=\"next\">[format-link $nextPage 0]</span>"
+        }
+        append links {</nav><!-- prev-next -->}
+    }
+    return $links
+}
+
 proc format-tag-cloud {} {
     # Blog tag cloud. For each tag it links to pages that are tagged with it.
     global pages
