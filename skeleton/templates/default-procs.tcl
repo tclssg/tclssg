@@ -86,6 +86,7 @@ proc format-article-tag-list {} {
     # Page tag list.
     global pages
     global pageLinks
+    global tagPage
     set tagList {}
     set tagPageLink {}
     if {[get-default tagPage {}] ne ""} {

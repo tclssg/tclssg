@@ -131,7 +131,7 @@ The following settings are specified in the file `website.conf` in `inputDir` an
 | charset | `utf-8` | Page character set. |
 | indexPage | `{index.md}` | The page normal pages will have a link back to. |
 | blogIndexPage | `{blog/index.md}` | The page blog post pages will have a link back to. |
-| tagsPage | `{blog/index.md}` | The page that tags link to. Enable `showTagCloud` on it. |
+| tagPage | `{blog/index.md}` | The page that tags link to. Enable `showTagCloud` on it. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
 All 0/1 settings default to `0`.
@@ -144,7 +144,7 @@ Per-page variables alter setting for just the page they are set on. They are set
     ! variableNameTwo {A variable value with spaces.}
     Lorem ipsum... (The rest of the page content follows.)
 
-Variable that can be set on any page:
+Variables that have an effect on any page:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -153,8 +153,9 @@ Variable that can be set on any page:
 | blogEntry | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
+| hideFooter | 0/1 | Disable the "Powered by" footer. |
 
-Variables that have meaning only for blog posts:
+Variables that only have an effect for blog posts:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -163,7 +164,6 @@ Variables that have meaning only for blog posts:
 | hidePostTags | 0/1 | Don't show whatever tags a blog post has. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
 | hidePrevNextLinks | 0/1 | Hide previous and next blog post links. |
-| hideFooter | 0/1 | Disable the "Powered by" footer. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
 
 Like with website settings all 0/1 settings default to `0`.
