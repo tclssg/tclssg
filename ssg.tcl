@@ -146,7 +146,7 @@ proc page-to-html {pageData template websiteConfig} {
     set output [
         template-subst $template $pageData $websiteConfig
     ]
-    write-file $outputFile $output
+    fileutil::writeFile $outputFile $output
 }
 
 # Generate tag list in the format of dict tag -> {id id id...}.

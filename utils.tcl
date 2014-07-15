@@ -3,26 +3,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-# Returns the content of file fname.
-proc read-file {fname {binary 0}} {
-    set fpvar [open $fname r]
-    if {$binary} {
-        fscriptConfigure $fpvar -translation binary
-    }
-    set content [read $fpvar]
-    close $fpvar
-    return $content
-}
-
-# Save content to file fname.
-proc write-file {fname content {binary 0}} {
-    set fpvar [open $fname w]
-    if {$binary} {
-        fscriptConfigure $fpvar -translation binary
-    }
-    puts -nonewline $fpvar $content
-    close $fpvar
-}
+interp alias {} read-file {} fileutil::cat
 
 # Transform a path relative to fromDir into the same path relative to toDir.
 proc replace-path-root {path fromDir toDir} {
@@ -251,6 +232,7 @@ proc choose-dir {path dirs} {
     error "$path not found in [join $dirs {, }]"
 }
 
+# Return true for a relative path and false otherwise.
 proc path-is-relative? {path} {
     return [catch {::fileutil::relative / $path}]
 }

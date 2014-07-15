@@ -93,9 +93,10 @@ proc main {argv0 argv} {
     ] {b {k 1} c {k 2} a {k 5}}
 
     # Tclssg init, build
-    puts "running build test..."
+    puts "running build tests..."
     set tempProjectDir [::fileutil::tempfile]
-    # Remove temporary file to replace it with a directory.
+    # Remove the temporary file for Tclssg to replace it with its project
+    # directory.
     file delete $tempProjectDir
     set tclssgArguments [
         list [file join $tempProjectDir input] \
