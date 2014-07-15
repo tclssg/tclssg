@@ -256,12 +256,12 @@ proc compile-website {inputDir outputDir websiteConfig} {
 }
 
 # Load website configuration file from directory.
-proc load-config {sourceDir {verbose 1}} {
+proc load-config {inputDir {verbose 1}} {
     upvar 1 scriptConfig scriptConfig
 
     set websiteConfig [
         read-file [
-            file join $sourceDir $scriptConfig(websiteConfigFileName)
+            file join $inputDir $scriptConfig(websiteConfigFileName)
         ]
     ]
 
@@ -313,8 +313,8 @@ proc main {argv0 argv} {
     set scriptConfig(templateFileName) default.thtml
     set scriptConfig(websiteConfigFileName) website.conf
     set scriptConfig(skeletonDir) [file join $scriptLocation skeleton]
-    set scriptConfig(defaultSourceDir) [file join "website" "input"]
-    set scriptConfig(defaultDestDir) [file join "website" "output"]
+    set scriptConfig(defaultInputDir) [file join "website" "input"]
+    set scriptConfig(defaultOutputDir) [file join "website" "output"]
 
     set scriptConfig(templateBrackets) {<% %>}
 
@@ -326,36 +326,36 @@ proc main {argv0 argv} {
     while {[lindex $argv 0] ne "--" && [string match -* [lindex $argv 0]]} {
         lappend options [string trimleft [unqueue argv] -]
     }
-    set sourceDir [unqueue argv]
-    set destDir [unqueue argv]
+    set inputDir [unqueue argv]
+    set outputDir [unqueue argv]
 
-    # Defaults for sourceDir and destDir.
-    if {$sourceDir eq "" && $destDir eq ""} {
-        set sourceDir $scriptConfig(defaultSourceDir)
-        set destDir $scriptConfig(defaultDestDir)
-    } elseif {$destDir eq ""} {
+    # Defaults for inputDir and outputDir.
+    if {$inputDir eq "" && $outputDir eq ""} {
+        set inputDir $scriptConfig(defaultInputDir)
+        set outputDir $scriptConfig(defaultOutputDir)
+    } elseif {$outputDir eq ""} {
         catch {
-            set destDir [
+            set outputDir [
                 dict-default-get {} [
-                    load-config $sourceDir 0
-                ] destDir
+                    load-config $inputDir 0
+                ] outputDir
             ]
-            # Make relative path from config relative to sourceDir.
-            if {$destDir ne "" && [path-is-relative? $destDir]} {
-                set destDir [
+            # Make relative path from config relative to inputDir.
+            if {$outputDir ne "" && [path-is-relative? $outputDir]} {
+                set outputDir [
                     ::fileutil::lexnormalize [
-                        file join $sourceDir $destDir
+                        file join $inputDir $outputDir
                     ]
                 ]
             }
         }
-        if {$destDir eq ""} {
+        if {$outputDir eq ""} {
             puts [
                 trim-indentation {
-                    error: no destDir given.
+                    error: no outputDir given.
 
-                    please either a) specify both sourceDir and destDir or
-                                  b) set destDir in your configuration file.
+                    please either a) specify both inputDir and outputDir or
+                                  b) set outputDir in your configuration file.
                 }
             ]
             exit 1
@@ -371,9 +371,9 @@ proc main {argv0 argv} {
                      $scriptConfig(staticDirName) \
                      [file join $scriptConfig(contentDirName) blog]
             ] {
-                file mkdir [file join $sourceDir $dir]
+                file mkdir [file join $inputDir $dir]
             }
-            file mkdir $destDir
+            file mkdir $outputDir
 
             # Copy project skeleton.
             set skipRegExp [
@@ -383,21 +383,21 @@ proc main {argv0 argv} {
                     lindex {.*templates.*}
                 }
             ]
-            copy-files $scriptConfig(skeletonDir) $sourceDir 0 $skipRegExp
+            copy-files $scriptConfig(skeletonDir) $inputDir 0 $skipRegExp
             exit 0
         }
         build {
-            set websiteConfig [load-config $sourceDir]
+            set websiteConfig [load-config $inputDir]
 
-            if {[file isdir $sourceDir]} {
-                compile-website $sourceDir $destDir $websiteConfig
+            if {[file isdir $inputDir]} {
+                compile-website $inputDir $outputDir $websiteConfig
             } else {
-                puts "couldn't access directory \"$sourceDir\""
+                puts "couldn't access directory \"$inputDir\""
                 exit 1
             }
         }
         clean {
-            foreach file [fileutil::find $destDir {file isfile}] {
+            foreach file [fileutil::find $outputDir {file isfile}] {
                 puts "deleting $file"
                 file delete $file
             }
@@ -416,20 +416,20 @@ proc main {argv0 argv} {
                 copy-files [
                     file join $scriptConfig(skeletonDir) $dir
                 ] [
-                    file join $sourceDir $dir
+                    file join $inputDir $dir
                 ] 2
             }
         }
         deploy-copy {
-            set websiteConfig [load-config $sourceDir]
+            set websiteConfig [load-config $inputDir]
 
             set deployDest [dict get $websiteConfig deployCopyPath]
 
-            copy-files $destDir $deployDest 1
+            copy-files $outputDir $deployDest 1
             exit 0
         }
         deploy-ftp {
-            set websiteConfig [load-config $sourceDir]
+            set websiteConfig [load-config $inputDir]
 
             package require ftp
             global errorInfo
@@ -449,8 +449,8 @@ proc main {argv0 argv} {
 
             ::ftp::Type $conn binary
 
-            foreach file [fileutil::find $destDir {file isfile}] {
-                set destFile [replace-path-root $file $destDir $deployFtpPath]
+            foreach file [fileutil::find $outputDir {file isfile}] {
+                set destFile [replace-path-root $file $outputDir $deployFtpPath]
                 set dir [file dirname $destFile]
                 if {[ftp::Cd $conn $dir]} {
                     ftp::Cd $conn /
@@ -467,13 +467,13 @@ proc main {argv0 argv} {
             ::ftp::Close $conn
         }
         open {
-            set websiteConfig [load-config $sourceDir]
+            set websiteConfig [load-config $inputDir]
 
             # Open the index page in the default browser.
             # Currently this is written just for Linux.
             exec -- xdg-open [
                 file rootname [
-                    file join $destDir [
+                    file join $outputDir [
                         dict-default-get index.md $websiteConfig indexPage
                     ]
                 ]
@@ -483,15 +483,15 @@ proc main {argv0 argv} {
             puts [
                 subst -nocommands [
                     trim-indentation {
-                        usage: $argv0 <command> [options] [sourceDir [destDir]]
+                        usage: $argv0 <command> [options] [inputDir [outputDir]]
 
                         Possible commands are:
                             init        create project skeleton
                                 --templates copy template files as well
                             build       build static website
-                            clean       delete files in destDir
+                            clean       delete files in outputDir
                             update      selectively replace static
-                                        files (e.g., CSS) in sourceDir with
+                                        files (e.g., CSS) in inputDir with
                                         those of project skeleton
                                 --templates update template files as well
                             deploy-copy copy result to location set in config
@@ -499,8 +499,8 @@ proc main {argv0 argv} {
                                         config
                             open        open index page in default browser
 
-                        sourceDir defaults to "$scriptConfig(defaultSourceDir)"
-                        destDir defaults to "$scriptConfig(defaultDestDir)"
+                        inputDir defaults to "$scriptConfig(defaultInputDir)"
+                        outputDir defaults to "$scriptConfig(defaultOutputDir)"
                     }
                 ]
             ]

@@ -60,28 +60,28 @@ Concepts
 | Template | A file with Tcl code embedded in HTML markup. When pages are converted from Markdown to HTML their content is inserted into a template and rendered according to that templates logic (code). |
 | Config file | The file `website.conf` in the input directory that specifies the options that apply to a static website as a whole like the website title. |
 | Variable | When set in individual pages variables specify information about that one page. When set in the config file say somethings about the website as a whole. |
-| Static file | The files that should be copied verbatim from a subdirectory in the source directory (`sourceDir/static`) to the destination directory. |
-| Output | The HTML files created by Tclssg based on the content in the source directory plus the static files. It is placed in the destination directory `destDir`. |
+| Static file | The files that should be copied verbatim from a subdirectory in the input directory (`inputDir/static`) to the output directory. |
+| Output | The HTML files created by Tclssg based on the content in the input directory plus the static files. It is placed in the output directory `outputDir`. |
 
 Usage
 -----
 
-    usage: ./ssg.tcl <command> [options] [sourceDir [destDir]]
+    usage: ./ssg.tcl <command> [options] [inputDir [outputDir]]
 
-`sourceDir` specifies the directory where the input for Tclssg is located. It defaults to `website/input` in the current directory.
-`destDir` is where the HTML is put. It defaults to `website/output` and can also be set in the configuration file in `sourceDir`.
+`inputDir` specifies the directory where the input for Tclssg is located. It defaults to `website/input` in the current directory.
+`outputDir` is where the HTML is put. It defaults to `website/output` and can also be set in the configuration file in `inputDir`.
 
 Possible commands are
 
 * `init [--templates]` — сreate new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
 
-> **NOTE:** The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `sourceDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the pages' look using CSS.
+> **NOTE:** The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `inputDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the pages' look using CSS.
 
 >By default your project will use the page template from the project skeleton. Not keeping a separate copy of the template is a good idea because it means you won't have to update it manually when a new version of Tclssg introduces changes to templating (which at this point in development it may).
 
-* `build` — build a static website in `destDir` based on the data in `sourceDir`.
-* `clean` — delete all files in `destDir`.
-* `update [--templates]` — replace static files in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. Do the same with templates if the option `--templates` is given. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
+* `build` — build a static website in `outputDir` based on the data in `inputDir`.
+* `clean` — delete all files in `outputDir`.
+* `update [--templates]` — replace static files in `inputDir` that have matching ones in the project skeleton with those in the project skeleton. Do the same with templates if the option `--templates` is given. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
 * `deploy-copy` — copy files to the destination set in the configuration file (`website.conf`).
 
 > **NOTE:** This can be used, e.g., if your build machine is your web server or if you have the server's documents directory mounted as a local path.
@@ -89,7 +89,7 @@ Possible commands are
 * `deploy-ftp` — deploy files to FTP server set in the configuration file.
 * `open` — open index page in the default browser.
 
-The default layout of the source directory is
+The default layout of the input directory is
 
     .
     ├── pages <-- Markdown files from which HTML is generated.
@@ -110,7 +110,7 @@ Once you've initialized your website with `init` you customize it with general a
 Website settings
 ----------------
 
-The following settings are specified in the file `website.conf` in `sourceDir` and affect all pages. The format of `website.conf` is as follows:
+The following settings are specified in the file `website.conf` in `inputDir` and affect all pages. The format of `website.conf` is as follows:
 
     variableNameOne short_value
     variableNameTwo {A variable value with spaces.}
@@ -119,7 +119,7 @@ The following settings are specified in the file `website.conf` in `sourceDir` a
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | Appened to the `<title>` of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say "Hello! &#124; My Awesome Website".  |
 | url | `{http://example.com/}` | Currently not used. |
-| destDir | `../output`, `/var/www/` | The default destination directory under which HTML output is produced. Relative paths are taken as relative to `sourceDir` (as given on the command line). |
+| outputDir | `../output`, `/var/www/` | The default destination directory under which HTML output is produced. Relative paths are taken as relative to `inputDir` (as given on the command line). |
 | templateFileName | `x.thtml` | If none is specified then `default.thtml` is used. |
 | deployCopyPath | `{/var/www/}` | The location to copy the built static website to on command `deploy-copy`. |
 | deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the built static website to on command `deploy-ftp`. |
