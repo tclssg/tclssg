@@ -53,14 +53,15 @@ Concepts
 
 | Concept | Explanation |
 |---------|-------------|
-| Page |  |
-| Index | |
-| Blog index | |
-| Template | |
-| Config file | |
-| Variable | |
-| Static file | |
-| Output | |
+| Page | The main building block of your static website. A page is a file with Markdown content based on which a single page of HTML output can be produced. When processed the HTML page is placed under the same relative path with the same file name. The page `test/page1.md` will generate the HTML file `test/page1.html` in output directory. A page can be a blog post (see below) or not. |
+| Blog post | Blog posts are like normal pages but they can have tags and a blog sidebar with links to other blog posts.
+| Index | A page all normal pages have a link back to at the top (by default). |
+| Blog index | A page all blog pages have a link back to at the top (by default). | |
+| Template | A file with Tcl code embedded in HTML markup. When pages are converted from Markdown to HTML their content is inserted into a template and rendered according to that templates logic (code). |
+| Config file | The file `website.conf` in the input directory that specifies the options that apply to a static website as a whole like the website title. |
+| Variable | When set in individual pages variables specify information about that one page. When set in the config file say somethings about the website as a whole. |
+| Static file | The files that should be copied verbatim from a subdirectory in the source directory (`sourceDir/static`) to the destination directory. |
+| Output | The HTML files created by Tclssg based on the content in the source directory plus the static files. It is placed in the destination directory `destDir`. |
 
 Usage
 -----
@@ -76,11 +77,11 @@ Possible commands are
 
 > **NOTE:** The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `sourceDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the pages' look using CSS.
 
->By default your project will use the page template from the project skeleton. Not keeping a separate copy of the template is a good idea because it means you won't have to update it manually when a new version of Tclssg introduces changes to templating (which at this point in development it can be expected to).
+>By default your project will use the page template from the project skeleton. Not keeping a separate copy of the template is a good idea because it means you won't have to update it manually when a new version of Tclssg introduces changes to templating (which at this point in development it may).
 
 * `build` — build a static website in `destDir` based on the data in `sourceDir`.
 * `clean` — delete all files in `destDir`.
-* `update` — replace static files and templates in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
+* `update [--templates]` — replace static files in `sourceDir` that have matching ones in the project skeleton with those in the project skeleton. Do the same with templates if the option `--templates` is given. This is used to update your website project when Tclssg itself is updated. Tclssg will prompt you whether to replace each file.
 * `deploy-copy` — copy files to the destination set in the configuration file (`website.conf`).
 
 > **NOTE:** This can be used, e.g., if your build machine is your web server or if you have the server's documents directory mounted as a local path.

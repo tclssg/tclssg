@@ -403,10 +403,15 @@ proc main {argv0 argv} {
             }
         }
         update {
-            foreach {dir descr} [
-                list $scriptConfig(templateDirName) templates \
-                     $scriptConfig(staticDirName) {static files} \
-            ] {
+            set updateSourceDirs [
+                list $scriptConfig(staticDirName) {static files}
+            ]
+            if {"templates" in $options} {
+                lappend updateSourceDirs \
+                        $scriptConfig(templateDirName) \
+                        templates
+            }
+            foreach {dir descr} $updateSourceDirs {
                 puts "updating $descr"
                 copy-files [
                     file join $scriptConfig(skeletonDir) $dir
@@ -485,9 +490,10 @@ proc main {argv0 argv} {
                                 --templates copy template files as well
                             build       build static website
                             clean       delete files in destDir
-                            update      selectively replace templates and static
-                                        files in sourceDir with those of
-                                        project skeleton
+                            update      selectively replace static
+                                        files (e.g., CSS) in sourceDir with
+                                        those of project skeleton
+                                --templates update template files as well
                             deploy-copy copy result to location set in config
                             deploy-ftp  upload result to FTP server set in
                                         config
