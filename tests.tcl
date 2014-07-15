@@ -21,7 +21,7 @@ proc assert-all-equal args {
 }
 
 proc main {argv0 argv} {
-    puts "running tests..."
+    puts "running procedure tests..."
 
     set scriptLocation [file dirname $argv0]
 
@@ -91,6 +91,20 @@ proc main {argv0 argv} {
     ] [
         dict-sort {a {k 5} b {k 1} c {k 2}} k 0 {} {x {lindex $x}}
     ] {b {k 1} c {k 2} a {k 5}}
+
+    # Tclssg init, build
+    puts "running build test..."
+    set tempProjectDir [::fileutil::tempfile]
+    # Remove temporary file to replace it with a directory.
+    file delete $tempProjectDir
+    set tclssgArguments [
+        list [file join $tempProjectDir input] \
+             [file join $tempProjectDir output]
+    ]
+    exec tclsh ssg.tcl init {*}$tclssgArguments
+    exec tclsh ssg.tcl build {*}$tclssgArguments
+    exec tclsh ssg.tcl clean {*}$tclssgArguments
+    file delete -force $tempProjectDir
 
     puts "done."
 }
