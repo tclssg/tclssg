@@ -150,10 +150,10 @@ Variables that have an effect on any page:
 |---------------|------------------|-------------|
 | pageTitle | `{Some title}` | Title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar/tag cloud links to the page. |
 | hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
-| blogEntry | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
+| blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
-| hideFooter | 0/1 | Disable the "Powered by" footer. |
+| hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 
 Variables that only have an effect for blog posts:
 
@@ -168,7 +168,7 @@ Variables that only have an effect for blog posts:
 
 Like with website settings all 0/1 settings default to `0`.
 
-For multiline page variable values and manipulating website variables just for the current page set `expandMacrosInPages` to `1` and use a macro in the page like
+Page variable values set as shown above can't exceed a single line. For multiline page variable values and set `expandMacrosInPages` to `1` and use a macro in the page like
 
     <%
     dict set pages $currentPageId variables headExtra {
@@ -178,6 +178,8 @@ For multiline page variable values and manipulating website variables just for t
     set websiteTitle blah
     lindex ""
     %>
+
+You can also use macros to manipulate website variables like the website title or the copyright notice just for the current page.
 
 Sample session
 --------------

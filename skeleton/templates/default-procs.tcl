@@ -46,7 +46,7 @@ proc format-index-link {} {
     global currentPageId
     set pageToLinkBackTo $indexPage
     if {[info exists blogIndexPage] &&
-        [page-variable-default-get 0 blogEntry] &&
+        [page-variable-default-get 0 blogPost] &&
         $currentPageId ne $blogIndexPage} {
         # Link from blog entries to the blog index page but link back to the
         # index page from the blog index page.
@@ -92,7 +92,7 @@ proc format-article-tag-list {} {
     if {[get-default tagPage {}] ne ""} {
         set tagPageLink [dict get $pageLinks $tagPage]
     }
-    if {[page-variable-default-get 0 blogEntry] && \
+    if {[page-variable-default-get 0 blogPost] && \
         ![page-variable-default-get 0 hidePostTags]} {
         set postTags [page-variable-default-get {} tags]
         if {[llength $postTags] > 0} {
@@ -112,12 +112,12 @@ proc format-sidebar {} {
     # Blog sidebar.
     global pages
     set sidebar {}
-    if {[page-variable-default-get 0 blogEntry] && \
+    if {[page-variable-default-get 0 blogPost] && \
         ![page-variable-default-get 0 hideSidebar]} {
         append sidebar {<nav id="sidebar"><ul>}
         foreach {id ___} $pages {
             # Only add links to other blog entries.
-            if {[page-variable-default-get 0 blogEntry $id] && \
+            if {[page-variable-default-get 0 blogPost $id] && \
                 ![page-variable-default-get 0 hideFromSidebar $id]} {
                 append sidebar [format-link $id]
             }
@@ -133,12 +133,12 @@ proc format-prev-next-links {} {
     global currentPageId
     set links {}
 
-    if {[page-variable-default-get 0 blogEntry] && \
+    if {[page-variable-default-get 0 blogPost] && \
         ![page-variable-default-get 0 hidePrevNextLinks]} {
         set pageIds {}
         foreach {id ___} $pages {
             # Only have links to other blog entries.
-            if {[page-variable-default-get 0 blogEntry $id] && \
+            if {[page-variable-default-get 0 blogPost $id] && \
                 ![page-variable-default-get 0 hideFromSidebar $id]} {
                 lappend pageIds $id
             }

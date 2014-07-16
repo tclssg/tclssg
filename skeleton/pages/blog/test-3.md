@@ -1,4 +1,4 @@
 ! pageTitle {Test page 3}
-! blogEntry 1
+! blogPost 1
 ! tags {test {another thing}}
 Lorem ipsum consequat consectetur elit exercitation. Excepteur consectetur proident elit velit est et laboris ex laboris deserunt consectetur in ex aliquip.
