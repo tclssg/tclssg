@@ -28,7 +28,9 @@ Page screenshot
 Getting started
 ---------------
 
-To use Tclssg you will need Tcl 8.5 or newer and Tcllib installed. You will also need a Markdown processor to turn Markdown into HTML. The default Markdown processor shipped with Tclssg is [Markdown 1.0.1](http://daringfireball.net/projects/markdown/), which requires Perl 5.
+Tclssg is known to run on Linux, FreeBSD, OpenBSD, OS X and Windows XP/7/8.x.
+
+To use it you will need Tcl 8.5 or newer and Tcllib installed. You will also need a Markdown processor to turn Markdown into HTML. The default Markdown processor shipped with Tclssg is [Markdown 1.0.1](http://daringfireball.net/projects/markdown/), which requires Perl 5.
 
 To install Tcl and Tcllib on Debian/Ubuntu run the following command:
 
@@ -39,13 +41,21 @@ On Fedora/RHEL/CentOS:
     su -
     yum install tcl tcllib
 
-Once you have these requirements installed clone this repository, `cd` into it then run
+On Windows the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't ship with Tcllib and won't run Tclssg out of the box.
+
+Once you have the requirements installed clone this repository, `cd` into it then run
 
     ./ssg.tcl init
     ./ssg.tcl build
     ./ssg.tcl open
 
-This will create a new website project in the directory `website/input`, build it in `website/output` and open the result in the browser. If you're not on Linux instead of running `./ssg.tcl open` open `website/output/index.html` manually.
+or on Windows
+
+    ssg.cmd init
+    ssg.cmd build
+    ssg.cmd open
+
+This will create a new website project in the directory `website/input`, build it in `website/output` and open the result in the default web browser.
 
 Concepts
 --------

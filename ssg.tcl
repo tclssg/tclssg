@@ -468,9 +468,17 @@ proc main {argv0 argv} {
         open {
             set websiteConfig [load-config $inputDir]
 
-            # Open the index page in the default browser.
-            # Currently this is written just for Linux.
-            exec -- xdg-open [
+            package require platform
+			set platform [platform::generic]
+
+			set openCommand [
+				switch -glob -- $platform {
+					*win* { lindex {cmd /c start ""} }
+					*osx* { lindex open }
+					default { lindex xdg-open }
+				}
+			] ;# The default is the freedesktop.org open command for *nix.
+            exec -- {*}$openCommand [
                 file rootname [
                     file join $outputDir [
                         dict-default-get index.md $websiteConfig indexPage
