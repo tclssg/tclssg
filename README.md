@@ -30,18 +30,18 @@ Getting started
 
 Tclssg is known to run on Linux, FreeBSD, OpenBSD, OS X and Windows XP/7/8.x.
 
-To use it you will need Tcl 8.5 or newer and Tcllib installed. You will also need a Markdown processor to turn Markdown into HTML. The default Markdown processor shipped with Tclssg is [Markdown 1.0.1](http://daringfireball.net/projects/markdown/), which requires Perl 5.
+To use it you will need Tcl 8.5 or newer and Tcllib installed. You will also need a Markdown processor to turn Markdown into HTML. The default Markdown processor shipped with Tclssg is [Markdown 1.0.1](http://daringfireball.net/projects/markdown/), which requires Perl 5.6 or newer.
 
-To install Tcl and Tcllib on Debian/Ubuntu run the following command:
+To install Tcl and Tcllib on **Debian/Ubuntu** run the following command:
 
     sudo apt-get install tcl tcllib
 
-On Fedora/RHEL/CentOS:
+On **Fedora/RHEL/CentOS**:
 
     su -
     yum install tcl tcllib
 
-On Windows the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't ship with Tcllib and won't run Tclssg out of the box.
+On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't ship with Tcllib, so it won't run Tclssg out of the box.
 
 Once you have the requirements installed clone this repository, `cd` into it then run
 
@@ -66,7 +66,7 @@ Concepts
 | Blog post | Blog posts are pages that have special features to help organize a blog: tags, a sidebar with links to other blog posts and links to the previous and the next blog post. Those features are enable by default but can be selectively disabled for any individual blog post. A blog post's order in the sidebar and the previous/next link chain is determined by its date (the `date` variable). |
 | Index | A page that all normal pages will have a link back to at the top by default. |
 | Blog index | A page that all blog pages will have a link back to at the top by default. | |
-| Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and your config file. Templating in Tclssg is powered by Tcllib's `[textutil::expander](http://tcllib.sourceforge.net/doc/expander.html)`. |
+| Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and your config file. Templating in Tclssg is powered by Tcllib's [`textutil::expander`](http://tcllib.sourceforge.net/doc/expander.html). |
 | Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
 | Variable | A variable specifies a Tclssg setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies a setting for that individual page. When a variable is set the configuration (config) file it specifies a setting for the website as a whole. |
 | Static file | A file that should be copied verbatim into to the output directory. Those are stored in a subdirectory of the input directory (`inputDir/static`). File paths relative to `inputDir/static` are preserved, which means that, e.g., `website/input/static/blah/file.zip` will be copied to `website/output/blah/file.zip`.  |
@@ -181,15 +181,20 @@ Page variable values set as shown above can't exceed a single line. For multilin
         <link rel="stylesheet"
         href="./contact.css">
     }
-    lindex ""
+    return
     %>
 
 You can also use macros to manipulate website variables like the website title or the copyright notice just for the current page:
 
     <%
     set websiteTitle blah
-    lindex ""
+    return
     %>
+
+FAQ
+---
+
+Answers to question about Tclssg can be on the [FAQ wiki page](https://github.com/dbohdan/tclssg/wiki/FAQ).
 
 Sample use session
 ------------------

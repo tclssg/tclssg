@@ -92,11 +92,11 @@ proc main {argv0 argv} {
         dict-sort {a {k 5} b {k 1} c {k 2}} k 0 {} {x {lindex $x}}
     ] {b {k 1} c {k 2} a {k 5}}
 
-    # Tclssg init, build
+    # Tclssg init, build.
     puts "running build tests..."
     set tempProjectDir [::fileutil::tempfile]
-    # Remove the temporary file for Tclssg to replace it with its project
-    # directory.
+    # Remove the temporary file so that Tclssg can replace it with
+    # a temporary project directory.
     file delete $tempProjectDir
     set tclssgArguments [
         list [file join $tempProjectDir input] \
