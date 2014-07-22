@@ -142,9 +142,9 @@ The following settings are specified in the file `website.conf` in `inputDir` an
 
 All 0/1 settings default to `0`.
 
-Per-page variables
+Per-page settings
 ------------------
-Per-page variables alter setting for just the page they are set on. They are set in the page source file (e.g., `{index.md}`), each one on a separate line that starts with `!` (an exclamation mark) and has the form of `! variableName {Value}`. Those lines are normally placed at the top of the page source file but can be placed anywhere in the file. Example usage:
+A page variable alters a setting for just the page it is set on. Page variables are set in the page source file (e.g., `{index.md}`), each one on a separate line that starts with `!` (an exclamation mark) and has the form of `! variableName {Value}`. Those lines are normally placed at the top of the page source file but can be placed anywhere in the file. Example usage:
 
     ! variableNameOne short_value
     ! variableNameTwo {A variable value with spaces.}

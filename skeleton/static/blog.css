@@ -1,0 +1,162 @@
+html, body {
+    margin-top: 0;
+    color: black;
+    background-color: white;
+    font-family: Times New Roman, times;
+    font-size: 28px;
+    height: 100%;
+}
+
+h2 {
+    font-size: 28px;
+}
+
+div#wrapper {
+    width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 900px) {
+    div#wrapper {
+        margin-left: 5px;
+        width: 100%;
+    }
+}
+
+header#index-link a:before {
+    content: "↩ ";
+}
+
+article {
+    width: 100%;
+    padding-bottom: 35px;
+}
+
+nav, footer, header#index-link, header#date {
+    font-size: 24px;
+}
+
+nav#sidebar li, nav#tag-cloud li {
+    list-style: square;
+
+}
+
+nav#sidebar:before {
+    font-weight: bold;
+    content: 'Blog posts';
+}
+
+header#page-title h2 {
+    margin-top: 25px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+header#page-title + header#date {
+    padding-top: 15px;
+}
+
+header#date {
+    font-weight: bold;
+    padding-top: 25px;
+}
+
+nav#tags ul li {
+    display: inline;
+}
+
+nav#tags ul:before {
+    font-weight: bold;
+    content: 'Tagged: ';
+}
+
+nav#tag-cloud:before {
+    font-weight: bold;
+    content: 'Blog tags';
+}
+
+nav#tag-cloud dl {
+    width: 100%;
+}
+
+nav#tag-cloud dl dt a {
+    color: black;
+}
+
+nav#tag-cloud dl dt {
+    float:left;
+    clear: both;
+    width: 10%;
+    text-align: right;
+}
+
+nav#tag-cloud dl dd {
+    float:left;
+    margin: 0;
+    padding: 0;
+}
+
+nav#tag-cloud dl dd ul {
+    padding-left: 20px;
+}
+
+nav#tag-cloud dl dd ul li {
+    display: inline-block;
+}
+
+nav#prev-next {
+    display: inline-block;
+    width: 100%;
+}
+
+nav#prev-next #previous {
+    float: left;
+}
+
+nav#prev-next #next {
+    float: right;
+}
+
+nav#prev-next #previous a:before {
+    content: "← ";
+}
+
+nav#prev-next #next a:after {
+    content: " →";
+}
+
+footer {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    clear: both;
+    text-align: center;
+}
+
+input, textarea {
+    font-family: Times New Roman, times;
+    font-size: 20px;
+}
+
+h1, form {
+    text-indent: 0px;
+    font-size: 28px;
+}
+
+a {
+    text-decoration: none;
+    color: #0000ff;
+}
+
+a:hover {
+    color: #000066;
+}
+
+a:active {
+    color: red;
+}
+
+a:visited {
+    color: #581c90;
+}

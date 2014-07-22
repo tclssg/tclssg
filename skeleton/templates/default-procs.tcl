@@ -13,7 +13,6 @@ proc page-var-get-default {varName default {pageId {}}} {
 }
 
 proc format-link {id {li 1} {customTitle ""}} {
-    global pages
     global pageLinks
     set link [dict get $pageLinks $id]
     if {$customTitle ne ""} {
@@ -62,7 +61,6 @@ proc format-index-link {} {
 
 proc format-article-title {} {
     # Article title.
-    global pages
     set title [page-var-get-default pageTitle {}]
     if {$title ne "" && ![page-var-get-default hideTitle 0]} {
         return "<header id=\"page-title\"><h2>$title</h2></header>"
@@ -73,7 +71,6 @@ proc format-article-title {} {
 
 proc format-article-date {} {
     # Page date.
-    global pages
     set date [page-var-get-default date {}]
     if {$date ne "" && ![page-var-get-default hideDate 0]} {
         return "<header id=\"date\">$date</header>"
@@ -84,7 +81,6 @@ proc format-article-date {} {
 
 proc format-article-tag-list {} {
     # Page tag list.
-    global pages
     global pageLinks
     global tagPage
     set tagList {}
@@ -115,7 +111,7 @@ proc format-sidebar {} {
     if {[page-var-get-default blogPost 0] && \
         ![page-var-get-default hideSidebar 0]} {
         append sidebar {<nav id="sidebar"><ul>}
-        foreach {id ___} $pages {
+        foreach {id _} $pages {
             # Only add links to other blog entries.
             if {[page-var-get-default blogPost 0 $id] && \
                 ![page-var-get-default hideFromSidebar 0 $id]} {
@@ -136,7 +132,7 @@ proc format-prev-next-links {} {
     if {[page-var-get-default blogPost 0] && \
         ![page-var-get-default hidePrevNextLinks 0]} {
         set pageIds {}
-        foreach {id ___} $pages {
+        foreach {id _} $pages {
             # Only have links to other blog entries.
             if {[page-var-get-default blogPost 0 $id] && \
                 ![page-var-get-default hideFromSidebar 0 $id]} {
@@ -183,7 +179,6 @@ proc format-tag-cloud {} {
 
 proc format-footer {} {
     # Footer.
-    global pages
     set footer {}
     if {[website-var-get-default copyright {}] ne ""} {
         append footer "<div id=\"copyright\">$copyright</div>"

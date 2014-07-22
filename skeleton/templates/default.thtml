@@ -13,7 +13,7 @@ interp-source default-procs.tcl
                 return $rootDirLink/blog.css
             } else {
                 return $rootDirLink/main.css
-            }  %>">
+            } %>">
         <% lindex [page-var-get-default headExtra {}] %>
     </head>
     <body>

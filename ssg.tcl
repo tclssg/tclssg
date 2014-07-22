@@ -79,7 +79,7 @@ proc markdown-to-html {markdown} {
 }
 
 # Get variables set in page using the "! variable value" syntax.
-proc get-metadata-variables {rawContent} {
+proc get-page-variables {rawContent} {
     global errorInfo
     set result {}
     foreach line [split $rawContent \n] {
@@ -182,7 +182,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
         # May want to change this preloading behavior for very large websites.
         dict set pages $id rawContent [read-file $file]
         dict set pages $id variables [
-            get-metadata-variables [
+            get-page-variables [
                 dict get $pages $id rawContent
             ]
         ]
@@ -223,7 +223,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict set websiteConfig pages tags [tag-list $pages]
 
     # Process page files into HTML output.
-    dict for {id ___} $pages {
+    dict for {id _} $pages {
         # Links to other page relative to the current.
         set outputFile [dict get $pages $id outputFile]
         set pageLinks {}
