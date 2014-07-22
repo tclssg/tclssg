@@ -9,12 +9,12 @@ interp-source default-procs.tcl
         <title><% format-html-title %></title>
         <link rel="stylesheet" href="<% lindex $rootDirLink/html5reset.css %>">
         <link rel="stylesheet" href="<%
-            if {[page-variable-default-get 0 blogPost]} {
+            if {[page-var-get-default blogPost 0]} {
                 return $rootDirLink/blog.css
             } else {
                 return $rootDirLink/main.css
             }  %>">
-        <% lindex [page-variable-default-get {} headExtra] %>
+        <% lindex [page-var-get-default headExtra {}] %>
     </head>
     <body>
         <div id="wrapper"><% format-index-link %>
