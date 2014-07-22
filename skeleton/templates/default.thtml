@@ -7,7 +7,13 @@ interp-source default-procs.tcl
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=<% get-default charset UTF-8 %>">
         <title><% format-html-title %></title>
-        <link rel="stylesheet" href="<% lindex $rootDirLink/main.css %>">
+        <link rel="stylesheet" href="<% lindex $rootDirLink/html5reset.css %>">
+        <link rel="stylesheet" href="<%
+            if {[page-variable-default-get 0 blogPost]} {
+                return $rootDirLink/blog.css
+            } else {
+                return $rootDirLink/main.css
+            }  %>">
         <% lindex [page-variable-default-get {} headExtra] %>
     </head>
     <body>

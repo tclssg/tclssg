@@ -98,7 +98,7 @@ proc format-article-tag-list {} {
         if {[llength $postTags] > 0} {
             append tagList {<nav id="tags"><ul>}
             foreach tag [lrange $postTags 0 end-1 ] {
-                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a>, </li>"
+                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
             }
             set tag [lindex $postTags end]
             append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
@@ -168,7 +168,7 @@ proc format-tag-cloud {} {
         foreach {tag ids} [dict-default-get {} $pages tags] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
-                append tagCloud "[format-link $id], "
+                append tagCloud "[format-link $id]"
             }
             append tagCloud [
                 format-link [
