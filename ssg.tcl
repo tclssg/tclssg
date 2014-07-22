@@ -12,7 +12,7 @@ package require textutil::expander
 
 # If $varName exists return its value in the interpreter templateInterp
 # else return the default value.
-proc get-default {varName default} {
+proc website-var-get-default {varName default} {
     if {[interp eval templateInterp "info exists $varName"]} {
         return [interp eval templateInterp "set $varName"]
     } else {
@@ -40,8 +40,8 @@ proc interp-up {inputDir} {
     # Create safe interpreter and expander for templates. Those are global.
     interp create -safe templateInterp
 
-    foreach command {replace-path-root dict-default-get  \
-                     get-default textutil::indent slugify
+    foreach command {replace-path-root dict-default-get
+                     website-var-get-default textutil::indent slugify
                      choose-dir interp-source puts} {
         interp alias templateInterp $command {} $command
     }

@@ -89,7 +89,7 @@ proc format-article-tag-list {} {
     global tagPage
     set tagList {}
     set tagPageLink {}
-    if {[get-default tagPage {}] ne ""} {
+    if {[website-var-get-default tagPage {}] ne ""} {
         set tagPageLink [dict get $pageLinks $tagPage]
     }
     if {[page-var-get-default blogPost 0] && \
@@ -168,8 +168,7 @@ proc format-tag-cloud {} {
         foreach {tag ids} [dict-default-get {} $pages tags] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
-                append tagCloud "[format-link $id]"
-            }
+                append tagCloud "[format-link $id]"}
             append tagCloud [
                 format-link [
                     lindex $ids end
@@ -186,10 +185,10 @@ proc format-footer {} {
     # Footer.
     global pages
     set footer {}
-    if {[get-default copyright {}] ne ""} {
+    if {[website-var-get-default copyright {}] ne ""} {
         append footer "<div id=\"copyright\">$copyright</div>"
     }
-    if {![page-var-get-default hideFooter 0]} {
+    if {![website-var-get-default hideFooter 0]} {
         append footer {<div id="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
     }
     return $footer
