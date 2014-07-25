@@ -13,6 +13,36 @@ package require textutil::expander
 namespace eval templating {
     namespace export *
     namespace ensemble create
+
+    # Make HTML out of content plus template.
+    proc subst {template pageData websiteConfig} {
+        upvar 1 scriptConfig scriptConfig
+
+        set choppedContent {}
+        foreach line [split [dict get $pageData rawContent] \n] {
+            # Skip lines that set variables.
+            if {[string index $line 0] != "!"} {
+                set choppedContent "$choppedContent$line\n"
+            }
+        }
+
+        templating interpreter up [dict get $websiteConfig inputDir]
+        templating interpreter inject $websiteConfig
+        # Page data overrides website config.
+        templating interpreter inject $pageData
+        # Macroexpand content if needed then convert it from Markdown to HTML.
+        if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
+            set choppedContent [::templating::exp expand $choppedContent]
+        }
+        set cookedContent [markdown-to-html $choppedContent]
+        # Expand template with content substituted in.
+        templating interpreter var-set content $cookedContent
+        set result [::templating::exp expand $template]
+        templating interpreter down
+
+        return $result
+    }
+
     # If $varName exists return its value in the interpreter templateInterp
     # else return the default value.
     proc website-var-get-default {varName default} {
@@ -23,79 +53,84 @@ namespace eval templating {
         }
     }
 
-    # Set variable $name to $value in the template interpreter.
-    proc interp-set {name value} {
-        interp eval templateInterp [format {set {%s} {%s}} $name $value]
-    }
+    namespace eval interpreter {
+        namespace export *
+        namespace ensemble create
 
-    # Set variable $key to $value in the template interpreter for each key-value
-    # pair in a dictionary.
-    proc interp-inject {dictionary} {
-        dict for {key value} $dictionary {
-            interp-set $key $value
-        }
-    }
-
-    # Set up template interpreter and expander.
-    proc interp-up {inputDir} {
-        upvar 1 scriptConfig scriptConfig
-
-        # Create safe interpreter and expander for templates. Those are global.
-        interp create -safe templateInterp
-
-        foreach command {
-            replace-path-root
-            dict-default-get
-            textutil::indent
-            slugify
-            choose-dir
-            puts
-        } {
-            interp alias templateInterp $command {} $command
-        }
-        interp alias templateInterp website-var-get-default \
-                {} ::templating::website-var-get-default
-
-        foreach builtIn {source} {
-            interp expose templateInterp $builtIn
+        # Set variable $name to $value in the template interpreter.
+        proc var-set {name value} {
+            interp eval templateInterp [format {set {%s} {%s}} $name $value]
         }
 
-        # Allow templates to source Tcl files with directory failover.
-        interp alias templateInterp interp-source {} \
-                ::templating::interp-source-dirs [
-                    list [
-                        file join $inputDir \
-                                  $scriptConfig(templateDirName)
-                    ] [
-                        file join $scriptConfig(skeletonDir) \
-                                  $scriptConfig(templateDirName)
-                    ]
-                ]
-
-        if {![catch {::textutil::expander ::templating::exp}]} {
-            ::templating::exp evalcmd {interp eval templateInterp}
-            ::templating::exp setbrackets {*}$scriptConfig(templateBrackets)
-        }
-    }
-
-    # Tear down template interpreter.
-    proc interp-down {} {
-        interp delete templateInterp
-    }
-
-    # Source fileName into templateInterp from the first directory out of dirs
-    # where it exists.
-    proc interp-source-dirs {dirs fileName} {
-        set command [
-            subst -nocommands {
-                source [
-                    choose-dir $fileName {$dirs}
-                ]
+        # Set variable $key to $value in the template interpreter for each key-value
+        # pair in a dictionary.
+        proc inject {dictionary} {
+            dict for {key value} $dictionary {
+                var-set $key $value
             }
-        ]
-        interp eval templateInterp $command
-    }
-} ;# namespace
+        }
+
+        # Set up template interpreter and expander.
+        proc up {inputDir} {
+            upvar 1 scriptConfig scriptConfig
+
+            # Create safe interpreter and expander for templates. Those are global.
+            interp create -safe templateInterp
+
+            foreach command {
+                replace-path-root
+                dict-default-get
+                textutil::indent
+                slugify
+                choose-dir
+                puts
+            } {
+                interp alias templateInterp $command {} $command
+            }
+            interp alias templateInterp website-var-get-default \
+                    {} ::templating::website-var-get-default
+
+            foreach builtIn {source} {
+                interp expose templateInterp $builtIn
+            }
+
+            # Allow templates to source Tcl files with directory failover.
+            interp alias templateInterp interp-source {} \
+                    ::templating::interpreter::source-dirs [
+                        list [
+                            file join $inputDir \
+                                      $scriptConfig(templateDirName)
+                        ] [
+                            file join $scriptConfig(skeletonDir) \
+                                      $scriptConfig(templateDirName)
+                        ]
+                    ]
+
+            if {![catch {::textutil::expander ::templating::exp}]} {
+                ::templating::exp evalcmd {interp eval templateInterp}
+                ::templating::exp setbrackets {*}$scriptConfig(templateBrackets)
+            }
+        }
+
+        # Tear down template interpreter.
+        proc down {} {
+            interp delete templateInterp
+        }
+
+        # Source fileName into templateInterp from the first directory out of dirs
+        # where it exists.
+        proc source-dirs {dirs fileName} {
+            set command [
+                subst -nocommands {
+                    source [
+                        choose-dir $fileName {$dirs}
+                    ]
+                }
+            ]
+            interp eval templateInterp $command
+        }
+    } ;# namespace interpreter
+} ;# namespace templating
 
 # Convert raw Markdown to HTML using an external Markdown processor.
 proc markdown-to-html {markdown} {
@@ -123,35 +158,6 @@ proc get-page-variables {rawContent} {
     return $result
 }
 
-# Make HTML out of content plus template.
-proc template-subst {template pageData websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
-
-    set choppedContent {}
-    foreach line [split [dict get $pageData rawContent] \n] {
-        # Skip lines that set variables.
-        if {[string index $line 0] != "!"} {
-            set choppedContent "$choppedContent$line\n"
-        }
-    }
-
-    templating interp-up [dict get $websiteConfig inputDir]
-    templating interp-inject $websiteConfig
-    # Page data overrides website config.
-    templating interp-inject $pageData
-    # Macroexpand content if needed then convert it from Markdown to HTML.
-    if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
-        set choppedContent [::templating::exp expand $choppedContent]
-    }
-    set cookedContent [markdown-to-html $choppedContent]
-    # Expand template with content substituted in.
-    templating interp-set content $cookedContent
-    set result [::templating::exp expand $template]
-    templating interp-down
-
-    return $result
-}
-
 # Process the raw content of a page supplied in pageData (which can contain
 # Markdown plus template code if enabled), substitute the result into a template
 # and save in the file specified under key outputFile in pageData.
@@ -169,7 +175,7 @@ proc page-to-html {pageData template websiteConfig} {
     }
 
     puts "processing page file $inputFile into $outputFile"
-    set output [template-subst $template $pageData $websiteConfig]
+    set output [templating subst $template $pageData $websiteConfig]
     fileutil::writeFile $outputFile $output
 }
 
