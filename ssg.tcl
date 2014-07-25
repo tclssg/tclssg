@@ -10,66 +10,92 @@ package require fileutil
 package require textutil
 package require textutil::expander
 
-# If $varName exists return its value in the interpreter templateInterp
-# else return the default value.
-proc website-var-get-default {varName default} {
-    if {[interp eval templateInterp "info exists $varName"]} {
-        return [interp eval templateInterp "set $varName"]
-    } else {
-        return $default
-    }
-}
-
-# Set variable $name to $value in the template interpreter.
-proc interp-set {name value} {
-    interp eval templateInterp [format {set {%s} {%s}} $name $value]
-}
-
-# Set variable $key to $value in the template interpreter for each key-value
-# pair in a dictionary.
-proc interp-inject {dictionary} {
-    dict for {key value} $dictionary {
-        interp-set $key $value
-    }
-}
-
-# Set up template interpreter and expander.
-proc interp-up {inputDir} {
-    upvar 1 scriptConfig scriptConfig
-
-    # Create safe interpreter and expander for templates. Those are global.
-    interp create -safe templateInterp
-
-    foreach command {replace-path-root dict-default-get
-                     website-var-get-default textutil::indent slugify
-                     choose-dir interp-source puts} {
-        interp alias templateInterp $command {} $command
-    }
-    foreach builtIn {source} {
-        interp expose templateInterp $builtIn
+namespace eval templating {
+    namespace export *
+    namespace ensemble create
+    # If $varName exists return its value in the interpreter templateInterp
+    # else return the default value.
+    proc website-var-get-default {varName default} {
+        if {[interp eval templateInterp "info exists $varName"]} {
+            return [interp eval templateInterp "set $varName"]
+        } else {
+            return $default
+        }
     }
 
-    # Allow templates to source Tcl files with directory failover.
-    interp alias templateInterp interp-source {} interp-source-dirs [
-        list [
-            file join $inputDir \
-                      $scriptConfig(templateDirName)
-        ] [
-            file join $scriptConfig(skeletonDir) \
-                      $scriptConfig(templateDirName)
+    # Set variable $name to $value in the template interpreter.
+    proc interp-set {name value} {
+        interp eval templateInterp [format {set {%s} {%s}} $name $value]
+    }
+
+    # Set variable $key to $value in the template interpreter for each key-value
+    # pair in a dictionary.
+    proc interp-inject {dictionary} {
+        dict for {key value} $dictionary {
+            interp-set $key $value
+        }
+    }
+
+    # Set up template interpreter and expander.
+    proc interp-up {inputDir} {
+        upvar 1 scriptConfig scriptConfig
+
+        # Create safe interpreter and expander for templates. Those are global.
+        interp create -safe templateInterp
+
+        foreach command {
+            replace-path-root
+            dict-default-get
+            textutil::indent
+            slugify
+            choose-dir
+            puts
+        } {
+            interp alias templateInterp $command {} $command
+        }
+        interp alias templateInterp website-var-get-default \
+                {} ::templating::website-var-get-default
+
+        foreach builtIn {source} {
+            interp expose templateInterp $builtIn
+        }
+
+        # Allow templates to source Tcl files with directory failover.
+        interp alias templateInterp interp-source {} \
+                ::templating::interp-source-dirs [
+                    list [
+                        file join $inputDir \
+                                  $scriptConfig(templateDirName)
+                    ] [
+                        file join $scriptConfig(skeletonDir) \
+                                  $scriptConfig(templateDirName)
+                    ]
+                ]
+
+        if {![catch {::textutil::expander ::templating::exp}]} {
+            ::templating::exp evalcmd {interp eval templateInterp}
+            ::templating::exp setbrackets {*}$scriptConfig(templateBrackets)
+        }
+    }
+
+    # Tear down template interpreter.
+    proc interp-down {} {
+        interp delete templateInterp
+    }
+
+    # Source fileName into templateInterp from the first directory out of dirs
+    # where it exists.
+    proc interp-source-dirs {dirs fileName} {
+        set command [
+            subst -nocommands {
+                source [
+                    choose-dir $fileName {$dirs}
+                ]
+            }
         ]
-    ]
-
-    if {![catch {::textutil::expander exp}]} {
-        ::exp evalcmd {interp eval templateInterp}
-        ::exp setbrackets {*}$scriptConfig(templateBrackets)
+        interp eval templateInterp $command
     }
-}
-
-# Tear down template interpreter.
-proc interp-down {} {
-    interp delete templateInterp
-}
+} ;# namespace
 
 # Convert raw Markdown to HTML using an external Markdown processor.
 proc markdown-to-html {markdown} {
@@ -109,19 +135,19 @@ proc template-subst {template pageData websiteConfig} {
         }
     }
 
-    interp-up [dict get $websiteConfig inputDir]
-    interp-inject $websiteConfig
+    templating interp-up [dict get $websiteConfig inputDir]
+    templating interp-inject $websiteConfig
     # Page data overrides website config.
-    interp-inject $pageData
+    templating interp-inject $pageData
     # Macroexpand content if needed then convert it from Markdown to HTML.
     if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
-        set choppedContent [::exp expand $choppedContent]
+        set choppedContent [::templating::exp expand $choppedContent]
     }
     set cookedContent [markdown-to-html $choppedContent]
     # Expand template with content substituted in.
-    interp-set content $cookedContent
-    set result [::exp expand $template]
-    interp-down
+    templating interp-set content $cookedContent
+    set result [::templating::exp expand $template]
+    templating interp-down
 
     return $result
 }
@@ -143,9 +169,7 @@ proc page-to-html {pageData template websiteConfig} {
     }
 
     puts "processing page file $inputFile into $outputFile"
-    set output [
-        template-subst $template $pageData $websiteConfig
-    ]
+    set output [template-subst $template $pageData $websiteConfig]
     fileutil::writeFile $outputFile $output
 }
 
@@ -170,9 +194,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     # Build page data.
     set pages {}
     foreach file [fileutil::findByPattern $contentDir -glob *.md] {
-        set id [
-            ::fileutil::relative $contentDir $file
-        ]
+        set id [::fileutil::relative $contentDir $file]
         dict set pages $id inputFile $file
         dict set pages $id outputFile [
             file rootname [
@@ -250,9 +272,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 
     # Copy static files verbatim.
-    copy-files [
-      file join $inputDir $scriptConfig(staticDirName)
-    ] $outputDir 1
+    copy-files [file join $inputDir $scriptConfig(staticDirName)] $outputDir 1
 }
 
 # Load website configuration file from directory.
@@ -260,9 +280,7 @@ proc load-config {inputDir {verbose 1}} {
     upvar 1 scriptConfig scriptConfig
 
     set websiteConfig [
-        read-file [
-            file join $inputDir $scriptConfig(websiteConfigFileName)
-        ]
+        read-file [file join $inputDir $scriptConfig(websiteConfigFileName)]
     ]
 
     # Show loaded config to user (without the password values).
@@ -278,19 +296,6 @@ proc load-config {inputDir {verbose 1}} {
     }
 
     return $websiteConfig
-}
-
-# Source fileName into templateInterp from the first directory out of dirs where
-# it exists.
-proc interp-source-dirs {dirs fileName} {
-    set command [
-        subst -nocommands {
-            source [
-                choose-dir $fileName {$dirs}
-            ]
-        }
-    ]
-    interp eval templateInterp $command
 }
 
 proc main {argv0 argv} {
@@ -434,15 +439,14 @@ proc main {argv0 argv} {
             global errorInfo
 
             set conn [
-                ::ftp::Open [
-                    dict get $websiteConfig deployFtpServer
-                ] [
-                    dict get $websiteConfig deployFtpUser
-                ] [
-                    dict get $websiteConfig deployFtpPassword
-                ] -port [
-                    dict-default-get 21 $websiteConfig deployFtpPort
-                ] -mode passive
+                ::ftp::Open \
+                        [dict get $websiteConfig deployFtpServer] \
+                        [dict get $websiteConfig deployFtpUser] \
+                        [dict get $websiteConfig deployFtpPassword] \
+                        -port [
+                            dict-default-get 21 $websiteConfig deployFtpPort
+                        ] \
+                        -mode passive
             ]
             set deployFtpPath [dict get $websiteConfig deployFtpPath]
 
