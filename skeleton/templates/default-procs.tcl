@@ -3,6 +3,14 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
+proc relative-link {id} {
+    global pageLinks
+    return [dict get $pageLinks $id]
+}
+
+set indexLink [relative-link $indexPage]
+set blogIndexLink [relative-link $blogIndexPage]
+
 proc page-var-get-default {varName default {pageId {}}} {
     global pages
     global currentPageId
@@ -12,9 +20,16 @@ proc page-var-get-default {varName default {pageId {}}} {
     dict-default-get $default $pages $pageId variables $varName
 }
 
+proc return-if {condition value} {
+    if {$condition} {
+        return $value
+    } else {
+        return {}
+    }
+}
+
 proc format-link {id {li 1} {customTitle ""}} {
-    global pageLinks
-    set link [dict get $pageLinks $id]
+    set link [relative-link $id]
     if {$customTitle ne ""} {
         set title $customTitle
     } else {
@@ -38,24 +53,18 @@ proc format-html-title {} {
     }
 }
 
-proc format-index-link {} {
-    # Link back to index/blog index.
-    global indexPage
-    global blogIndexPage
-    global currentPageId
-    set pageToLinkBackTo $indexPage
-    if {[info exists blogIndexPage] &&
-        [page-var-get-default blogPost 0] &&
-        $currentPageId ne $blogIndexPage} {
-        # Link from blog entries to the blog index page but link back to the
-        # index page from the blog index page.
-        set pageToLinkBackTo $blogIndexPage
-    }
-
-    if {$currentPageId ne $pageToLinkBackTo} {
-        return "<header id=\"index-link\">[format-link $pageToLinkBackTo 0]</header>"
-    } else {
+proc format-document-title {} {
+    global websiteTitle
+    set pageTitle [page-var-get-default pageTitle {}]
+    set hideTitle [page-var-get-default hideTitle 0]
+    if {$hideTitle} {
         return ""
+    } else {
+        if {$pageTitle eq ""} {
+            return $websiteTitle
+        } else {
+            return $pageTitle
+        }
     }
 }
 

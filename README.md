@@ -243,4 +243,6 @@ License
 
 MIT. See the file `LICENSE` for details.
 
-Tclssg includes a copy of Markdown 1.0.1, which is copyright (c) 2004, John Gruber, and is distributed under a three-clause BSD license. See `external/Markdown_1.0.1/License.text`.
+Markdown 1.0.1 is copyright (c) 2004 John Gruber and is distributed under a three-clause BSD license. See `external/Markdown_1.0.1/License.text`.
+
+Bootstrap 3.2.0 is copyright (c) 2011-2014 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.2.0-dist/LICENSE`.

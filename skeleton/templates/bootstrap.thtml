@@ -1,0 +1,57 @@
+<%
+
+interp-source default-procs.tcl
+
+%><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="<% website-var-get-default charset UTF-8 %>">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="icon" href="../../favicon.ico"> -->
+
+    <title><% format-html-title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="<%= $rootDirPath %>/jumbotron-narrow.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <div class="container">
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li><!-- class="active" --><a href="<%= $indexLink %>">Home</a></li>
+          <li><a href="<%= $blogIndexLink %>">Blog</a></li>
+          <li><a href="<%= $rootDirPath %>/contact.html">Contact</a></li>
+        </ul>
+        <h3 class="text-muted"><% format-document-title %>&nbsp;</h3>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8"><%= $content %></div>
+        <div class="col-md-4">
+          <% format-sidebar %>
+          <% format-tag-cloud %>
+        </div>
+      </div>
+
+      <div class="footer">
+        <% format-prev-next-links %>
+        <% format-footer %>
+      </div>
+
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+  </body>
+</html>

@@ -21,6 +21,7 @@ namespace eval templating {
         exec -- {*}$scriptConfig(markdownProcessor) << $markdown
     }
 
+    # Make HTML out of content plus article template.
     proc prepare-content {rawContent pageData websiteConfig} {
         upvar 1 scriptConfig scriptConfig
 
@@ -45,7 +46,7 @@ namespace eval templating {
         return $cookedContent
     }
 
-    # Make HTML out of content plus template.
+    # Expand template with (HTML) content.
     proc expand {template cookedContent pageData websiteConfig} {
         upvar 1 scriptConfig scriptConfig
 
@@ -53,10 +54,7 @@ namespace eval templating {
         templating interpreter inject $websiteConfig
         # Page data overrides website config.
         templating interpreter inject $pageData
-        # Macroexpand content if needed then convert it from Markdown to HTML.
-        if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
-            set choppedContent [::templating::exp expand $choppedContent]
-        }
+
         # Expand template with content substituted in.
         templating interpreter var-set content $cookedContent
         set result [::templating::exp expand $template]
@@ -112,6 +110,9 @@ namespace eval templating {
             }
             interp alias templateInterp website-var-get-default \
                     {} ::templating::website-var-get-default
+            interp eval templateInterp {
+                proc = varName { return $varName }
+            }
 
             foreach builtIn {source} {
                 interp expose templateInterp $builtIn
@@ -174,6 +175,9 @@ proc get-page-variables {rawContent} {
     return $result
 }
 
+# :-? Process the raw content of a pages supplied in pageData (which can contain
+# Markdown plus template code if enabled), substitute the result into a template
+# and save in the file specified under key outputFile in pageData.
 proc format-article {pageData articleTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
     templating expand $articleTemplate [dict get $pageData rawContent] \
@@ -185,9 +189,6 @@ proc format-document {content pageData documentTemplate websiteConfig} {
     templating expand $documentTemplate $content $pageData $websiteConfig
 }
 
-# Process the raw content of a page supplied in pageData (which can contain
-# Markdown plus template code if enabled), substitute the result into a template
-# and save in the file specified under key outputFile in pageData.
 proc generate-html-file {outputFile pagesData articleTemplate documentTemplate
         websiteConfig} {
     upvar 1 scriptConfig scriptConfig
@@ -311,17 +312,20 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ]
         }
         dict set pages $id pageLinks $pageLinks
-        dict set pages $id rootDirLink [
+        dict set pages $id rootDirPath [
             ::fileutil::relative [
                 file dirname $outputFile
             ] $outputDir
         ]
         dict set websiteConfig currentPageId $id
         dict set pages $id rawContent [
-                templating prepare-content [dict get $pages $id rawContent] \
-                        [dict get $pages $id] $websiteConfig
+            templating prepare-content \
+                    [dict get $pages $id rawContent] \
+                    [dict get $pages $id] \
+                    $websiteConfig
         ]
-        generate-html-file [dict get $pages $id outputFile] \
+        generate-html-file \
+                [dict get $pages $id outputFile] \
                 [list [dict get $pages $id]] \
                 $articleTemplate $documentTemplate \
                 $websiteConfig
@@ -355,16 +359,29 @@ proc load-config {inputDir {verbose 1}} {
 }
 
 proc main {argv0 argv} {
-    set scriptLocation [file dirname $argv0]
+    set scriptConfig(scriptLocation) [file dirname $argv0]
 
     # Utility functions.
-    source [file join $scriptLocation utils.tcl]
+    source [file join $scriptConfig(scriptLocation) utils.tcl]
+    set scriptConfig(version) [
+        string trim [
+            read-file [file join $scriptConfig(scriptLocation) VERSION]
+        ]
+    ]
+    catch {
+        set currentPath [pwd]
+        cd $scriptConfig(scriptLocation)
+        append scriptConfig(version) \
+                " (commit [string range [exec git rev-parse HEAD] 0 9])"
+        cd $currentPath
+    }
 
-    # What follows is the xonfiguration that is generally not supposed to vary
-    # from website to website.
+    # What follows is the configuration that is generally not supposed to vary
+    # from project to project.
     set scriptConfig(markdownProcessor) [
         concat perl [
-            file join $scriptLocation external Markdown_1.0.1 Markdown.pl
+            file join $scriptConfig(scriptLocation) \
+                    external Markdown_1.0.1 Markdown.pl
         ]
     ]
 
@@ -372,9 +389,10 @@ proc main {argv0 argv} {
     set scriptConfig(templateDirName) templates
     set scriptConfig(staticDirName) static
     set scriptConfig(articleTemplateFileName) article.thtml
-    set scriptConfig(documentTemplateFileName) document.thtml
+    set scriptConfig(documentTemplateFileName) bootstrap.thtml
     set scriptConfig(websiteConfigFileName) website.conf
-    set scriptConfig(skeletonDir) [file join $scriptLocation skeleton]
+    set scriptConfig(skeletonDir) \
+            [file join $scriptConfig(scriptLocation) skeleton]
     set scriptConfig(defaultInputDir) [file join "website" "input"]
     set scriptConfig(defaultOutputDir) [file join "website" "output"]
 
@@ -547,6 +565,9 @@ proc main {argv0 argv} {
                 ]
             ].html
         }
+        version {
+            puts $scriptConfig(version)
+        }
         default {
             puts [
                 subst -nocommands [
@@ -566,6 +587,7 @@ proc main {argv0 argv} {
                             deploy-ftp  upload result to FTP server set in
                                         config
                             open        open index page in default browser
+                            version     print version number and exit
 
                         inputDir defaults to "$scriptConfig(defaultInputDir)"
                         outputDir defaults to "$scriptConfig(defaultOutputDir)"
