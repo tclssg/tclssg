@@ -1,0 +1,7 @@
+body {
+	font-size: 18px;
+}
+
+:target {
+   background-color: #ffa;
+}

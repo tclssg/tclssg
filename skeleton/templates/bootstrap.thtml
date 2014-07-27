@@ -16,30 +16,53 @@ interp-source default-procs.tcl
 
     <!-- Bootstrap core CSS -->
     <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <!-- Bootstrap theme -->
+    <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
-    <link href="<%= $rootDirPath %>/jumbotron-narrow.css" rel="stylesheet">
-
+    <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
   </head>
 
   <body>
-
-    <div class="container">
-      <div class="header">
-        <ul class="nav nav-pills pull-right">
+    <div class="navbar navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#"><%= $websiteTitle %></a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
           <li><!-- class="active" --><a href="<%= $indexLink %>">Home</a></li>
           <li><a href="<%= $blogIndexLink %>">Blog</a></li>
           <li><a href="<%= $rootDirPath %>/contact.html">Contact</a></li>
-        </ul>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+
+
+    <div class="container">
+      <div class="header">
         <h3 class="text-muted"><% format-document-title %>&nbsp;</h3>
       </div>
 
       <div class="row">
-        <div class="col-md-8"><%= $content %></div>
-        <div class="col-md-4">
-          <% format-sidebar %>
-          <% format-tag-cloud %>
-        </div>
+        <% if {[page-var-get-default blogPost 0]} {
+          return "<div class=\"col-md-8\">$content</div>
+                  <div class=\"col-md-4 well\">
+                      [format-sidebar]
+                      [format-tag-cloud]
+                  </div>"
+          } else {
+            return "<div class=\"col-md-12\">$content</div>"
+          }
+        }
+        %>
       </div>
 
       <div class="footer">
@@ -50,8 +73,10 @@ interp-source default-procs.tcl
     </div> <!-- /container -->
 
 
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-  </body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/js/bootstrap.min.js"></script>
 </html>

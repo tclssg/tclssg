@@ -208,6 +208,7 @@ proc generate-html-file {outputFile pagesData articleTemplate documentTemplate
     }
 
     puts "processing page file $inputFiles into $outputFile"
+    # Take page settings form the first page.
     set output [
         format-document $gen [lindex $pagesData 0] \
                 $documentTemplate $websiteConfig
@@ -257,22 +258,19 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict set websiteConfig inputDir $inputDir
     set contentDir [file join $inputDir $scriptConfig(contentDirName)]
 
-    # Build page data.
+    # Build page data from input files.
     set pages {}
     foreach file [fileutil::findByPattern $contentDir -glob *.md] {
         set id [::fileutil::relative $contentDir $file]
+        dict set pages $id currentPageId $id
         dict set pages $id inputFile $file
         dict set pages $id outputFile [
-            file rootname [
-                replace-path-root $file $contentDir $outputDir
-            ]
+            file rootname [replace-path-root $file $contentDir $outputDir]
         ].html
         # May want to change this preloading behavior for very large websites.
         dict set pages $id rawContent [read-file $file]
         dict set pages $id variables [
-            get-page-variables [
-                dict get $pages $id rawContent
-            ]
+            get-page-variables [dict get $pages $id rawContent]
         ]
         dict set pages $id variables dateUnix [
             incremental-clock-scan [
@@ -281,6 +279,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
         ]
     }
 
+    # Read template files.
     set articleTemplate [
         read-template-file $inputDir articleTemplateFileName $websiteConfig
     ]
@@ -311,13 +310,17 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 ]
             ]
         }
+
+        # Store links to other page and website root path relative to $id.
         dict set pages $id pageLinks $pageLinks
         dict set pages $id rootDirPath [
             ::fileutil::relative [
                 file dirname $outputFile
             ] $outputDir
         ]
-        dict set websiteConfig currentPageId $id
+
+        # Expand templates, first for the article then for the HTML document.
+        # This modifies pages.
         dict set pages $id rawContent [
             templating prepare-content \
                     [dict get $pages $id rawContent] \
@@ -327,9 +330,27 @@ proc compile-website {inputDir outputDir websiteConfig} {
         generate-html-file \
                 [dict get $pages $id outputFile] \
                 [list [dict get $pages $id]] \
-                $articleTemplate $documentTemplate \
+                $articleTemplate \
+                $documentTemplate \
                 $websiteConfig
     }
+
+    set blogPosts {}
+    foreach {id pageData} $pages {
+        puts [dict-default-get 0 $pageData  blogPost]
+        if {[dict-default-get 0 $pageData variables blogPost]} {
+            puts APP
+            lappend blogPosts $pageData
+        }
+    }
+
+    # Make blog index
+    set id [dict get $websiteConfig blogIndexPage]
+    generate-html-file \
+            [dict get $pages $id outputFile] \
+            $blogPosts \
+            $articleTemplate $documentTemplate \
+            $websiteConfig
 
     # Copy static files verbatim.
     copy-files [file join $inputDir $scriptConfig(staticDirName)] $outputDir 1

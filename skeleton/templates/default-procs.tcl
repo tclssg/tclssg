@@ -119,7 +119,7 @@ proc format-sidebar {} {
     set sidebar {}
     if {[page-var-get-default blogPost 0] && \
         ![page-var-get-default hideSidebar 0]} {
-        append sidebar {<nav id="sidebar"><ul>}
+        append sidebar {<nav class="sidebar"><h3>Posts</h3><ul>}
         foreach {id _} $pages {
             # Only add links to other blog entries.
             if {[page-var-get-default blogPost 0 $id] && \
@@ -169,7 +169,7 @@ proc format-tag-cloud {} {
     global pages
     set tagCloud {}
     if {[page-var-get-default showTagCloud 0]} {
-        append tagCloud {<nav id="tag-cloud"><dl>}
+        append tagCloud {<nav id="tag-cloud"><h3>Tags</h3><dl>}
         foreach {tag ids} [dict-default-get {} $pages tags] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
