@@ -12,12 +12,14 @@ set indexLink [relative-link $indexPage]
 set blogIndexLink [relative-link $blogIndexPage]
 
 proc page-var-get-default {varName default {pageId {}}} {
-    global pages
+    global variables
     global currentPageId
+    global pages
     if {$pageId eq ""} {
-        set pageId $currentPageId
+        dict-default-get $default $variables $varName
+    } else {
+        dict-default-get $default $pages $pageId variables $varName
     }
-    dict-default-get $default $pages $pageId variables $varName
 }
 
 proc return-if {condition value} {
@@ -141,31 +143,24 @@ proc format-sidebar {} {
 }
 
 proc format-prev-next-links {} {
-    # Blog "next" and "previous" blog post links.
-    global pages
-    global currentPageId
+    # Blog "next" and "previous" blog index page links.
+    proc make-link x {
+        return "<a href=\"$x\">$x</a>"
+    }
+    global currentPageId pages
+    puts $currentPageId
+    set prevLinkReal [page-var-get-default prevLink {}]
+    set nextLinkReal [page-var-get-default nextLink {}]
     set links {}
-
     if {[page-var-get-default blogPost 0] && \
-        ![page-var-get-default hidePrevNextLinks 0]} {
-        set pageIds {}
-        foreach {id _} $pages {
-            # Only have links to other blog entries.
-            if {[page-var-get-default blogPost 0 $id] && \
-                ![page-var-get-default hideFromSidebar 0 $id]} {
-                lappend pageIds $id
-            }
-        }
-
-        set currentPageIndex [lsearch -exact $pageIds $currentPageId]
+                (($prevLinkReal ne "") || ($nextLinkReal ne ""))} {
+        puts YO
         append links {<nav class="prev-next">}
-        set prevPage [lindex $pageIds [expr $currentPageIndex - 1]]
-        set nextPage [lindex $pageIds [expr $currentPageIndex + 1]]
-        if {$prevPage ne ""} {
-            append links "<span class=\"previous\">[format-link $prevPage 0]</span>"
+        if {$prevLinkReal ne ""} {
+            append links "<span class=\"previous\">[make-link $prevLinkReal]</span>"
         }
-        if {$nextPage ne ""} {
-            append links "<span class=\"next\">[format-link $nextPage 0]</span>"
+        if {$nextLinkReal ne ""} {
+            append links "<span class=\"next\">[make-link $nextLinkReal]</span>"
         }
         append links {</nav><!-- prev-next -->}
     }
@@ -178,7 +173,7 @@ proc format-tag-cloud {} {
     set tagCloud {}
     if {[page-var-get-default showTagCloud 0]} {
         append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><dl>}
-        foreach {tag ids} [dict-default-get {} $pages tags] {
+        foreach {tag ids} [page-var-get-default tags {}] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
                 append tagCloud "[format-link $id]"}

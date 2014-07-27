@@ -290,9 +290,9 @@ proc compile-website {inputDir outputDir websiteConfig} {
     # Sort pages by date.
     dict set websiteConfig pages [
         dict-sort $pages {variables dateUnix} 0 \
-                  {-decreasing}
+                {-decreasing}
     ]
-    dict set websiteConfig pages tags [tag-list $pages]
+    dict set websiteConfig tags [tag-list $pages]
 
     # Process page files into HTML output.
     dict for {id _} $pages {
@@ -336,24 +336,50 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 
     set blogPosts {}
-    foreach {id pageData} $pages {
+    # Can't use $pages here because by now they may have lost how they
+    # sorted.
+    foreach {id _} [dict get $websiteConfig pages] {
         if {$id eq [dict-default-get {} $websiteConfig blogIndexPage]} {
             continue
         }
-        puts [dict-default-get 0 $pageData blogPost]
+        set pageData [dict get $pages $id]
         if {[dict-default-get 0 $pageData variables blogPost]} {
-            puts APP
             lappend blogPosts $pageData
         }
     }
 
-    # Make blog index
+    # Make blog index.
+    set perPage 5
     set id [dict get $websiteConfig blogIndexPage]
-    generate-html-file \
-            [dict get $pages $id outputFile] \
-            [list [dict get $pages $id] {*}$blogPosts] \
-            $articleTemplate $documentTemplate \
-            $websiteConfig
+
+    set outputFile [dict get $pages $id outputFile]
+    set outputFile "[file rootname $outputFile]%s[file ext $outputFile]"
+    set outputFiles {}
+    for {set i 0} {$i < [llength $blogPosts]} {incr i $perPage} {
+        dict set outputFiles $i \
+                [format $outputFile [expr {$i == 0 ? "" : "-$i"}]]
+    }
+
+    for {set i 0} {$i < [llength $blogPosts]} {incr i $perPage} {
+        set indexPageData [dict get $pages $id]
+        if {$i > 0} {
+            dict set indexPageData variables prevLink \
+                    [dict get $outputFiles [expr {$i - $perPage}]]
+        }
+        if {$i + $perPage < [llength $blogPosts]} {
+            dict set indexPageData variables nextLink \
+                    [dict get $outputFiles [expr {$i + $perPage}]]
+        }
+        #dict set indexPageData variables nextLink a
+        generate-html-file \
+                [dict get $outputFiles $i] \
+                [list $indexPageData \
+                        {*}[lrange $blogPosts $i [expr $i + $perPage - 1]]] \
+                $articleTemplate \
+                $documentTemplate \
+                $websiteConfig
+    }
+
 
     # Copy static files verbatim.
     copy-files [file join $inputDir $scriptConfig(staticDirName)] $outputDir 1
