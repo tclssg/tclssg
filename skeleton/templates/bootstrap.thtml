@@ -47,10 +47,6 @@ interp-source default-procs.tcl
 
 
     <div class="container">
-      <div class="header">
-        <h3 class="text-muted"><% format-document-title %>&nbsp;</h3>
-      </div>
-
       <div class="row">
         <% if {[page-var-get-default blogPost 0]} {
           return "<div class=\"col-md-8\">$content</div>

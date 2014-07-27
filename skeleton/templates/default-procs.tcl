@@ -70,9 +70,17 @@ proc format-document-title {} {
 
 proc format-article-title {} {
     # Article title.
+    global currentPageId
     set title [page-var-get-default pageTitle {}]
     if {$title ne "" && ![page-var-get-default hideTitle 0]} {
-        return "<header id=\"page-title\"><h2>$title</h2></header>"
+        set result {<header class="page-title"><h2>}
+        if {[page-var-get-default blogPost 0]} {
+            append result [format-link $currentPageId 0 $title]
+        } else {
+            append result $title
+        }
+        append result {</h2></header>}
+        return $result
     } else {
         return ""
     }
@@ -82,7 +90,7 @@ proc format-article-date {} {
     # Page date.
     set date [page-var-get-default date {}]
     if {$date ne "" && ![page-var-get-default hideDate 0]} {
-        return "<header id=\"date\">$date</header>"
+        return "<header class=\"date\">$date</header>"
     } else {
         return ""
     }
@@ -101,7 +109,7 @@ proc format-article-tag-list {} {
         ![page-var-get-default hidePostTags 0]} {
         set postTags [page-var-get-default tags {}]
         if {[llength $postTags] > 0} {
-            append tagList {<nav id="tags"><ul>}
+            append tagList {<nav class="tags"><ul>}
             foreach tag [lrange $postTags 0 end-1 ] {
                 append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
             }
@@ -150,14 +158,14 @@ proc format-prev-next-links {} {
         }
 
         set currentPageIndex [lsearch -exact $pageIds $currentPageId]
-        append links {<nav id="prev-next">}
+        append links {<nav class="prev-next">}
         set prevPage [lindex $pageIds [expr $currentPageIndex - 1]]
         set nextPage [lindex $pageIds [expr $currentPageIndex + 1]]
         if {$prevPage ne ""} {
-            append links "<span id=\"previous\">[format-link $prevPage 0]</span>"
+            append links "<span class=\"previous\">[format-link $prevPage 0]</span>"
         }
         if {$nextPage ne ""} {
-            append links "<span id=\"next\">[format-link $nextPage 0]</span>"
+            append links "<span class=\"next\">[format-link $nextPage 0]</span>"
         }
         append links {</nav><!-- prev-next -->}
     }
@@ -169,7 +177,7 @@ proc format-tag-cloud {} {
     global pages
     set tagCloud {}
     if {[page-var-get-default showTagCloud 0]} {
-        append tagCloud {<nav id="tag-cloud"><h3>Tags</h3><dl>}
+        append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><dl>}
         foreach {tag ids} [dict-default-get {} $pages tags] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
@@ -190,10 +198,10 @@ proc format-footer {} {
     # Footer.
     set footer {}
     if {[website-var-get-default copyright {}] ne ""} {
-        append footer "<div id=\"copyright\">$copyright</div>"
+        append footer "<div class=\"copyright\">$copyright</div>"
     }
     if {![website-var-get-default hideFooter 0]} {
-        append footer {<div id="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
+        append footer {<div class="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
     }
     return $footer
 }

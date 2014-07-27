@@ -337,7 +337,10 @@ proc compile-website {inputDir outputDir websiteConfig} {
 
     set blogPosts {}
     foreach {id pageData} $pages {
-        puts [dict-default-get 0 $pageData  blogPost]
+        if {$id eq [dict-default-get {} $websiteConfig blogIndexPage]} {
+            continue
+        }
+        puts [dict-default-get 0 $pageData blogPost]
         if {[dict-default-get 0 $pageData variables blogPost]} {
             puts APP
             lappend blogPosts $pageData
@@ -348,7 +351,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     set id [dict get $websiteConfig blogIndexPage]
     generate-html-file \
             [dict get $pages $id outputFile] \
-            $blogPosts \
+            [list [dict get $pages $id] {*}$blogPosts] \
             $articleTemplate $documentTemplate \
             $websiteConfig
 
