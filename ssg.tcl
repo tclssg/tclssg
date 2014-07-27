@@ -14,12 +14,18 @@ namespace eval templating {
     namespace export *
     namespace ensemble create
 
-    # Make HTML out of content plus template.
-    proc subst {template pageData websiteConfig} {
+    # Convert raw Markdown to HTML using an external Markdown processor.
+    proc markdown-to-html {markdown} {
+        upvar 1 scriptConfig scriptConfig
+
+        exec -- {*}$scriptConfig(markdownProcessor) << $markdown
+    }
+
+    proc prepare-content {rawContent pageData websiteConfig} {
         upvar 1 scriptConfig scriptConfig
 
         set choppedContent {}
-        foreach line [split [dict get $pageData rawContent] \n] {
+        foreach line [split $rawContent \n] {
             # Skip lines that set variables.
             if {[string index $line 0] != "!"} {
                 set choppedContent "$choppedContent$line\n"
@@ -34,7 +40,23 @@ namespace eval templating {
         if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
             set choppedContent [::templating::exp expand $choppedContent]
         }
+        templating interpreter down
         set cookedContent [markdown-to-html $choppedContent]
+        return $cookedContent
+    }
+
+    # Make HTML out of content plus template.
+    proc expand {template cookedContent pageData websiteConfig} {
+        upvar 1 scriptConfig scriptConfig
+
+        templating interpreter up [dict get $websiteConfig inputDir]
+        templating interpreter inject $websiteConfig
+        # Page data overrides website config.
+        templating interpreter inject $pageData
+        # Macroexpand content if needed then convert it from Markdown to HTML.
+        if {[dict-default-get 0 $websiteConfig expandMacrosInPages]} {
+            set choppedContent [::templating::exp expand $choppedContent]
+        }
         # Expand template with content substituted in.
         templating interpreter var-set content $cookedContent
         set result [::templating::exp expand $template]
@@ -62,8 +84,8 @@ namespace eval templating {
             interp eval templateInterp [format {set {%s} {%s}} $name $value]
         }
 
-        # Set variable $key to $value in the template interpreter for each key-value
-        # pair in a dictionary.
+        # Set variable $key to $value in the template interpreter for each key-
+        # value pair in a dictionary.
         proc inject {dictionary} {
             dict for {key value} $dictionary {
                 var-set $key $value
@@ -74,7 +96,8 @@ namespace eval templating {
         proc up {inputDir} {
             upvar 1 scriptConfig scriptConfig
 
-            # Create safe interpreter and expander for templates. Those are global.
+            # Create safe interpreter and expander for templates. Those are
+            # global.
             interp create -safe templateInterp
 
             foreach command {
@@ -117,8 +140,8 @@ namespace eval templating {
             interp delete templateInterp
         }
 
-        # Source fileName into templateInterp from the first directory out of dirs
-        # where it exists.
+        # Source fileName into templateInterp from the first directory out of
+        # dirs where it exists.
         proc source-dirs {dirs fileName} {
             set command [
                 subst -nocommands {
@@ -131,13 +154,6 @@ namespace eval templating {
         }
     } ;# namespace interpreter
 } ;# namespace templating
-
-# Convert raw Markdown to HTML using an external Markdown processor.
-proc markdown-to-html {markdown} {
-    upvar 1 scriptConfig scriptConfig
-
-    exec -- {*}$scriptConfig(markdownProcessor) << $markdown
-}
 
 # Get variables set in page using the "! variable value" syntax.
 proc get-page-variables {rawContent} {
@@ -158,14 +174,30 @@ proc get-page-variables {rawContent} {
     return $result
 }
 
+proc format-article {pageData articleTemplate websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
+    templating expand $articleTemplate [dict get $pageData rawContent] \
+            $pageData $websiteConfig
+}
+
+proc format-document {content pageData documentTemplate websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
+    templating expand $documentTemplate $content $pageData $websiteConfig
+}
+
 # Process the raw content of a page supplied in pageData (which can contain
 # Markdown plus template code if enabled), substitute the result into a template
 # and save in the file specified under key outputFile in pageData.
-proc page-to-html {pageData template websiteConfig} {
+proc generate-html-file {outputFile pagesData articleTemplate documentTemplate
+        websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
-    set inputFile [dict get $pageData inputFile]
-    set outputFile [dict get $pageData outputFile]
+    set inputFiles {}
+    set gen {}
+    foreach pageData $pagesData {
+        append gen [format-article $pageData $articleTemplate $websiteConfig]
+        lappend inputFiles [dict get $pageData inputFile]
+    }
 
     set subdir [file dirname $outputFile]
 
@@ -174,8 +206,11 @@ proc page-to-html {pageData template websiteConfig} {
         file mkdir $subdir
     }
 
-    puts "processing page file $inputFile into $outputFile"
-    set output [templating subst $template $pageData $websiteConfig]
+    puts "processing page file $inputFiles into $outputFile"
+    set output [
+        format-document $gen [lindex $pagesData 0] \
+                $documentTemplate $websiteConfig
+    ]
     fileutil::writeFile $outputFile $output
 }
 
@@ -188,6 +223,30 @@ proc tag-list {pages} {
         }
     }
     return $tags
+}
+
+# Read template from $inputDir or scriptConfig(skeletonDir). The template is
+# either the default (determined by $scriptConfig(templateFileName)) or the
+# one specified in the configuration file. Can later be made per-directory
+# or metadata-based.
+proc read-template-file {inputDir varName websiteConfig} {
+    upvar 1 scriptConfig scriptConfig
+
+    set templateFile [
+        choose-dir [
+            dict-default-get $scriptConfig($varName) \
+                             $websiteConfig $varName
+        ] [
+            list [
+                file join $inputDir \
+                          $scriptConfig(templateDirName)
+            ] [
+                file join $scriptConfig(skeletonDir) \
+                          $scriptConfig(templateDirName)
+            ]
+        ]
+    ]
+    return [read-file $templateFile]
 }
 
 # Process input files in inputDir to produce static website in outputDir.
@@ -221,26 +280,11 @@ proc compile-website {inputDir outputDir websiteConfig} {
         ]
     }
 
-    # Read template from $inputDir or scriptConfig(skeletonDir). The template is
-    # either the default (determined by $scriptConfig(templateFileName)) or the
-    # one specified in the configuration file. Can later be made per-directory
-    # or metadata-based.
-    set templateFile [
-        choose-dir [
-            dict-default-get $scriptConfig(templateFileName) \
-                             $websiteConfig templateFileName
-        ] [
-            list [
-                file join $inputDir \
-                          $scriptConfig(templateDirName)
-            ] [
-                file join $scriptConfig(skeletonDir) \
-                          $scriptConfig(templateDirName)
-            ]
-        ]
+    set articleTemplate [
+        read-template-file $inputDir articleTemplateFileName $websiteConfig
     ]
-    set template [
-        read-file $templateFile
+    set documentTemplate [
+        read-template-file $inputDir documentTemplateFileName $websiteConfig
     ]
 
     # Sort pages by date.
@@ -273,8 +317,14 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ] $outputDir
         ]
         dict set websiteConfig currentPageId $id
-
-        page-to-html [dict get $pages $id] $template $websiteConfig
+        dict set pages $id rawContent [
+                templating prepare-content [dict get $pages $id rawContent] \
+                        [dict get $pages $id] $websiteConfig
+        ]
+        generate-html-file [dict get $pages $id outputFile] \
+                [list [dict get $pages $id]] \
+                $articleTemplate $documentTemplate \
+                $websiteConfig
     }
 
     # Copy static files verbatim.
@@ -321,7 +371,8 @@ proc main {argv0 argv} {
     set scriptConfig(contentDirName) pages
     set scriptConfig(templateDirName) templates
     set scriptConfig(staticDirName) static
-    set scriptConfig(templateFileName) default.thtml
+    set scriptConfig(articleTemplateFileName) article.thtml
+    set scriptConfig(documentTemplateFileName) document.thtml
     set scriptConfig(websiteConfigFileName) website.conf
     set scriptConfig(skeletonDir) [file join $scriptLocation skeleton]
     set scriptConfig(defaultInputDir) [file join "website" "input"]
