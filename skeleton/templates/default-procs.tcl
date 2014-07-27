@@ -3,7 +3,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-proc page-variable-default-get {default varName {pageId {}}} {
+proc page-var-get-default {varName default {pageId {}}} {
     global pages
     global currentPageId
     if {$pageId eq ""} {
@@ -13,13 +13,12 @@ proc page-variable-default-get {default varName {pageId {}}} {
 }
 
 proc format-link {id {li 1} {customTitle ""}} {
-    global pages
     global pageLinks
     set link [dict get $pageLinks $id]
     if {$customTitle ne ""} {
         set title $customTitle
     } else {
-        set title [page-variable-default-get $link pageTitle $id]
+        set title [page-var-get-default pageTitle $link $id]
     }
     set linkHTML "<a href=\"$link\">$title</a>"
     if {$li} {
@@ -30,8 +29,8 @@ proc format-link {id {li 1} {customTitle ""}} {
 
 proc format-html-title {} {
     global websiteTitle
-    set pageTitle [page-variable-default-get {} pageTitle]
-    set hideTitle [page-variable-default-get 0 hideTitle]
+    set pageTitle [page-var-get-default pageTitle {}]
+    set hideTitle [page-var-get-default hideTitle 0]
     if {$hideTitle || ($pageTitle == "")} {
         return $websiteTitle
     } else {
@@ -46,7 +45,7 @@ proc format-index-link {} {
     global currentPageId
     set pageToLinkBackTo $indexPage
     if {[info exists blogIndexPage] &&
-        [page-variable-default-get 0 blogPost] &&
+        [page-var-get-default blogPost 0] &&
         $currentPageId ne $blogIndexPage} {
         # Link from blog entries to the blog index page but link back to the
         # index page from the blog index page.
@@ -62,9 +61,8 @@ proc format-index-link {} {
 
 proc format-article-title {} {
     # Article title.
-    global pages
-    set title [page-variable-default-get {} pageTitle]
-    if {$title ne "" && ![page-variable-default-get 0 hideTitle]} {
+    set title [page-var-get-default pageTitle {}]
+    if {$title ne "" && ![page-var-get-default hideTitle 0]} {
         return "<header id=\"page-title\"><h2>$title</h2></header>"
     } else {
         return ""
@@ -73,9 +71,8 @@ proc format-article-title {} {
 
 proc format-article-date {} {
     # Page date.
-    global pages
-    set date [page-variable-default-get {} date]
-    if {$date ne "" && ![page-variable-default-get 0 hideDate]} {
+    set date [page-var-get-default date {}]
+    if {$date ne "" && ![page-var-get-default hideDate 0]} {
         return "<header id=\"date\">$date</header>"
     } else {
         return ""
@@ -84,21 +81,20 @@ proc format-article-date {} {
 
 proc format-article-tag-list {} {
     # Page tag list.
-    global pages
     global pageLinks
     global tagPage
     set tagList {}
     set tagPageLink {}
-    if {[get-default tagPage {}] ne ""} {
+    if {[website-var-get-default tagPage {}] ne ""} {
         set tagPageLink [dict get $pageLinks $tagPage]
     }
-    if {[page-variable-default-get 0 blogPost] && \
-        ![page-variable-default-get 0 hidePostTags]} {
-        set postTags [page-variable-default-get {} tags]
+    if {[page-var-get-default blogPost 0] && \
+        ![page-var-get-default hidePostTags 0]} {
+        set postTags [page-var-get-default tags {}]
         if {[llength $postTags] > 0} {
             append tagList {<nav id="tags"><ul>}
             foreach tag [lrange $postTags 0 end-1 ] {
-                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a>, </li>"
+                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
             }
             set tag [lindex $postTags end]
             append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
@@ -112,13 +108,13 @@ proc format-sidebar {} {
     # Blog sidebar.
     global pages
     set sidebar {}
-    if {[page-variable-default-get 0 blogPost] && \
-        ![page-variable-default-get 0 hideSidebar]} {
+    if {[page-var-get-default blogPost 0] && \
+        ![page-var-get-default hideSidebar 0]} {
         append sidebar {<nav id="sidebar"><ul>}
-        foreach {id ___} $pages {
+        foreach {id _} $pages {
             # Only add links to other blog entries.
-            if {[page-variable-default-get 0 blogPost $id] && \
-                ![page-variable-default-get 0 hideFromSidebar $id]} {
+            if {[page-var-get-default blogPost 0 $id] && \
+                ![page-var-get-default hideFromSidebar 0 $id]} {
                 append sidebar [format-link $id]
             }
         }
@@ -133,13 +129,13 @@ proc format-prev-next-links {} {
     global currentPageId
     set links {}
 
-    if {[page-variable-default-get 0 blogPost] && \
-        ![page-variable-default-get 0 hidePrevNextLinks]} {
+    if {[page-var-get-default blogPost 0] && \
+        ![page-var-get-default hidePrevNextLinks 0]} {
         set pageIds {}
-        foreach {id ___} $pages {
+        foreach {id _} $pages {
             # Only have links to other blog entries.
-            if {[page-variable-default-get 0 blogPost $id] && \
-                ![page-variable-default-get 0 hideFromSidebar $id]} {
+            if {[page-var-get-default blogPost 0 $id] && \
+                ![page-var-get-default hideFromSidebar 0 $id]} {
                 lappend pageIds $id
             }
         }
@@ -163,13 +159,12 @@ proc format-tag-cloud {} {
     # Blog tag cloud. For each tag it links to pages that are tagged with it.
     global pages
     set tagCloud {}
-    if {[page-variable-default-get 0 showTagCloud]} {
+    if {[page-var-get-default showTagCloud 0]} {
         append tagCloud {<nav id="tag-cloud"><dl>}
         foreach {tag ids} [dict-default-get {} $pages tags] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
-                append tagCloud "[format-link $id], "
-            }
+                append tagCloud "[format-link $id]"}
             append tagCloud [
                 format-link [
                     lindex $ids end
@@ -184,12 +179,11 @@ proc format-tag-cloud {} {
 
 proc format-footer {} {
     # Footer.
-    global pages
     set footer {}
-    if {[get-default copyright {}] ne ""} {
+    if {[website-var-get-default copyright {}] ne ""} {
         append footer "<div id=\"copyright\">$copyright</div>"
     }
-    if {![page-variable-default-get 0 hideFooter]} {
+    if {![website-var-get-default hideFooter 0]} {
         append footer {<div id="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
     }
     return $footer
