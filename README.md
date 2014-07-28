@@ -16,7 +16,7 @@ Features
 * Generated links are all relative.
 * Output is valid HTML5 and CSS level 3.
 
-1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, tags, and links to the previous and the next blog post. A "tag cloud" can generated to navigate to pages by tag.
+1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, tags and the latest are featured on the blog index. A "tag cloud" can generated to find pages by tag.
 
 2\. Templating example:
 
@@ -44,7 +44,7 @@ On **Fedora/RHEL/CentOS**:
     su -
     yum install tcl tcllib
 
-On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't ship with Tcllib, so it won't run Tclssg out of the box.
+On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't come with Tcllib, so it won't run Tclssg out of the box.
 
 Once you have the requirements installed clone this repository, `cd` into it then run
 
@@ -66,9 +66,9 @@ Concepts
 | Concept | Explanation |
 |---------|-------------|
 | Page | The main building block of your static website. A page is a file with extension `.md` and Markdown content based on which a single page of HTML output is produced. When a page from `inputDir` is processed by Tclssg the HTML file is placed under the same relative path with the same file name in `outputDir`. E.g., the page `test/page1.md` will generate the HTML file `test/page1.html` in output directory. A page can be a blog post (see below) or not. |
-| Blog post | Blog posts are pages that have special features to help organize a blog: tags, a sidebar with links to other blog posts and links to the previous and the next blog post. Those features are enable by default but can be selectively disabled for any individual blog post. A blog post's order in the sidebar and the previous/next link chain is determined by its date (the `date` variable). |
-| Index | A page that all normal pages will have a link back to at the top by default. |
-| Blog index | A page that all blog pages will have a link back to at the top by default. | |
+| Blog post | Blog posts are pages that have special features to help organize a blog, tags and a sidebar with links to other blog posts. Those features are enable by default but can be selectively disabled for any individual blog post. The latest blog posts are featured on the blog index page. A blog post's order in the sidebar is determined by its date (the `date` variable). |
+| Index | |
+| Blog index | | |
 | Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and your config file. Templating in Tclssg is powered by Tcllib's [`textutil::expander`](http://tcllib.sourceforge.net/doc/expander.html). |
 | Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
 | Variable | A variable specifies a Tclssg setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies a setting for that individual page. When a variable is set the configuration (config) file it specifies a setting for the website as a whole. |
@@ -109,9 +109,10 @@ The default layout of the input directory is
     ├── static <-- Files copied verbatim to the output
     │   │          directory.
     │   └── main.css
-    ├── templates
-    │   └── default.thtml <-- The website's layout
-    │                         template (HTML + Tcl).
+    ├── templates <-- The website's layout templates (HTML + Tcl).
+    │   ├── article.thtml
+    │   └── bootstrap.thtml
+    │
     └── website.conf <-- Configurating file.
 
 Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files.
@@ -129,9 +130,10 @@ The following settings are specified in the file `website.conf` in `inputDir` an
 | websiteTitle | `{My Awesome Website}` | Appended to the `<title>` tag of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say "Hello! &#124; My Awesome Website".  |
 | url | `{http://example.com/}` | Currently not used. |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are taken as relative to `inputDir`; if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
-| templateFileName | `x.thtml` | If none is specified then `default.thtml` is used. Tclssg looks for templates in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
-| deployCopyPath | `{/var/www/}` | The location to copy the built static website to when the command `deploy-copy` is given. |
-| deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the built static website to when the command `deploy-ftp` is given. |
+| articleTemplateFileName | `article.thtml` | The article template define what goes between the `<article>...</article>` tags for each page. If none is specified then `default.thtml` is used. Tclssg looks for templates in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
+| documentTemplateFileName | `article.thtml` | The document template define the HTML document structure (expect for article structure). If none is specified then `default.thtml` is used. Tclssg looks for templates in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
+| deployCopyPath | `{/var/www/}` | The location to copy the output (the generated static website) to when the command `deploy-copy` is given. |
+| deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the static website to when the command `deploy-ftp` is given. |
 | deployFtpPort | `21` | FTP server port. |
 | deployFtpPath | `{htdocs}` | The directory on the FTP server where to deploy the static website. |
 | deployFtpUser | `{user}` | FTP user name. |
@@ -140,7 +142,7 @@ The following settings are specified in the file `website.conf` in `inputDir` an
 | charset | `utf-8` | The pages' character set. |
 | indexPage | `{index.md}` | The page normal pages will have a link back to. |
 | blogIndexPage | `{blog/index.md}` | |
-| blogPostsPerDocument | 10 | |
+| blogPostsPerDocument | 10 | How many of the latest posts go on a page of the blog index. |
 | tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
@@ -171,7 +173,7 @@ Variables that only have an effect for blog posts:
 |---------------|------------------|-------------|
 | hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
 | hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
-| hidePostTags | 0/1 | Don't show whatever tags a blog post has. |
+| hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
 
