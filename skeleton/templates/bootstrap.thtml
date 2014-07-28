@@ -62,7 +62,7 @@ interp-source default-procs.tcl
       </div>
 
       <div class="footer">
-        <% format-prev-next-links %>
+        <% format-prev-next-links "Previous page" "Next page" %>
         <% format-footer %>
       </div>
 

@@ -290,11 +290,10 @@ proc compile-website {inputDir outputDir websiteConfig} {
     ]
 
     # Sort pages by date.
-    dict set websiteConfig pages [
+    set pages [
         dict-sort $pages {variables dateUnix} 0 \
                 {-decreasing}
     ]
-    dict set websiteConfig tags [tag-list $pages]
 
     # Generate blox index page(s).
     set perPage 2
@@ -308,38 +307,46 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict unset pages $blogIndexPage
     set prevIndexPageId {}
 
-    dict for {id _} $pages {
-        if {[dict-default-get 0 $pages $id variables blogPost] &&
-            ($id ne $blogIndexPage)} {
-            lappend currentPageArticles $id
-            if {$i == $perPage - 1} {
-                set newPageId [add-number-before-extension $blogIndexPage $pageNumber]
-                puts -nonewline "adding blog index page $pageNumber ($newPageId) "
+    set posts [
+        dict filter $pages script {id pageData} {
+            dict-default-get 0 $pageData variables blogPost
+        }
+    ]
 
-                set newPageData $blogIndexPageData
-                dict with newPageData {
-                    set currentPageId $newPageId
-                    set inputFile [add-number-before-extension $inputFile $pageNumber]
-                    set outputFile [add-number-before-extension $outputFile $pageNumber]
-                }
-                dict set newPageData articlesToAppend $currentPageArticles
-                if {$pageNumber > 0} {
-                    dict set newPageData variables prevPage $prevIndexPageId
-                    dict set pages $prevIndexPageId variables nextPage $newPageId
-                }
-                # Hack alert! Add key while keep dictionary ordering. This is
-                # needed, among other things, to generate the pageLinks for
-                # normal pages before they are included into multiarticle ones.
-                lappend pages $newPageId $newPageData
-                puts "with posts $currentPageArticles"
-                set prevIndexPageId $newPageId
-                set i 0
-                incr pageNumber
-            } else {
-                incr i
+    dict for {id _} $posts {
+        lappend currentPageArticles $id
+        # If there is enough posts for a page or this is the last post...
+        if {($i == $perPage - 1) || ($id eq [lindex $posts end-1])} {
+            set newPageId [add-number-before-extension $blogIndexPage $pageNumber]
+            puts -nonewline "adding blog index page $pageNumber ($newPageId) "
+
+            set newPageData $blogIndexPageData
+            dict with newPageData {
+                set currentPageId $newPageId
+                set inputFile [add-number-before-extension $inputFile $pageNumber]
+                set outputFile [add-number-before-extension $outputFile $pageNumber]
             }
+            dict set newPageData articlesToAppend $currentPageArticles
+            if {$pageNumber > 0} {
+                dict set newPageData variables prevPage $prevIndexPageId
+                dict set pages $prevIndexPageId variables nextPage $newPageId
+            }
+            # Hack alert! Add key while keep dictionary ordering. This is
+            # needed, among other things, to generate the pageLinks for
+            # normal pages before they are included into multiarticle ones.
+            lappend pages $newPageId $newPageData
+            puts "with posts $currentPageArticles"
+            set prevIndexPageId $newPageId
+            set i 0
+            set currentPageArticles {}
+            incr pageNumber
+        } else {
+            incr i
         }
     }
+
+    dict set websiteConfig pages $pages
+    dict set websiteConfig tags [tag-list $pages]
 
     dict for {id pageData} $pages {
         # Expand templates, first for the article then for the HTML document.

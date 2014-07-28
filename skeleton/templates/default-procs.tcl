@@ -142,7 +142,7 @@ proc format-sidebar {} {
     return $sidebar
 }
 
-proc format-prev-next-links {} {
+proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
     # Blog "next" and "previous" blog index page links.
     proc make-link x {
         return "<a href=\"$x\">$x</a>"
@@ -156,10 +156,10 @@ proc format-prev-next-links {} {
                 (($prevPageReal ne "") || ($nextPageReal ne ""))} {
         append links {<nav class="prev-next">}
         if {$prevPageReal ne ""} {
-            append links "<span class=\"previous\">[format-link $prevPageReal 0]</span>"
+            append links "<span class=\"previous\">[format-link $prevPageReal 0 $prevLinkTitle]</span>"
         }
         if {$nextPageReal ne ""} {
-            append links "<span class=\"next\">[format-link $nextPageReal 0]</span>"
+            append links "<span class=\"next\">[format-link $nextPageReal 0 $nextLinkTitle]</span>"
         }
         append links {</nav><!-- prev-next -->}
     }
