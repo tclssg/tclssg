@@ -296,6 +296,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     ]
     dict set websiteConfig tags [tag-list $pages]
 
+    # Generate blox index page(s).
     set perPage 2
     set i 0
     set currentPageArticles {}
@@ -305,29 +306,33 @@ proc compile-website {inputDir outputDir websiteConfig} {
     set blogIndexPageData [dict get $pages $blogIndexPage]
 
     dict unset pages $blogIndexPage
+    set prevIndexPageId {}
 
     dict for {id _} $pages {
         if {[dict-default-get 0 $pages $id variables blogPost] &&
             ($id ne $blogIndexPage)} {
             lappend currentPageArticles $id
             if {$i == $perPage - 1} {
-                set newPage [add-number-before-extension $blogIndexPage $pageNumber]
-                puts -nonewline "adding blog index page $pageNumber ($newPage) "
+                set newPageId [add-number-before-extension $blogIndexPage $pageNumber]
+                puts -nonewline "adding blog index page $pageNumber ($newPageId) "
 
                 set newPageData $blogIndexPageData
                 dict with newPageData {
-                    set currentPageId $newPage
+                    set currentPageId $newPageId
                     set inputFile [add-number-before-extension $inputFile $pageNumber]
                     set outputFile [add-number-before-extension $outputFile $pageNumber]
                 }
                 dict set newPageData articlesToAppend $currentPageArticles
-                dict set newPageData variables prevPage $blogIndexPage
-                dict set newPageData variables nextPage $blogIndexPage
-                # Hack alert! Add key while keep dictionary ordering.
-                # This is needed.
-                lappend pages $newPage $newPageData
+                if {$pageNumber > 0} {
+                    dict set newPageData variables prevPage $prevIndexPageId
+                    dict set pages $prevIndexPageId variables nextPage $newPageId
+                }
+                # Hack alert! Add key while keep dictionary ordering. This is
+                # needed, among other things, to generate the pageLinks for
+                # normal pages before they are included into multiarticle ones.
+                lappend pages $newPageId $newPageData
                 puts "with posts $currentPageArticles"
-                set currentPageArticles {}
+                set prevIndexPageId $newPageId
                 set i 0
                 incr pageNumber
             } else {
