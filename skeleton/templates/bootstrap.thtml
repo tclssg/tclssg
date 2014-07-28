@@ -48,7 +48,9 @@ interp-source default-procs.tcl
 
     <div class="container">
       <div class="row">
-        <% if {[page-var-get-default blogPost 0]} {
+        <% if {[page-var-get-default blogPost 0] && \
+              (![page-var-get-default hideSidebar 0] || \
+                  [page-var-get-default showTagCloud 0])} {
           return "<div class=\"col-md-8\">
                     $content
                     [format-prev-next-links {Previous page} {Next page}]

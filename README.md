@@ -3,7 +3,7 @@ Tclssg
 
 A static site generator with template support written in Tcl for danyilbohdan.com. Intended to make it easy to manage a small personal website with an optional blog.
 
-**Warning! Tclssg is still in early development and may change rapidly in incompatible ways. **
+**Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
 Features
 --------
