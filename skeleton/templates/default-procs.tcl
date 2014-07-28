@@ -168,11 +168,12 @@ proc format-prev-next-links {} {
 
 proc format-tag-cloud {} {
     # Blog tag cloud. For each tag it links to pages that are tagged with it.
+    global tags
     global pages
     set tagCloud {}
     if {[page-var-get-default showTagCloud 0]} {
         append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><dl>}
-        foreach {tag ids} [page-var-get-default tags {}] {
+        foreach {tag ids} [website-var-get-default tags {}] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
             foreach id [lrange $ids 0 end-1] {
                 append tagCloud "[format-link $id]"}
@@ -190,11 +191,12 @@ proc format-tag-cloud {} {
 
 proc format-footer {} {
     # Footer.
+    global copyright
     set footer {}
     if {[website-var-get-default copyright {}] ne ""} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }
-    if {![website-var-get-default hideFooter 0]} {
+    if {![page-var-get-default hideFooter 0]} {
         append footer {<div class="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
     }
     return $footer
