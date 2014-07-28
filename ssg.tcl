@@ -175,28 +175,31 @@ proc get-page-variables {rawContent} {
     return $result
 }
 
-# :-? Process the raw content of a pages supplied in pageData (which can contain
-# Markdown plus template code if enabled), substitute the result into a template
-# and save in the file specified under key outputFile in pageData.
+# Format one HTML article out of a page according to an article template.
 proc format-article {pageData articleTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
     templating expand $articleTemplate [dict get $pageData cookedContent] \
             $pageData $websiteConfig
 }
 
+# Format one HTML document according to an document template. Document content
+# is taken from in the variable content while page variables are taken from
+# pageData.
 proc format-document {content pageData documentTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
     templating expand $documentTemplate $content $pageData $websiteConfig
 }
 
-# pages means all pages out which those with ids in articleIds are selected.
-proc generate-html-file {outputFile pages articleIds articleTemplate
+# Generate an HTML document out pages and store it as outputFile.  Articles are
+# taken from those pages in the dict pages the ids of which are listed in
+# pageIds.
+proc generate-html-file {outputFile pages pageIds articleTemplate
         documentTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
     set inputFiles {}
     set gen {}
-    foreach id $articleIds {
+    foreach id $pageIds {
         append gen [format-article [dict get $pages $id] $articleTemplate \
                 $websiteConfig]
         lappend inputFiles [dict get $pages $id inputFile]
@@ -212,7 +215,7 @@ proc generate-html-file {outputFile pages articleIds articleTemplate
     puts "processing page file $inputFiles into $outputFile"
     # Take page settings form the first page.
     set output [
-        format-document $gen [dict get $pages [lindex $articleIds 0]] \
+        format-document $gen [dict get $pages [lindex $pageIds 0]] \
                 $documentTemplate $websiteConfig
     ]
     fileutil::writeFile $outputFile $output
@@ -295,8 +298,17 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 {-decreasing}
     ]
 
-    # Generate blox index page(s).
-    set perPage 2
+
+    # Filter posts out of pages.
+    set posts [
+        dict filter $pages script {id pageData} {
+            dict-default-get 0 $pageData variables blogPost
+        }
+    ]
+
+    # Generate blog index page(s).
+    set blogPostsPerDocument \
+            [dict-default-get 10 $websiteConfig blogPostsPerDocument]
     set i 0
     set currentPageArticles {}
     set pageNumber 0
@@ -307,24 +319,22 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict unset pages $blogIndexPage
     set prevIndexPageId {}
 
-    set posts [
-        dict filter $pages script {id pageData} {
-            dict-default-get 0 $pageData variables blogPost
-        }
-    ]
-
     dict for {id _} $posts {
         lappend currentPageArticles $id
         # If there is enough posts for a page or this is the last post...
-        if {($i == $perPage - 1) || ($id eq [lindex $posts end-1])} {
-            set newPageId [add-number-before-extension $blogIndexPage $pageNumber]
+        if {($i == $blogPostsPerDocument - 1) || \
+                    ($id eq [lindex $posts end-1])} {
+            set newPageId \
+                    [add-number-before-extension $blogIndexPage $pageNumber]
             puts -nonewline "adding blog index page $pageNumber ($newPageId) "
 
             set newPageData $blogIndexPageData
             dict with newPageData {
                 set currentPageId $newPageId
-                set inputFile [add-number-before-extension $inputFile $pageNumber]
-                set outputFile [add-number-before-extension $outputFile $pageNumber]
+                set inputFile \
+                        [add-number-before-extension $inputFile $pageNumber]
+                set outputFile \
+                        [add-number-before-extension $outputFile $pageNumber]
             }
             dict set newPageData articlesToAppend $currentPageArticles
             if {$pageNumber > 0} {

@@ -7,6 +7,7 @@ Features
 --------
 
 * Markdown for content formatting.
+* [Bootstrap](http://getbootstrap.com/) for layout. Supports Bootstrap themes.
 * Support for plain old pages and blogs post. [1]
 * A single command deploys the resulting website over FTP.
 * Tcl code embedded in HTML for templating. [2]
@@ -136,7 +137,8 @@ The following settings are specified in the file `website.conf` in `inputDir` an
 | expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. |
 | charset | `utf-8` | The pages' character set. |
 | indexPage | `{index.md}` | The page normal pages will have a link back to. |
-| blogIndexPage | `{blog/index.md}` | The page blog post pages will have a link back to. |
+| blogIndexPage | `{blog/index.md}` | |
+| blogPostsPerDocument | 10 | |
 | tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
@@ -169,7 +171,6 @@ Variables that only have an effect for blog posts:
 | hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
 | hidePostTags | 0/1 | Don't show whatever tags a blog post has. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
-| hidePrevNextLinks | 0/1 | Hide previous and next blog post links. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
 
 Like with website settings all 0/1 settings default to `0`.

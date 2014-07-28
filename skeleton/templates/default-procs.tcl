@@ -22,7 +22,7 @@ proc page-var-get-default {varName default {pageId {}}} {
     }
 }
 
-proc return-if {condition value} {
+proc either {condition value} {
     if {$condition} {
         return $value
     } else {
@@ -148,7 +148,6 @@ proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
         return "<a href=\"$x\">$x</a>"
     }
     global currentPageId pages
-    puts $currentPageId
     set prevPageReal [page-var-get-default prevPage {}]
     set nextPageReal [page-var-get-default nextPage {}]
     set links {}
@@ -156,10 +155,10 @@ proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
                 (($prevPageReal ne "") || ($nextPageReal ne ""))} {
         append links {<nav class="prev-next">}
         if {$prevPageReal ne ""} {
-            append links "<span class=\"previous\">[format-link $prevPageReal 0 $prevLinkTitle]</span>"
+            append links "<span class=\"prev-page-link\">[format-link $prevPageReal 0 $prevLinkTitle]</span>"
         }
         if {$nextPageReal ne ""} {
-            append links "<span class=\"next\">[format-link $nextPageReal 0 $nextLinkTitle]</span>"
+            append links "<span class=\"next-page-link\">[format-link $nextPageReal 0 $nextLinkTitle]</span>"
         }
         append links {</nav><!-- prev-next -->}
     }
