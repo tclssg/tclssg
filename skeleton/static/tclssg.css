@@ -1,0 +1,22 @@
+body {
+	font-size: 18px;
+}
+
+:target {
+   background-color: #ffffaa;
+}
+
+.footer {
+  padding-top: 19px;
+  color: #777;
+  border-top: 1px solid #e5e5e5;
+  text-align: center;
+}
+
+.prev-page-link {
+	float: left;
+}
+
+.next-page-link {
+	float: right;
+}

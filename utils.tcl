@@ -7,7 +7,6 @@ interp alias {} read-file {} fileutil::cat
 
 # Transform a path relative to fromDir into the same path relative to toDir.
 proc replace-path-root {path fromDir toDir} {
-    # string map here is a hack to fix /./ making printed logs ugly.
     fileutil::lexnormalize [
         file join $toDir [
             ::fileutil::relative $fromDir [file dirname $path]
@@ -72,9 +71,7 @@ proc ltrim {list {emptyRegExp "^$"}} {
 
 # Format text for URL slug. E.g., "Hello, World!" becomes "hello-world".
 proc slugify {text} {
-    string trim [
-        regsub -all {[^[:alnum:]]+} [string tolower $text] "-"
-    ] "-"
+    string trim [regsub -all {[^[:alnum:]]+} [string tolower $text] "-"] "-"
 }
 
 # Return dictionary with values replaced with stars for every key with
@@ -206,9 +203,7 @@ proc incremental-clock-scan {date {debug 0}} {
             # http://wiki.tcl.tk/2525.
             set result [
                 clock scan [
-                    join [
-                        list $date $padding
-                    ] ""
+                    join [list $date $padding] ""
                 ] -format {%Y-%m-%d-%H-%M-%S}
             ]
             if {$debug} {
@@ -235,4 +230,15 @@ proc choose-dir {path dirs} {
 # Return true for a relative path and false otherwise.
 proc path-is-relative? {path} {
     return [catch {::fileutil::relative / $path}]
+}
+
+#
+proc add-number-before-extension {fileName n {numberFormat {-%d}}
+        {nothingOnZero 1}} {
+    if {$n == 0 && $nothingOnZero} {
+        set s ""
+    } else {
+        set s [format $numberFormat $n]
+    }
+    return [format "[file rootname $fileName]%s[file extension $fileName]" $s]
 }

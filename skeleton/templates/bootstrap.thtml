@@ -1,0 +1,86 @@
+<%
+
+interp-source default-procs.tcl
+
+%><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="<% website-var-get-default charset UTF-8 %>">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="icon" href="<%= $rootDirPath %>/favicon.ico"> -->
+
+    <title><% format-html-title %></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap theme -->
+    <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap-theme.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+    <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="navbar navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#"><%= $websiteTitle %></a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+          <li><!-- class="active" --><a href="<%= $indexLink %>">Home</a></li>
+          <li><a href="<%= $blogIndexLink %>">Blog</a></li>
+          <li><a href="<%= $rootDirPath %>/contact.html">Contact</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+
+
+
+    <div class="container">
+      <div class="row">
+        <% if {[page-var-get-default blogPost 0]} {
+          return "<div class=\"col-md-8\">
+                    $content
+                    [format-prev-next-links {Previous page} {Next page}]
+                  </div>
+                  <div class=\"col-md-4 well\">
+                    [format-sidebar]
+                    [format-tag-cloud]
+                  </div>"
+          } else {
+            return "<div class=\"col-md-12\">
+                      $content
+                      [format-prev-next-links {Previous page} {Next page}]
+                    </div>"
+          }
+        }
+        %>
+        <div>
+          <%  %>
+        </div>
+      </div>
+
+      <div class="footer">
+        <% format-footer %>
+      </div>
+
+    </div> <!-- /container -->
+
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/js/bootstrap.min.js"></script>
+</html>

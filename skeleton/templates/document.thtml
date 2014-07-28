@@ -18,9 +18,7 @@ interp-source default-procs.tcl
     </head>
     <body>
         <div id="wrapper"><% format-index-link %>
-        <article><% format-article-title %><% format-article-date %>
-        <% textutil::indent $content {        } %>
-        <% format-article-tag-list %></article>
+        <% return $content %>
         <% format-sidebar %>
         <% format-prev-next-links %>
         <% format-tag-cloud %>
