@@ -231,3 +231,14 @@ proc choose-dir {path dirs} {
 proc path-is-relative? {path} {
     return [catch {::fileutil::relative / $path}]
 }
+
+#
+proc add-number-before-extension {fileName n {numberFormat {-%d}}
+        {nothingOnZero 1}} {
+    if {$n == 0 && $nothingOnZero} {
+        set s ""
+    } else {
+        set s [format $numberFormat $n]
+    }
+    return [format "[file rootname $fileName]%s[file extension $fileName]" $s]
+}

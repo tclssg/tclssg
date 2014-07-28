@@ -149,18 +149,17 @@ proc format-prev-next-links {} {
     }
     global currentPageId pages
     puts $currentPageId
-    set prevLinkReal [page-var-get-default prevLink {}]
-    set nextLinkReal [page-var-get-default nextLink {}]
+    set prevPageReal [page-var-get-default prevPage {}]
+    set nextPageReal [page-var-get-default nextPage {}]
     set links {}
     if {[page-var-get-default blogPost 0] && \
-                (($prevLinkReal ne "") || ($nextLinkReal ne ""))} {
-        puts YO
+                (($prevPageReal ne "") || ($nextPageReal ne ""))} {
         append links {<nav class="prev-next">}
-        if {$prevLinkReal ne ""} {
-            append links "<span class=\"previous\">[make-link $prevLinkReal]</span>"
+        if {$prevPageReal ne ""} {
+            append links "<span class=\"previous\">[format-link $prevPageReal 0]</span>"
         }
-        if {$nextLinkReal ne ""} {
-            append links "<span class=\"next\">[make-link $nextLinkReal]</span>"
+        if {$nextPageReal ne ""} {
+            append links "<span class=\"next\">[format-link $nextPageReal 0]</span>"
         }
         append links {</nav><!-- prev-next -->}
     }

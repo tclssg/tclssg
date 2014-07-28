@@ -92,6 +92,28 @@ proc main {argv0 argv} {
         dict-sort {a {k 5} b {k 1} c {k 2}} k 0 {} {x {lindex $x}}
     ] {b {k 1} c {k 2} a {k 5}}
 
+    # add-number-before-extension
+    assert-all-equal [
+        add-number-before-extension "filename.ext" 0
+    ] "filename.ext"
+
+    assert-all-equal [
+        add-number-before-extension "filename.ext" 0 "-%d" 0
+    ] "filename-0.ext"
+
+    for {set i 1} {$i < 11} {incr i} {
+        assert-all-equal [
+            add-number-before-extension "filename.ext" $i
+        ] "filename-$i.ext"
+        assert-all-equal [
+            add-number-before-extension "filename.ext" $i "%03d"
+        ] [
+            add-number-before-extension "filename.ext" $i "%03d" 1
+        ] [
+            format "filename%03d.ext" $i
+        ]
+    }
+
     # Tclssg init, build.
     puts "running build tests..."
     set tempProjectDir [::fileutil::tempfile]

@@ -180,7 +180,7 @@ proc get-page-variables {rawContent} {
 # and save in the file specified under key outputFile in pageData.
 proc format-article {pageData articleTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
-    templating expand $articleTemplate [dict get $pageData rawContent] \
+    templating expand $articleTemplate [dict get $pageData cookedContent] \
             $pageData $websiteConfig
 }
 
@@ -189,15 +189,17 @@ proc format-document {content pageData documentTemplate websiteConfig} {
     templating expand $documentTemplate $content $pageData $websiteConfig
 }
 
-proc generate-html-file {outputFile pagesData articleTemplate documentTemplate
-        websiteConfig} {
+# pages means all pages out which those with ids in articleIds are selected.
+proc generate-html-file {outputFile pages articleIds articleTemplate
+        documentTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
 
     set inputFiles {}
     set gen {}
-    foreach pageData $pagesData {
-        append gen [format-article $pageData $articleTemplate $websiteConfig]
-        lappend inputFiles [dict get $pageData inputFile]
+    foreach id $articleIds {
+        append gen [format-article [dict get $pages $id] $articleTemplate \
+                $websiteConfig]
+        lappend inputFiles [dict get $pages $id inputFile]
     }
 
     set subdir [file dirname $outputFile]
@@ -210,7 +212,7 @@ proc generate-html-file {outputFile pagesData articleTemplate documentTemplate
     puts "processing page file $inputFiles into $outputFile"
     # Take page settings form the first page.
     set output [
-        format-document $gen [lindex $pagesData 0] \
+        format-document $gen [dict get $pages [lindex $articleIds 0]] \
                 $documentTemplate $websiteConfig
     ]
     fileutil::writeFile $outputFile $output
@@ -294,6 +296,57 @@ proc compile-website {inputDir outputDir websiteConfig} {
     ]
     dict set websiteConfig tags [tag-list $pages]
 
+    set perPage 2
+    set i 0
+    set currentPageArticles {}
+    set pageNumber 0
+
+    set blogIndexPage [dict get $websiteConfig blogIndexPage]
+    set blogIndexPageData [dict get $pages $blogIndexPage]
+
+    dict unset pages $blogIndexPage
+
+    dict for {id _} $pages {
+        if {[dict-default-get 0 $pages $id variables blogPost] &&
+            ($id ne $blogIndexPage)} {
+            lappend currentPageArticles $id
+            if {$i == $perPage - 1} {
+                set newPage [add-number-before-extension $blogIndexPage $pageNumber]
+                puts -nonewline "adding blog index page $pageNumber ($newPage) "
+
+                set newPageData $blogIndexPageData
+                dict with newPageData {
+                    set currentPageId $newPage
+                    set inputFile [add-number-before-extension $inputFile $pageNumber]
+                    set outputFile [add-number-before-extension $outputFile $pageNumber]
+                }
+                dict set newPageData articlesToAppend $currentPageArticles
+                dict set newPageData variables prevPage $blogIndexPage
+                dict set newPageData variables nextPage $blogIndexPage
+                # Hack alert! Add key while keep dictionary ordering.
+                # This is needed.
+                lappend pages $newPage $newPageData
+                puts "with posts $currentPageArticles"
+                set currentPageArticles {}
+                set i 0
+                incr pageNumber
+            } else {
+                incr i
+            }
+        }
+    }
+
+    dict for {id pageData} $pages {
+        # Expand templates, first for the article then for the HTML document.
+        # This modifies pages.
+        dict set pages $id cookedContent [
+            templating prepare-content \
+                    [dict get $pages $id rawContent] \
+                    [dict get $pages $id] \
+                    $websiteConfig
+        ]
+    }
+
     # Process page files into HTML output.
     dict for {id _} $pages {
         # Links to other page relative to the current.
@@ -311,7 +364,8 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ]
         }
 
-        # Store links to other page and website root path relative to $id.
+        # Store links to other pages and website root path relative to the
+        # current page.
         dict set pages $id pageLinks $pageLinks
         dict set pages $id rootDirPath [
             ::fileutil::relative [
@@ -319,17 +373,11 @@ proc compile-website {inputDir outputDir websiteConfig} {
             ] $outputDir
         ]
 
-        # Expand templates, first for the article then for the HTML document.
-        # This modifies pages.
-        dict set pages $id rawContent [
-            templating prepare-content \
-                    [dict get $pages $id rawContent] \
-                    [dict get $pages $id] \
-                    $websiteConfig
-        ]
         generate-html-file \
                 [dict get $pages $id outputFile] \
-                [list [dict get $pages $id]] \
+                $pages \
+                [list $id \
+                        {*}[dict-default-get {} $pages $id articlesToAppend]] \
                 $articleTemplate \
                 $documentTemplate \
                 $websiteConfig
@@ -347,39 +395,6 @@ proc compile-website {inputDir outputDir websiteConfig} {
             lappend blogPosts $pageData
         }
     }
-
-    # Make blog index.
-    set perPage 5
-    set id [dict get $websiteConfig blogIndexPage]
-
-    set outputFile [dict get $pages $id outputFile]
-    set outputFile "[file rootname $outputFile]%s[file ext $outputFile]"
-    set outputFiles {}
-    for {set i 0} {$i < [llength $blogPosts]} {incr i $perPage} {
-        dict set outputFiles $i \
-                [format $outputFile [expr {$i == 0 ? "" : "-$i"}]]
-    }
-
-    for {set i 0} {$i < [llength $blogPosts]} {incr i $perPage} {
-        set indexPageData [dict get $pages $id]
-        if {$i > 0} {
-            dict set indexPageData variables prevLink \
-                    [dict get $outputFiles [expr {$i - $perPage}]]
-        }
-        if {$i + $perPage < [llength $blogPosts]} {
-            dict set indexPageData variables nextLink \
-                    [dict get $outputFiles [expr {$i + $perPage}]]
-        }
-        #dict set indexPageData variables nextLink a
-        generate-html-file \
-                [dict get $outputFiles $i] \
-                [list $indexPageData \
-                        {*}[lrange $blogPosts $i [expr $i + $perPage - 1]]] \
-                $articleTemplate \
-                $documentTemplate \
-                $websiteConfig
-    }
-
 
     # Copy static files verbatim.
     copy-files [file join $inputDir $scriptConfig(staticDirName)] $outputDir 1
