@@ -16,14 +16,12 @@ namespace eval templating {
 
     # Convert raw Markdown to HTML using an external Markdown processor.
     proc markdown-to-html {markdown} {
-        upvar 1 scriptConfig scriptConfig
-
-        exec -- {*}$scriptConfig(markdownProcessor) << $markdown
+        exec -- {*}$::tclssg::config(markdownProcessor) << $markdown
     }
 
     # Make HTML out of content plus article template.
     proc prepare-content {rawContent pageData websiteConfig} {
-        upvar 1 scriptConfig scriptConfig
+
 
         set choppedContent [lindex [get-page-variables $rawContent] 1]
         templating interpreter up [dict get $websiteConfig inputDir]
@@ -41,8 +39,6 @@ namespace eval templating {
 
     # Expand template with (HTML) content.
     proc expand {template cookedContent pageData websiteConfig} {
-        upvar 1 scriptConfig scriptConfig
-
         templating interpreter up [dict get $websiteConfig inputDir]
         templating interpreter inject $websiteConfig
         # Page data overrides website config.
@@ -85,7 +81,7 @@ namespace eval templating {
 
         # Set up template interpreter and expander.
         proc up {inputDir} {
-            upvar 1 scriptConfig scriptConfig
+
 
             # Create safe interpreter and expander for templates. Those are
             # global.
@@ -116,16 +112,17 @@ namespace eval templating {
                     ::templating::interpreter::source-dirs [
                         list [
                             file join $inputDir \
-                                      $scriptConfig(templateDirName)
+                                      $::tclssg::config(templateDirName)
                         ] [
-                            file join $scriptConfig(skeletonDir) \
-                                      $scriptConfig(templateDirName)
+                            file join $::tclssg::config(skeletonDir) \
+                                      $::tclssg::config(templateDirName)
                         ]
                     ]
 
             if {![catch {::textutil::expander ::templating::exp}]} {
                 ::templating::exp evalcmd {interp eval templateInterp}
-                ::templating::exp setbrackets {*}$scriptConfig(templateBrackets)
+                ::templating::exp setbrackets \
+                        {*}$::tclssg::config(templateBrackets)
             }
         }
 
@@ -151,7 +148,6 @@ namespace eval templating {
 
 # Format one HTML article out of a page according to an article template.
 proc format-article {pageData articleTemplate websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
     templating expand $articleTemplate [dict get $pageData cookedContent] \
             $pageData $websiteConfig
 }
@@ -160,7 +156,6 @@ proc format-article {pageData articleTemplate websiteConfig} {
 # is taken from in the variable content while page variables are taken from
 # pageData.
 proc format-document {content pageData documentTemplate websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
     templating expand $documentTemplate $content $pageData $websiteConfig
 }
 
@@ -169,8 +164,6 @@ proc format-document {content pageData documentTemplate websiteConfig} {
 # pageIds.
 proc generate-html-file {outputFile pages pageIds articleTemplate
         documentTemplate websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
-
     set inputFiles {}
     set gen {}
     foreach id $pageIds {
@@ -206,24 +199,24 @@ proc tag-list {pages} {
     return $tags
 }
 
-# Read template from $inputDir or scriptConfig(skeletonDir). The template is
-# either the default (determined by $scriptConfig(templateFileName)) or the
+# Read template from $inputDir or ::tclssg::config(skeletonDir). The template is
+# either the default (determined by $::tclssg::config(templateFileName)) or the
 # one specified in the configuration file. Can later be made per-directory
 # or metadata-based.
 proc read-template-file {inputDir varName websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
+
 
     set templateFile [
         choose-dir [
-            dict-default-get $scriptConfig($varName) \
+            dict-default-get $::tclssg::config($varName) \
                              $websiteConfig $varName
         ] [
             list [
                 file join $inputDir \
-                          $scriptConfig(templateDirName)
+                          $::tclssg::config(templateDirName)
             ] [
-                file join $scriptConfig(skeletonDir) \
-                          $scriptConfig(templateDirName)
+                file join $::tclssg::config(skeletonDir) \
+                          $::tclssg::config(templateDirName)
             ]
         ]
     ]
@@ -291,10 +284,8 @@ proc add-article-collection {pagesVarName pageIds topPageId websiteConfig} {
 
 # Process input files in inputDir to produce static website in outputDir.
 proc compile-website {inputDir outputDir websiteConfig} {
-    upvar 1 scriptConfig scriptConfig
-
     dict set websiteConfig inputDir $inputDir
-    set contentDir [file join $inputDir $scriptConfig(contentDirName)]
+    set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
 
     # Build page data from input files.
     set pages {}
@@ -414,15 +405,13 @@ proc compile-website {inputDir outputDir websiteConfig} {
     }
 
     # Copy static files verbatim.
-    copy-files [file join $inputDir $scriptConfig(staticDirName)] $outputDir 1
+    copy-files [file join $inputDir $::tclssg::config(staticDirName)] $outputDir 1
 }
 
 # Load website configuration file from directory.
 proc load-config {inputDir {verbose 1}} {
-    upvar 1 scriptConfig scriptConfig
-
     set websiteConfig [
-        read-file [file join $inputDir $scriptConfig(websiteConfigFileName)]
+        read-file [file join $inputDir $::tclssg::config(websiteConfigFileName)]
     ]
 
     # Show loaded config to user (without the password values).
@@ -445,13 +434,11 @@ namespace eval tclssg {
     namespace ensemble create -prefixes 0 -unknown ::tclssg::unknown
 
     proc init {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         foreach dir [
-            list $scriptConfig(contentDirName) \
-                 $scriptConfig(templateDirName) \
-                 $scriptConfig(staticDirName) \
-                 [file join $scriptConfig(contentDirName) blog]
+            list $::tclssg::config(contentDirName) \
+                 $::tclssg::config(templateDirName) \
+                 $::tclssg::config(staticDirName) \
+                 [file join $::tclssg::config(contentDirName) blog]
         ] {
             file mkdir [file join $inputDir $dir]
         }
@@ -465,13 +452,11 @@ namespace eval tclssg {
                 lindex {.*templates.*}
             }
         ]
-        copy-files $scriptConfig(skeletonDir) $inputDir 0 $skipRegExp
+        copy-files $::tclssg::config(skeletonDir) $inputDir 0 $skipRegExp
         exit 0
     }
 
     proc build {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         set websiteConfig [load-config $inputDir]
 
         if {[file isdir $inputDir]} {
@@ -483,8 +468,6 @@ namespace eval tclssg {
     }
 
     proc clean {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         foreach file [fileutil::find $outputDir {file isfile}] {
             puts "deleting $file"
             file delete $file
@@ -492,20 +475,18 @@ namespace eval tclssg {
     }
 
     proc update {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         set updateSourceDirs [
-            list $scriptConfig(staticDirName) {static files}
+            list $::tclssg::config(staticDirName) {static files}
         ]
         if {"templates" in $options} {
             lappend updateSourceDirs \
-                    $scriptConfig(templateDirName) \
+                    $::tclssg::config(templateDirName) \
                     templates
         }
         foreach {dir descr} $updateSourceDirs {
             puts "updating $descr"
             copy-files [
-                file join $scriptConfig(skeletonDir) $dir
+                file join $::tclssg::config(skeletonDir) $dir
             ] [
                 file join $inputDir $dir
             ] 2
@@ -513,8 +494,6 @@ namespace eval tclssg {
     }
 
     proc deploy-copy {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         set websiteConfig [load-config $inputDir]
 
         set deployDest [dict get $websiteConfig deployCopyPath]
@@ -524,8 +503,6 @@ namespace eval tclssg {
     }
 
     proc deploy-ftp {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         set websiteConfig [load-config $inputDir]
 
         package require ftp
@@ -564,8 +541,6 @@ namespace eval tclssg {
     }
 
     proc open {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
         set websiteConfig [load-config $inputDir]
 
         package require platform
@@ -588,14 +563,11 @@ namespace eval tclssg {
     }
 
     proc version {inputDir outputDir options} {
-        upvar 1 scriptConfig scriptConfig
-
-        puts $scriptConfig(version)
+        puts $::tclssg::config(version)
     }
 
     proc help {{inputDir ""} {outputDir ""} {options ""}} {
         global argv0
-        upvar 1 scriptConfig scriptConfig
 
         puts [
             subst -nocommands [
@@ -618,59 +590,65 @@ namespace eval tclssg {
                         version     print version number and exit
                         help        show this message
 
-                    inputDir defaults to "$scriptConfig(defaultInputDir)"
-                    outputDir defaults to "$scriptConfig(defaultOutputDir)"
+                    inputDir defaults to "$::tclssg::config(defaultInputDir)"
+                    outputDir defaults to "$::tclssg::config(defaultOutputDir)"
                 }
             ]
         ]
     }
 
+    proc configure {{scriptLocation .}} {
+        # What follows is the configuration that is generally not supposed to vary
+        # from project to project.
+        set ::tclssg::config(scriptLocation) $scriptLocation
+
+        set ::tclssg::config(markdownProcessor) [
+            concat perl [
+                file join $::tclssg::config(scriptLocation) \
+                        external Markdown_1.0.1 Markdown.pl
+            ]
+        ]
+
+        set ::tclssg::config(contentDirName) pages
+        set ::tclssg::config(templateDirName) templates
+        set ::tclssg::config(staticDirName) static
+        set ::tclssg::config(articleTemplateFileName) article.thtml
+        set ::tclssg::config(documentTemplateFileName) bootstrap.thtml
+        set ::tclssg::config(websiteConfigFileName) website.conf
+        set ::tclssg::config(skeletonDir) \
+                [file join $::tclssg::config(scriptLocation) skeleton]
+        set ::tclssg::config(defaultInputDir) [file join "website" "input"]
+        set ::tclssg::config(defaultOutputDir) [file join "website" "output"]
+
+        set ::tclssg::config(templateBrackets) {<% %>}
+
+        puts [array names ::tclssg::config]
+    }
+
     proc unknown args {
         return ::tclssg::help
     }
-}
+} ;# namespace tclssg
 
 proc main {argv0 argv} {
-    set scriptConfig(scriptLocation) [file dirname $argv0]
+    tclssg configure [file dirname $argv0]
 
     # Utility functions.
-    source [file join $scriptConfig(scriptLocation) utils.tcl]
-    set scriptConfig(version) [
+    source [file join $::tclssg::config(scriptLocation) utils.tcl]
+    set ::tclssg::config(version) [
         string trim [
-            read-file [file join $scriptConfig(scriptLocation) VERSION]
+            read-file [file join $::tclssg::config(scriptLocation) VERSION]
         ]
     ]
 
     # Version.
     catch {
         set currentPath [pwd]
-        cd $scriptConfig(scriptLocation)
-        append scriptConfig(version) \
+        cd $::tclssg::config(scriptLocation)
+        append ::tclssg::config(version) \
                 " (commit [string range [exec git rev-parse HEAD] 0 9])"
         cd $currentPath
     }
-
-    # What follows is the configuration that is generally not supposed to vary
-    # from project to project.
-    set scriptConfig(markdownProcessor) [
-        concat perl [
-            file join $scriptConfig(scriptLocation) \
-                    external Markdown_1.0.1 Markdown.pl
-        ]
-    ]
-
-    set scriptConfig(contentDirName) pages
-    set scriptConfig(templateDirName) templates
-    set scriptConfig(staticDirName) static
-    set scriptConfig(articleTemplateFileName) article.thtml
-    set scriptConfig(documentTemplateFileName) bootstrap.thtml
-    set scriptConfig(websiteConfigFileName) website.conf
-    set scriptConfig(skeletonDir) \
-            [file join $scriptConfig(scriptLocation) skeleton]
-    set scriptConfig(defaultInputDir) [file join "website" "input"]
-    set scriptConfig(defaultOutputDir) [file join "website" "output"]
-
-    set scriptConfig(templateBrackets) {<% %>}
 
     # Get command line options, including directories to operate on.
     set command [unqueue argv]
@@ -684,8 +662,8 @@ proc main {argv0 argv} {
 
     # Defaults for inputDir and outputDir.
     if {$inputDir eq "" && $outputDir eq ""} {
-        set inputDir $scriptConfig(defaultInputDir)
-        set outputDir $scriptConfig(defaultOutputDir)
+        set inputDir $::tclssg::config(defaultInputDir)
+        set outputDir $::tclssg::config(defaultOutputDir)
     } elseif {$outputDir eq ""} {
         catch {
             set outputDir [
@@ -719,4 +697,22 @@ proc main {argv0 argv} {
     tclssg $command $inputDir $outputDir $options
 }
 
-main $argv0 $argv
+# Check if we were run as the primary script by the interpreter.
+# Based on http://wiki.tcl.tk/40097.
+proc main-script? {} {
+    global argv0
+
+    if {[info exists argv0]
+     && [file exists [info script]] && [file exists $argv0]} {
+        file stat $argv0 argv0Info
+        file stat [info script] scriptInfo
+        expr {$argv0Info(dev) == $scriptInfo(dev)
+           && $argv0Info(ino) == $scriptInfo(ino)}
+    } else {
+        return 0
+    }
+}
+
+if {[main-script?]} {
+    main $argv0 $argv
+}
