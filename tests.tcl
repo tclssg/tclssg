@@ -150,6 +150,9 @@ proc main {argv0 argv} {
     ]
     exec tclsh ssg.tcl init {*}$tclssgArguments
     exec tclsh ssg.tcl build {*}$tclssgArguments
+    exec tclsh tools/yes.tcl | \
+            tclsh ssg.tcl update --templates {*}$tclssgArguments
+    exec tclsh ssg.tcl build {*}$tclssgArguments
     exec tclsh ssg.tcl clean {*}$tclssgArguments
     file delete -force $tempProjectDir
 

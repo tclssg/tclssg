@@ -132,7 +132,11 @@ proc dict-sort {dictionary \
 # Remove first n elements from varName and return them.
 proc unqueue {varName {n 1}} {
     upvar 1 $varName var
-    set result [lrange $var 0 [expr $n - 1]]
+    if {$n == 1} {
+        set result [lindex $var 0]
+    } else {
+        set result [lrange $var 0 [expr $n - 1]]
+    }
     set var [lrange $var $n end]
     return $result
 }
