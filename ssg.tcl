@@ -280,8 +280,8 @@ proc compile-website {inputDir outputDir websiteConfig} {
     ]
 
     # Generate blog index page(s).
-    set blogPostsPerDocument \
-            [dict-default-get 10 $websiteConfig blogPostsPerDocument]
+    set blogPostsPerFile \
+            [dict-default-get 10 $websiteConfig blogPostsPerFile]
     set i 0
     set currentPageArticles {}
     set pageNumber 0
@@ -296,7 +296,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
     dict for {id _} $posts {
         lappend currentPageArticles $id
         # If there is enough posts for a page or this is the last post...
-        if {($i == $blogPostsPerDocument - 1) || \
+        if {($i == $blogPostsPerFile - 1) || \
                     ($id eq [lindex $posts end-1])} {
             set newPageId \
                     [add-number-before-extension $blogIndexPage $pageNumber]
