@@ -231,10 +231,10 @@ proc read-template-file {inputDir varName websiteConfig} {
 }
 
 # Appends to ordered dict pagesVarName a page or a series of pages that collect
-# articles of those pages that are listed in pageIds. The number of pages add
-# equals [llength pageIds] / $blogPostsPerFile rounded to the nearest whole
-# number. Page settings are taken from the page topPageId and its content is
-# prepended to every output page. Used for making the blog index page.
+# the articles of those pages that are listed in pageIds. The number of pages
+# added equals ([llength pageIds] / $blogPostsPerFile) rounded to the nearest
+# whole number. Page settings are taken from the page topPageId and its content
+# is prepended to every output page. Used for making the blog index page.
 proc add-article-collection {pagesVarName pageIds topPageId websiteConfig} {
     upvar 1 $pagesVarName pages
 
@@ -338,11 +338,20 @@ proc compile-website {inputDir outputDir websiteConfig} {
         }
     ]
 
+    # Add chronological blog index.
+    set blogIndexPage [dict get $websiteConfig blogIndexPage]
     add-article-collection pages [dict keys $posts] \
-            [dict get $websiteConfig blogIndexPage] $websiteConfig
+            $blogIndexPage $websiteConfig
 
     dict set websiteConfig pages $pages
     dict set websiteConfig tags [tag-list $pages]
+
+    ## Add tag pages.
+    # foreach {tag taggedPages} [dict get $websiteConfig tags] {
+    #     lappend blog/$tag.md [dict get $pages $blogIndexPage]
+    #     add-article-collection pages $taggedPages \
+    #         $blogIndexPage $websiteConfig
+    # }
 
     dict for {id pageData} $pages {
         # Expand templates, first for the article then for the HTML document.
@@ -431,6 +440,196 @@ proc load-config {inputDir {verbose 1}} {
     return $websiteConfig
 }
 
+namespace eval tclssg {
+    namespace export *
+    namespace ensemble create -prefixes 0 -unknown ::tclssg::unknown
+
+    proc init {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        foreach dir [
+            list $scriptConfig(contentDirName) \
+                 $scriptConfig(templateDirName) \
+                 $scriptConfig(staticDirName) \
+                 [file join $scriptConfig(contentDirName) blog]
+        ] {
+            file mkdir [file join $inputDir $dir]
+        }
+        file mkdir $outputDir
+
+        # Copy project skeleton.
+        set skipRegExp [
+            if {"templates" in $options} {
+                lindex {}
+            } else {
+                lindex {.*templates.*}
+            }
+        ]
+        copy-files $scriptConfig(skeletonDir) $inputDir 0 $skipRegExp
+        exit 0
+    }
+
+    proc build {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        set websiteConfig [load-config $inputDir]
+
+        if {[file isdir $inputDir]} {
+            compile-website $inputDir $outputDir $websiteConfig
+        } else {
+            puts "couldn't access directory \"$inputDir\""
+            exit 1
+        }
+    }
+
+    proc clean {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        foreach file [fileutil::find $outputDir {file isfile}] {
+            puts "deleting $file"
+            file delete $file
+        }
+    }
+
+    proc update {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        set updateSourceDirs [
+            list $scriptConfig(staticDirName) {static files}
+        ]
+        if {"templates" in $options} {
+            lappend updateSourceDirs \
+                    $scriptConfig(templateDirName) \
+                    templates
+        }
+        foreach {dir descr} $updateSourceDirs {
+            puts "updating $descr"
+            copy-files [
+                file join $scriptConfig(skeletonDir) $dir
+            ] [
+                file join $inputDir $dir
+            ] 2
+        }
+    }
+
+    proc deploy-copy {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        set websiteConfig [load-config $inputDir]
+
+        set deployDest [dict get $websiteConfig deployCopyPath]
+
+        copy-files $outputDir $deployDest 1
+        exit 0
+    }
+
+    proc deploy-ftp {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        set websiteConfig [load-config $inputDir]
+
+        package require ftp
+        global errorInfo
+
+        set conn [
+            ::ftp::Open \
+                    [dict get $websiteConfig deployFtpServer] \
+                    [dict get $websiteConfig deployFtpUser] \
+                    [dict get $websiteConfig deployFtpPassword] \
+                    -port [
+                        dict-default-get 21 $websiteConfig deployFtpPort
+                    ] \
+                    -mode passive
+        ]
+        set deployFtpPath [dict get $websiteConfig deployFtpPath]
+
+        ::ftp::Type $conn binary
+
+        foreach file [fileutil::find $outputDir {file isfile}] {
+            set destFile [replace-path-root $file $outputDir $deployFtpPath]
+            set dir [file dirname $destFile]
+            if {[ftp::Cd $conn $dir]} {
+                ftp::Cd $conn /
+            } else {
+                puts "creating directory $dir"
+                ::ftp::MkDir $conn $dir
+            }
+            puts "uploading $file as $destFile"
+            if {![::ftp::Put $conn $file $destFile]} {
+                puts "upload error: $errorInfo"
+                exit 1
+            }
+        }
+        ::ftp::Close $conn
+    }
+
+    proc open {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        set websiteConfig [load-config $inputDir]
+
+        package require platform
+        set platform [platform::generic]
+
+        set openCommand [
+            switch -glob -- $platform {
+                *win* { lindex {cmd /c start ""} }
+                *osx* { lindex open }
+                default { lindex xdg-open }
+            }
+        ] ;# The default is the freedesktop.org open command for *nix.
+        exec -- {*}$openCommand [
+            file rootname [
+                file join $outputDir [
+                    dict-default-get index.md $websiteConfig indexPage
+                ]
+            ]
+        ].html
+    }
+
+    proc version {inputDir outputDir options} {
+        upvar 1 scriptConfig scriptConfig
+
+        puts $scriptConfig(version)
+    }
+
+    proc help {{inputDir ""} {outputDir ""} {options ""}} {
+        global argv0
+        upvar 1 scriptConfig scriptConfig
+
+        puts [
+            subst -nocommands [
+                trim-indentation {
+                    usage: $argv0 <command> [options] [inputDir [outputDir]]
+
+                    Possible commands are:
+                        init        create project skeleton
+                            --templates copy template files as well
+                        build       build static website
+                        clean       delete files in outputDir
+                        update      selectively replace static
+                                    files (e.g., CSS) in inputDir with
+                                    those of project skeleton
+                            --templates update template files as well
+                        deploy-copy copy result to location set in config
+                        deploy-ftp  upload result to FTP server set in
+                                    config
+                        open        open index page in default browser
+                        version     print version number and exit
+                        help        show this message
+
+                    inputDir defaults to "$scriptConfig(defaultInputDir)"
+                    outputDir defaults to "$scriptConfig(defaultOutputDir)"
+                }
+            ]
+        ]
+    }
+
+    proc unknown args {
+        return ::tclssg::help
+    }
+}
+
 proc main {argv0 argv} {
     set scriptConfig(scriptLocation) [file dirname $argv0]
 
@@ -441,6 +640,8 @@ proc main {argv0 argv} {
             read-file [file join $scriptConfig(scriptLocation) VERSION]
         ]
     ]
+
+    # Version.
     catch {
         set currentPath [pwd]
         cd $scriptConfig(scriptLocation)
@@ -515,160 +716,7 @@ proc main {argv0 argv} {
     }
 
     # Execute command.
-    switch -exact -- $command {
-        init {
-            foreach dir [
-                list $scriptConfig(contentDirName) \
-                     $scriptConfig(templateDirName) \
-                     $scriptConfig(staticDirName) \
-                     [file join $scriptConfig(contentDirName) blog]
-            ] {
-                file mkdir [file join $inputDir $dir]
-            }
-            file mkdir $outputDir
-
-            # Copy project skeleton.
-            set skipRegExp [
-                if {"templates" in $options} {
-                    lindex {}
-                } else {
-                    lindex {.*templates.*}
-                }
-            ]
-            copy-files $scriptConfig(skeletonDir) $inputDir 0 $skipRegExp
-            exit 0
-        }
-        build {
-            set websiteConfig [load-config $inputDir]
-
-            if {[file isdir $inputDir]} {
-                compile-website $inputDir $outputDir $websiteConfig
-            } else {
-                puts "couldn't access directory \"$inputDir\""
-                exit 1
-            }
-        }
-        clean {
-            foreach file [fileutil::find $outputDir {file isfile}] {
-                puts "deleting $file"
-                file delete $file
-            }
-        }
-        update {
-            set updateSourceDirs [
-                list $scriptConfig(staticDirName) {static files}
-            ]
-            if {"templates" in $options} {
-                lappend updateSourceDirs \
-                        $scriptConfig(templateDirName) \
-                        templates
-            }
-            foreach {dir descr} $updateSourceDirs {
-                puts "updating $descr"
-                copy-files [
-                    file join $scriptConfig(skeletonDir) $dir
-                ] [
-                    file join $inputDir $dir
-                ] 2
-            }
-        }
-        deploy-copy {
-            set websiteConfig [load-config $inputDir]
-
-            set deployDest [dict get $websiteConfig deployCopyPath]
-
-            copy-files $outputDir $deployDest 1
-            exit 0
-        }
-        deploy-ftp {
-            set websiteConfig [load-config $inputDir]
-
-            package require ftp
-            global errorInfo
-
-            set conn [
-                ::ftp::Open \
-                        [dict get $websiteConfig deployFtpServer] \
-                        [dict get $websiteConfig deployFtpUser] \
-                        [dict get $websiteConfig deployFtpPassword] \
-                        -port [
-                            dict-default-get 21 $websiteConfig deployFtpPort
-                        ] \
-                        -mode passive
-            ]
-            set deployFtpPath [dict get $websiteConfig deployFtpPath]
-
-            ::ftp::Type $conn binary
-
-            foreach file [fileutil::find $outputDir {file isfile}] {
-                set destFile [replace-path-root $file $outputDir $deployFtpPath]
-                set dir [file dirname $destFile]
-                if {[ftp::Cd $conn $dir]} {
-                    ftp::Cd $conn /
-                } else {
-                    puts "creating directory $dir"
-                    ::ftp::MkDir $conn $dir
-                }
-                puts "uploading $file as $destFile"
-                if {![::ftp::Put $conn $file $destFile]} {
-                    puts "upload error: $errorInfo"
-                    exit 1
-                }
-            }
-            ::ftp::Close $conn
-        }
-        open {
-            set websiteConfig [load-config $inputDir]
-
-            package require platform
-			set platform [platform::generic]
-
-			set openCommand [
-				switch -glob -- $platform {
-					*win* { lindex {cmd /c start ""} }
-					*osx* { lindex open }
-					default { lindex xdg-open }
-				}
-			] ;# The default is the freedesktop.org open command for *nix.
-            exec -- {*}$openCommand [
-                file rootname [
-                    file join $outputDir [
-                        dict-default-get index.md $websiteConfig indexPage
-                    ]
-                ]
-            ].html
-        }
-        version {
-            puts $scriptConfig(version)
-        }
-        default {
-            puts [
-                subst -nocommands [
-                    trim-indentation {
-                        usage: $argv0 <command> [options] [inputDir [outputDir]]
-
-                        Possible commands are:
-                            init        create project skeleton
-                                --templates copy template files as well
-                            build       build static website
-                            clean       delete files in outputDir
-                            update      selectively replace static
-                                        files (e.g., CSS) in inputDir with
-                                        those of project skeleton
-                                --templates update template files as well
-                            deploy-copy copy result to location set in config
-                            deploy-ftp  upload result to FTP server set in
-                                        config
-                            open        open index page in default browser
-                            version     print version number and exit
-
-                        inputDir defaults to "$scriptConfig(defaultInputDir)"
-                        outputDir defaults to "$scriptConfig(defaultOutputDir)"
-                    }
-                ]
-            ]
-        }
-    }
+    tclssg $command $inputDir $outputDir $options
 }
 
 main $argv0 $argv
