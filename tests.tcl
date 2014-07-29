@@ -13,10 +13,18 @@ source utils.tcl
 control::control assert enabled 1
 
 proc assert-all-equal args {
-    set prevArg [lindex $args 0]
-    foreach arg [lrange $args 1 end] {
-        control::assert {$arg eq $prevArg}
-        set prevArg $arg
+    if {[lindex $args 0] == "-listmode"} {
+        set prevArg [lindex $args 1]
+        foreach arg [lrange $args 2 end] {
+            control::assert [struct::list equal $arg $prevArg]
+            set prevArg $arg
+        }
+    } else {
+        set prevArg [lindex $args 0]
+        foreach arg [lrange $args 1 end] {
+            control::assert [list \"$arg\" eq \"$prevArg\"]
+            set prevArg $arg
+        }
     }
 }
 
@@ -113,6 +121,22 @@ proc main {argv0 argv} {
             format "filename%03d.ext" $i
         ]
     }
+
+    # get-page-variables
+    assert-all-equal -listmode [
+        get-page-variables "{hello world} Hello, world!"
+    ] [
+        get-page-variables "{ hello world } Hello, world!"
+    ] [
+        get-page-variables "{hello world}
+
+            Hello, world!"
+    ] [
+        get-page-variables "{
+                hello world
+            }
+            Hello, world!"
+    ] [list [list hello world] "Hello, world!"]
 
     # Tclssg init, build.
     puts "running build tests..."

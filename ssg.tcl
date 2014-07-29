@@ -25,14 +25,7 @@ namespace eval templating {
     proc prepare-content {rawContent pageData websiteConfig} {
         upvar 1 scriptConfig scriptConfig
 
-        set choppedContent {}
-        foreach line [split $rawContent \n] {
-            # Skip lines that set variables.
-            if {[string index $line 0] != "!"} {
-                set choppedContent "$choppedContent$line\n"
-            }
-        }
-
+        set choppedContent [lindex [get-page-variables $rawContent] 1]
         templating interpreter up [dict get $websiteConfig inputDir]
         templating interpreter inject $websiteConfig
         # Page data overrides website config.
@@ -156,25 +149,6 @@ namespace eval templating {
     } ;# namespace interpreter
 } ;# namespace templating
 
-# Get variables set in page using the "! variable value" syntax.
-proc get-page-variables {rawContent} {
-    global errorInfo
-    set result {}
-    foreach line [split $rawContent \n] {
-        if {[string index $line 0] == "!"} {
-            if {[catch {dict set result [lindex $line 1] [lindex $line 2]}]} {
-                puts "error: syntax error when setting page variable: '$line'"
-                puts "$errorInfo"
-                exit 1
-            }
-            if {[llength $line] > 3} {
-                puts "warning: trailing data after variable value: '$line'"
-            }
-        }
-    }
-    return $result
-}
-
 # Format one HTML article out of a page according to an article template.
 proc format-article {pageData articleTemplate websiteConfig} {
     upvar 1 scriptConfig scriptConfig
@@ -275,7 +249,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
         # May want to change this preloading behavior for very large websites.
         dict set pages $id rawContent [read-file $file]
         dict set pages $id variables [
-            get-page-variables [dict get $pages $id rawContent]
+            lindex [get-page-variables [dict get $pages $id rawContent]] 0
         ]
         dict set pages $id variables dateUnix [
             incremental-clock-scan [
@@ -298,8 +272,7 @@ proc compile-website {inputDir outputDir websiteConfig} {
                 {-decreasing}
     ]
 
-
-    # Filter posts out of pages.
+    # Filter blog posts out of pages. This preserves the ordering.
     set posts [
         dict filter $pages script {id pageData} {
             dict-default-get 0 $pageData variables blogPost
@@ -315,8 +288,9 @@ proc compile-website {inputDir outputDir websiteConfig} {
 
     set blogIndexPage [dict get $websiteConfig blogIndexPage]
     set blogIndexPageData [dict get $pages $blogIndexPage]
-
+    # Needed to the key to the end of the dict.
     dict unset pages $blogIndexPage
+
     set prevIndexPageId {}
 
     dict for {id _} $posts {

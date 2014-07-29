@@ -112,11 +112,13 @@ proc format-article-tag-list {} {
         set postTags [page-var-get-default tags {}]
         if {[llength $postTags] > 0} {
             append tagList {<nav class="tags"><ul>}
-            foreach tag [lrange $postTags 0 end-1 ] {
-                append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
+
+            set listElems {}
+            foreach tag $postTags {
+                lappend listElems "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
             }
-            set tag [lindex $postTags end]
-            append tagList "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
+            append tagList [join $listElems "<span class='separator small'> </span>"]
+
             append tagList {</ul></nav><!-- tags -->}
         }
     }
@@ -174,13 +176,12 @@ proc format-tag-cloud {} {
         append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><dl>}
         foreach {tag ids} [website-var-get-default tags {}] {
             append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
-            foreach id [lrange $ids 0 end-1] {
-                append tagCloud "[format-link $id]"}
-            append tagCloud [
-                format-link [
-                    lindex $ids end
-                ]
-            ]
+
+            set listElems {}
+            foreach id $ids {
+                lappend listElems [format-link $id]
+            }
+            append tagCloud [join $listElems "<span class='separator small'> </span>"]
             append tagCloud "</ul></dd>"
         }
         append tagCloud {</dl></nav><!-- tag-cloud -->}
@@ -196,7 +197,7 @@ proc format-footer {} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }
     if {![page-var-get-default hideFooter 0]} {
-        append footer {<div class="powered-by">Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a></div>}
+        append footer {<div class="powered-by"><small>Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a> and <a href="http://getbootstrap.com/">Bootstrap</a></small></div>}
     }
     return $footer
 }

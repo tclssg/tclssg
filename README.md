@@ -125,6 +125,8 @@ The following settings are specified in the file `website.conf` in `inputDir` an
     variableNameOne short_value
     variableNameTwo {A variable value with spaces.}
 
+Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
+
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | Appended to the `<title>` tag of every page. E.g., in this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say "Hello! &#124; My Awesome Website".  |
@@ -150,13 +152,17 @@ All 0/1 settings default to `0`.
 
 Per-page settings
 ------------------
-A page variable alters a setting for just the page it is set on. Page variables are set in the page source file (e.g., `{index.md}`), each one on a separate line that starts with `!` (an exclamation mark) and has the form of `! variableName {Value}`. Those lines are normally placed at the top of the page source file but can be placed anywhere in the file. Example usage:
+A page variable alters a setting for just the page it is set on. Page variables are set my placing a list of them at the top of a page source file (e.g., `{index.md}`). Example usage:
 
-    ! variableNameOne short_value
-    ! variableNameTwo {A variable value with spaces.}
+    {
+        variableNameOne short_value
+        variableNameTwo {A variable value with spaces.}
+    }
     Lorem ipsum... (The rest of the page content follows.)
 
-Variables that have an effect for any page:
+Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
+
+The following variables have an effect on any page they are set on:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -167,7 +173,7 @@ Variables that have an effect for any page:
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 
-Variables that only have an effect for blog posts:
+The following variables only have affect blog posts:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -199,7 +205,7 @@ You can also use macros to manipulate website variables like the website title o
 FAQ
 ---
 
-Answers to question about Tclssg can be on the [FAQ wiki page](https://github.com/dbohdan/tclssg/wiki/FAQ).
+Answers to questions about Tclssg can be found on the [FAQ wiki page](https://github.com/dbohdan/tclssg/wiki/FAQ).
 
 Sample use session
 ------------------
@@ -241,7 +247,7 @@ Sample use session
     uploading website/output/contact.css as danyilbohdan.com/contact.css
     uploading website/output/blog/index.html as danyilbohdan.com/blog/index.html
 
-(The password value is automatically replaced with "***" in Tclssg log output.)
+(The password value was automatically replaced with "***" in Tclssg's log output.)
 
 License
 -------
