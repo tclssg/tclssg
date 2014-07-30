@@ -13,7 +13,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.6.0
+    variable version 0.7.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -62,15 +62,15 @@ namespace eval tclssg {
         }
 
         # Make HTML out of content plus article template.
-        proc prepare-content {rawContent pageData websiteConfig} {
-
-
+        proc prepare-content {rawContent pageData websiteConfig \
+                    {extraVariables {}}} {
             set choppedContent \
                     [lindex [::tclssg::utils::get-page-variables $rawContent] 1]
             tclssg templating interpreter up [dict get $websiteConfig inputDir]
             tclssg templating interpreter inject $websiteConfig
             # Page data overrides website config.
             tclssg templating interpreter inject $pageData
+            tclssg templating interpreter inject $extraVariables
             # Macroexpand content if needed then convert it from Markdown to
             # HTML.
             if {[::tclssg::utils::dict-default-get 0 \
@@ -84,11 +84,13 @@ namespace eval tclssg {
         }
 
         # Expand template with (HTML) content.
-        proc expand {template cookedContent pageData websiteConfig} {
+        proc expand {template cookedContent pageData websiteConfig \
+                    {extraVariables {}}} {
             tclssg templating interpreter up [dict get $websiteConfig inputDir]
             tclssg templating interpreter inject $websiteConfig
             # Page data overrides website config.
             tclssg templating interpreter inject $pageData
+            tclssg templating interpreter inject $extraVariables
 
             # Expand template with content substituted in.
             tclssg templating interpreter var-set content $cookedContent
@@ -198,9 +200,11 @@ namespace eval tclssg {
     } ;# namespace templating
 
     # Format one HTML article out of a page according to an article template.
-    proc format-article {pageData articleTemplate websiteConfig} {
-        templating expand $articleTemplate [dict get $pageData cookedContent] \
-                $pageData $websiteConfig
+    proc format-article {pageData articleTemplate websiteConfig \
+                {abbreviate 0}} {
+        set cookedContent [dict get $pageData cookedContent]
+        templating expand $articleTemplate $cookedContent \
+                $pageData $websiteConfig [list abbreviate $abbreviate]
     }
 
     # Format one HTML document according to an document template. Document
@@ -217,10 +221,13 @@ namespace eval tclssg {
             documentTemplate websiteConfig} {
         set inputFiles {}
         set gen {}
+        set first 1
+
         foreach id $pageIds {
             append gen [format-article [dict get $pages $id] $articleTemplate \
-                    $websiteConfig]
+                    $websiteConfig [expr {!$first}]]
             lappend inputFiles [dict get $pages $id inputFile]
+            set first 0
         }
 
         set subdir [file dirname $outputFile]

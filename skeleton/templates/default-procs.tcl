@@ -106,6 +106,19 @@ proc format-article-date {} {
     }
 }
 
+proc abbreviate-article {content {abbreviate 0}} {
+    global moreText
+    global currentPageId
+    if {$abbreviate} {
+        if {[regexp {(.*?)<!-- *more *-->} $content \
+                match content]} {
+            append content \
+                    [format [page-var-get-default moreText "(...)"] [relative-link $currentPageId]]
+        }
+    }
+    return $content
+}
+
 proc format-article-tag-list {} {
     # Page tag list.
     global pageLinks

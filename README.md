@@ -115,7 +115,12 @@ The default layout of the input directory is
     │
     └── website.conf <-- Configuration file.
 
-Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files. Those are two different sets of variables.
+Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files. Those are two different sets of variables but the defaults for page variables can be set in `website.conf` (look for `pageVariables` below).
+
+Markup
+------
+
+Use [Markdown](http://daringfireball.net/projects/markdown/syntax) and `<!-- more -->`.
 
 Website settings
 ----------------
@@ -146,7 +151,7 @@ Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If you blog index is `blog/index.md` the content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
-| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Specify defaults for page variables (see below). |
+| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Default values for page variables (see the following section). |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
 All 0/1 settings default to `0`.
@@ -171,6 +176,7 @@ The following variables have an effect on any page they are set on:
 | hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
 | blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
+| hideDate | 0/1 | Do not put show the page date. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 
@@ -183,6 +189,7 @@ The following variables only have affect blog posts:
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
+| moreText | `{(<a href="%s">read on</a>)}` | `(...)` (without a link) by default. |
 
 Like with website settings all 0/1 settings default to `0`.
 
