@@ -8,8 +8,6 @@ package require control
 package require struct
 package require fileutil
 
-source utils.tcl
-
 control::control assert enabled 1
 
 proc assert-all-equal args {
@@ -35,6 +33,7 @@ proc main {argv0 argv} {
 
     # Import utility functions.
     source [file join $scriptLocation utils.tcl]
+    namespace import ::utils::*
 
     # incremental-clock-scan
     assert-all-equal [
@@ -148,12 +147,26 @@ proc main {argv0 argv} {
         list [file join $tempProjectDir input] \
              [file join $tempProjectDir output]
     ]
+    exec tclsh ssg.tcl version
+    exec tclsh ssg.tcl help
     exec tclsh ssg.tcl init {*}$tclssgArguments
     exec tclsh ssg.tcl build {*}$tclssgArguments
-    exec tclsh tools/yes.tcl | \
-            tclsh ssg.tcl update --templates {*}$tclssgArguments
+    exec tclsh ssg.tcl update --templates --yes {*}$tclssgArguments
     exec tclsh ssg.tcl build {*}$tclssgArguments
     exec tclsh ssg.tcl clean {*}$tclssgArguments
+
+    # Tclssg as library.
+    puts "running tclssg library tests..."
+    set file [file join $tempProjectDir libtest.tcl]
+    fileutil::writeFile $file [
+        subst {
+            source [file join $scriptLocation ssg.tcl]
+            tclssg configure
+            tclssg command build {*}$tclssgArguments
+        }
+    ]
+    exec tclsh $file
+
     file delete -force $tempProjectDir
 
     puts "done."
