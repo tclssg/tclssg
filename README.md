@@ -120,7 +120,23 @@ Once you've initialized your website project with `init` you can customize it by
 Markup
 ------
 
-Use [Markdown](http://daringfireball.net/projects/markdown/syntax) and `<!-- more -->`.
+Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate the break between the teaser (the part of the article shown on the blog index) and the rest of the content. Use page variables to customize page settings. Example:
+
+    {
+        pageTitle {Test page}
+        blogPost 1
+        tags {test {a long tag with spaces}}
+        date 2014-01-02
+        hideDate 1
+    }
+    **Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id
+    voluptate proident enim eu aliqua sit.
+
+    <!-- more -->
+
+    Mollit ex cillum pariatur anim [exemplum](http://example.com) tempor
+    exercitation sed eu Excepteur dolore deserunt cupidatat aliquip irure in
+    fugiat eu laborum est.
 
 Website settings
 ----------------

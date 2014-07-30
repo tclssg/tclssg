@@ -13,7 +13,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.7.0
+    variable version 0.7.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -300,6 +300,7 @@ namespace eval tclssg {
         set topPageData [dict get $pages $topPageId]
         # Needed to move the key to the end of the dict.
         dict unset pages $topPageId
+        set pageIds [::struct::list filterfor x $pageIds { $x ne $topPageId }]
 
         set prevIndexPageId {}
 
@@ -325,6 +326,7 @@ namespace eval tclssg {
                                     $outputFile $pageNumber]
                 }
                 dict set newPageData articlesToAppend $currentPageArticles
+                dict set newPageData variables collection 1
                 if {$pageNumber > 0} {
                     dict set newPageData \
                             variables prevPage $prevIndexPageId
