@@ -146,6 +146,7 @@ Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If you blog index is `blog/index.md` the content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
+| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Specify defaults for page variables (see below). |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
 All 0/1 settings default to `0`.

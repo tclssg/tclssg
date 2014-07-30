@@ -11,10 +11,18 @@ proc relative-link {id} {
 set indexLink [relative-link $indexPage]
 set blogIndexLink [relative-link $blogIndexPage]
 
-proc page-var-get-default {varName default {pageId {}}} {
+proc page-var-get-default {varName explicitDefault {pageId {}}} {
     global variables
     global currentPageId
     global pages
+    global pageVariables
+
+    # Account for config defaults.
+    set default [dict-default-get \
+            $explicitDefault \
+            [website-var-get-default pageVariables {}] \
+            $varName]
+
     if {$pageId eq ""} {
         dict-default-get $default $variables $varName
     } else {

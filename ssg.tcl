@@ -13,7 +13,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.5.0
+    variable version 0.6.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -397,9 +397,13 @@ namespace eval tclssg {
         dict set websiteConfig pages $pages
         dict set websiteConfig tags [tag-list $pages]
 
-        ## Add tag pages.
+        # Add tag pages.
         # foreach {tag taggedPages} [dict get $websiteConfig tags] {
-        #     lappend blog/$tag.md [dict get $pages $blogIndexPage]
+        #     set newPageId "blog/$tag.md"
+        #     lappend pages $newPageId [dict get $pages $blogIndexPage]
+        #     dict with pages $newPageId {
+        #         puts "$currentPageId $inputFile $outputFile"
+        #     }
         #     add-article-collection pages $taggedPages \
         #         $blogIndexPage $websiteConfig
         # }
