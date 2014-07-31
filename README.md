@@ -15,6 +15,7 @@ Features
 * Tcl code embedded in HTML for templating. [2]
 * Generated links are all relative.
 * Output is valid HTML5 and CSS level 3.
+* External comment engine support (currently: Disqus)
 
 1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, tags and the latest are featured on the blog index. A "tag cloud" can generated to find pages by tag.
 
@@ -162,6 +163,7 @@ The following variables have an effect on any page they are set on:
 | hideDate | 0/1 | Do not put show the page date. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
+| showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |
 
 The following variables only have affect blog posts:
 
@@ -224,6 +226,8 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
 | pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Default values for page variables. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
+| commentsEngine | `none`/`disqus` | Select what comment engine to use on pages that specify `showUserComments 1`. |
+| commentsDisqusShortname | `example` | Configuration for when `commentsEngine` is set to `disqus`. Specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 
 Like with page settings all 0/1 settings default to `0`.
 

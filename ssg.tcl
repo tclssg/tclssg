@@ -13,7 +13,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.7.2
+    variable version 0.8.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {

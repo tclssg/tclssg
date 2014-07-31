@@ -72,6 +72,10 @@ interp-source default-procs.tcl
         </div>
       </div>
 
+
+      <% format-comments %>
+
+
       <div class="footer">
         <% format-footer %>
       </div>
