@@ -84,7 +84,8 @@ proc format-article-title {} {
     set title [page-var-get-default pageTitle {}]
     if {$title ne "" && ![page-var-get-default hideTitle 0]} {
         set result {<header class="page-title"><h2>}
-        if {[page-var-get-default blogPost 0]} {
+        if {[page-var-get-default blogPost 0] &&
+            [page-var-get-default collection 0]} {
             append result [format-link $currentPageId 0 $title]
         } else {
             append result $title
@@ -113,7 +114,8 @@ proc abbreviate-article {content {abbreviate 0}} {
         if {[regexp {(.*?)<!-- *more *-->} $content \
                 match content]} {
             append content \
-                    [format [page-var-get-default moreText "(...)"] [relative-link $currentPageId]]
+                    [format [page-var-get-default moreText "(...)"] \
+                    [relative-link $currentPageId]]
         }
     }
     return $content
@@ -136,9 +138,11 @@ proc format-article-tag-list {} {
 
             set listElems {}
             foreach tag $postTags {
-                lappend listElems "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
+                lappend listElems \
+                    "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
             }
-            append tagList [join $listElems "<span class='separator small'> </span>"]
+            append tagList [join $listElems \
+                    "<span class='separator small'> </span>"]
 
             append tagList {</ul></nav><!-- tags -->}
         }

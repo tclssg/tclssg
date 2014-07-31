@@ -9,7 +9,7 @@ Features
 --------
 
 * Markdown for content formatting.
-* [Bootstrap](http://getbootstrap.com/) for layout. Supports Bootstrap themes.
+* [Bootstrap](http://getbootstrap.com/) for layout with Bootstrap theme support.
 * Support for plain old pages and blog posts. [1]
 * A single command deploys the resulting website over FTP.
 * Tcl code embedded in HTML for templating. [2]
@@ -48,6 +48,7 @@ On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [A
 
 Once you have the requirements installed clone this repository, `cd` into it then run
 
+    chmod +x ssg.tcl
     ./ssg.tcl init
     ./ssg.tcl build
     ./ssg.tcl open
@@ -138,6 +139,60 @@ Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!
     exercitation sed eu Excepteur dolore deserunt cupidatat aliquip irure in
     fugiat eu laborum est.
 
+Page settings
+------------------
+Page settings are specified using page variables. Each page variable alters some setting for just the page it is set on. Page variables are set at the top of a page source file using Tcl dict syntax. Example:
+
+    {
+        variableNameOne short_value
+        variableNameTwo {A variable value with spaces.}
+    }
+    Lorem ipsum... (The rest of the page content follows.)
+
+Values can be quoted with braces (`{value}`) or double quotes (`"value"`). To how to set a page variable for more than one page at once see `pageVariables` in the next section.
+
+The following variables have an effect on any page they are set on:
+
+| Variable name | Example value(s) | Description |
+|---------------|------------------|-------------|
+| pageTitle | `{Some title}` | Title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar/tag cloud links to the page. |
+| hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
+| blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
+| date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
+| hideDate | 0/1 | Do not put show the page date. |
+| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
+| hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
+
+The following variables only have affect blog posts:
+
+| Variable name | Example value(s) | Description |
+|---------------|------------------|-------------|
+| hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
+| hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
+| hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
+| showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
+| tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
+| moreText | `{(<a href="%s">read on</a>)}` | `(...)` (without a link) by default. |
+
+All 0/1 settings default to `0`.
+
+Page variable values set as shown above can't exceed a single line. For multiline page variable values set `expandMacrosInPages` to `1` and put a macro like the following in the page:
+
+    <%
+    dict set pages $currentPageId variables headExtra {
+        <link rel="stylesheet"
+        href="./contact.css">
+    }
+    return
+    %>
+
+You can also use macros to manipulate website variables like the website title or the copyright notice just for the current page:
+
+    <%
+    set websiteTitle blah
+    return
+    %>
+
 Website settings
 ----------------
 
@@ -146,7 +201,7 @@ The following settings are specified in the file `website.conf` in `inputDir` an
     variableNameOne short_value
     variableNameTwo {A variable value with spaces.}
 
-Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
+Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -167,64 +222,10 @@ Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If you blog index is `blog/index.md` the content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
-| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Default values for page variables (see the following section). |
+| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Default values for page variables. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 
-All 0/1 settings default to `0`.
-
-Per-page settings
-------------------
-A page variable alters a setting for just the page it is set on. Page variables are set my placing a list of them at the top of a page source file (e.g., `{index.md}`). Example usage:
-
-    {
-        variableNameOne short_value
-        variableNameTwo {A variable value with spaces.}
-    }
-    Lorem ipsum... (The rest of the page content follows.)
-
-Values can be quoted using braces (`{value}`) or double quotes (`"value"`).
-
-The following variables have an effect on any page they are set on:
-
-| Variable name | Example value(s) | Description |
-|---------------|------------------|-------------|
-| pageTitle | `{Some title}` | Title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar/tag cloud links to the page. |
-| hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar/tag cloud links to the page. |
-| blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
-| date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | . Blog posts are sorted on the `date` field. The date must be in a [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| hideDate | 0/1 | Do not put show the page date. |
-| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
-| hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
-
-The following variables only have affect blog posts:
-
-| Variable name | Example value(s) | Description |
-|---------------|------------------|-------------|
-| hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
-| hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
-| hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
-| showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
-| tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
-| moreText | `{(<a href="%s">read on</a>)}` | `(...)` (without a link) by default. |
-
-Like with website settings all 0/1 settings default to `0`.
-
-Page variable values set as shown above can't exceed a single line. For multiline page variable values set `expandMacrosInPages` to `1` and put a macro like the following in the page:
-
-    <%
-    dict set pages $currentPageId variables headExtra {
-        <link rel="stylesheet"
-        href="./contact.css">
-    }
-    return
-    %>
-
-You can also use macros to manipulate website variables like the website title or the copyright notice just for the current page:
-
-    <%
-    set websiteTitle blah
-    return
-    %>
+Like with page settings all 0/1 settings default to `0`.
 
 FAQ
 ---

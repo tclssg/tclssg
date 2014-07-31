@@ -4,6 +4,7 @@
     tags {test {a long tag with spaces}}
     date 2014-01-02
     hideDate 1
+    moreText {(<a href="%s">read more still</a>)}
 }
 **Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id
 voluptate proident enim eu aliqua sit.
