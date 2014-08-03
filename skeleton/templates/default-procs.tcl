@@ -63,21 +63,6 @@ proc format-html-title {} {
     }
 }
 
-proc format-document-title {} {
-    global websiteTitle
-    set pageTitle [page-var-get-default pageTitle {}]
-    set hideTitle [page-var-get-default hideTitle 0]
-    if {$hideTitle} {
-        return ""
-    } else {
-        if {$pageTitle eq ""} {
-            return $websiteTitle
-        } else {
-            return $pageTitle
-        }
-    }
-}
-
 proc format-article-title {} {
     # Article title.
     global currentPageId
@@ -111,8 +96,7 @@ proc abbreviate-article {content {abbreviate 0}} {
     global moreText
     global currentPageId
     if {$abbreviate} {
-        if {[regexp {(.*?)<!-- *more *-->} $content \
-                match content]} {
+        if {[regexp {(.*?)<!-- *more *-->} $content match content]} {
             append content \
                     [format [page-var-get-default moreText "(...)"] \
                     [relative-link $currentPageId]]

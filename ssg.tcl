@@ -423,7 +423,7 @@ namespace eval tclssg {
 
         # Process page files into HTML output.
         dict for {id _} $pages {
-            # Links to other page relative to the current.
+            # Links to other pages relative to the current one.
             set outputFile [dict get $pages $id outputFile]
             set pageLinks {}
             dict for {otherFile otherMetadata} $pages {
