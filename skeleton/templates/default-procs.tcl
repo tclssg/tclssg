@@ -9,7 +9,11 @@ proc relative-link {id} {
 }
 
 set indexLink [relative-link $indexPage]
-set blogIndexLink [relative-link $blogIndexPage]
+if {[website-var-get-default blogIndexPage {}] ne ""} {
+    set blogIndexLink [relative-link $blogIndexPage]
+} else {
+    set blogIndexLink {}
+}
 
 proc page-var-get-default {varName explicitDefault {pageId {}}} {
     global variables

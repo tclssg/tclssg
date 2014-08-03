@@ -5,14 +5,14 @@ interp-source default-procs.tcl
 %><!DOCTYPE html>
 <html>
   <head>
-    <meta charset="<% website-var-get-default charset UTF-8 %>">
+    <meta charset="<%! website-var-get-default charset UTF-8 %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
     <!-- <link rel="icon" href="<%= $rootDirPath %>/favicon.ico"> -->
 
-    <title><% format-html-title %></title>
+    <title><%! format-html-title %></title>
 
     <!-- Bootstrap core CSS -->
     <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap.min.css" rel="stylesheet">
@@ -45,39 +45,37 @@ interp-source default-procs.tcl
     </div>
 
 
-
     <div class="container">
       <div class="row">
         <% if {[page-var-get-default blogPost 0] && \
               (![page-var-get-default hideSidebar 0] || \
-                  [page-var-get-default showTagCloud 0])} {
-          return "<div class=\"col-md-8\">
-                    $content
-                    [format-prev-next-links {Previous page} {Next page}]
-                  </div>
-                  <div class=\"col-md-4 well\">
-                    [format-sidebar]
-                    [format-tag-cloud]
-                  </div>"
-          } else {
-            return "<div class=\"col-md-12\">
-                      $content
-                      [format-prev-next-links {Previous page} {Next page}]
-                    </div>"
-          }
-        }
+                  [page-var-get-default showTagCloud 0])} { %>
+          <div class="col-md-8">
+            <%= $content %>
+            <%! format-prev-next-links {Previous page} {Next page} %>
+          </div>
+          <div class="col-md-4 well">
+            <%! format-sidebar %>
+            <%! format-tag-cloud %>
+          </div>
+         <% } else { %>
+          <div class="col-md-12">
+            <%= $content %>
+            <%! format-prev-next-links {Previous page} {Next page} %>
+          </div>
+        <%  }
         %>
         <div>
-          <%  %>
+
         </div>
       </div>
 
 
-      <% format-comments %>
+      <%! format-comments %>
 
 
       <div class="footer">
-        <% format-footer %>
+        <%! format-footer %>
       </div>
 
     </div> <!-- /container -->

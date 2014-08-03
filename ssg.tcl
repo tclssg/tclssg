@@ -7,13 +7,12 @@ package require Tcl 8.5
 package require struct
 package require fileutil
 package require textutil
-package require textutil::expander
 
 namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.8.0
+    variable version 0.9.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -23,6 +22,7 @@ namespace eval tclssg {
 
        # Utility functions.
         source [file join $::tclssg::config(scriptLocation) utils.tcl]
+
         set ::tclssg::config(version) [
             string trim [
                 read-file [file join $::tclssg::config(scriptLocation) VERSION]
@@ -136,6 +136,7 @@ namespace eval tclssg {
                 }
                 interp eval templateInterp {
                     proc = varName { return $varName }
+                    proc : args { return [expr $args] }
                 }
 
                 foreach builtIn {source} {
@@ -153,11 +154,6 @@ namespace eval tclssg {
                                           $::tclssg::config(templateDirName)
                             ]
                         ]
-
-                if {![catch {::textutil::expander exp}]} {
-                    exp evalcmd {interp eval templateInterp}
-                    exp setbrackets {*}$::tclssg::config(templateBrackets)
-                }
             }
 
             # Tear down template interpreter.
@@ -184,8 +180,38 @@ namespace eval tclssg {
                 # Page data overrides website config.
                 inject $pageData
                 inject $extraVariables
-                set result [exp expand $template]
+                set result [parse $template {interp eval templateInterp}]
                 down
+                return $result
+            }
+
+            # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl.tk/20363).
+            proc parse {template {evalCommand eval}} {
+                set result {}
+                set regExpr {^(.*?)<%(.*?)%>(.*)$}
+                set listing "set _output {}\n"
+                while {[regexp $regExpr $template \
+                        match preceding token template]} {
+                    append listing [list append _output $preceding]\n
+                    switch -exact -- [string index $token 0] {
+                        = {
+                            append listing \
+                                    [format {append _output [expr %s]} \
+                                            [list [string range $token 1 end]]]
+                        }
+                        ! {
+                            append listing \
+                                    [format {append _output [%s]} \
+                                            [string range $token 1 end]]
+                        }
+                        default {
+                            append listing $token
+                        }
+                    }
+                    append listing \n
+                }
+                append listing [list append _output $template]\n
+                set result [{*}$evalCommand $listing]
                 return $result
             }
         } ;# namespace interpreter
@@ -392,9 +418,11 @@ namespace eval tclssg {
         ]
 
         # Add chronological blog index.
-        set blogIndexPage [dict get $websiteConfig blogIndexPage]
-        add-article-collection pages [dict keys $posts] \
-                $blogIndexPage $websiteConfig
+        set blogIndexPage [utils::dict-default-get {} $websiteConfig blogIndexPage]
+        if {$blogIndexPage ne ""} {
+            add-article-collection pages [dict keys $posts] \
+                    $blogIndexPage $websiteConfig
+        }
 
         dict set websiteConfig pages $pages
         dict set websiteConfig tags [tag-list $pages]
