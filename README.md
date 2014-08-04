@@ -17,12 +17,12 @@ Features
 * Output is valid HTML5 and CSS level 3.
 * External comment engine support (currently: Disqus)
 
-1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, tags and the latest are featured on the blog index. A "tag cloud" can generated to find pages by tag.
+1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, have tags and the latest ones are featured on the blog index. A "tag cloud" can be placed on the blog index to find pages by tag.
 
 2\. Templating example:
 
         <article>
-        <% textutil::indent $content {        } %>
+        <%! textutil::indent $content {        } %>
         </article>
 
 Page screenshot
@@ -45,7 +45,7 @@ On **Fedora/RHEL/CentOS**:
     su -
     yum install tcl tcllib
 
-On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't come with Tcllib, so it won't run Tclssg out of the box.
+On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't include Tcllib, so it won't run Tclssg out of the box.
 
 Once you have the requirements installed clone this repository, `cd` into it then run
 
@@ -68,13 +68,14 @@ Glossary
 | Term | Explanation |
 |---------|-------------|
 | Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content based on which a single page of HTML output is produced. When a page from the input directory is processed by Tclssg the HTML file is placed under the same relative path in the output directory with the same file name. E.g., placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
-| Blog post | Blog posts are pages with special features enabled that help the user navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are also displayed chronologically on the blog index page. Some features are enabled by default but can be selectively disabled for any individual blog post. A blog post's order in the sidebar is determined by its date (the `date` variable). |
+| Blog post | Blog posts are pages with special features enabled that help navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are presented in a chronological order  (based on their the `date` variables) on the blog index page. The order in which the links to blog posts appear on the sidebar is also determined by the posts' dates. The sidebar, tags and other features can be selectively disabled for an individual blog post. |
 | Index | The home/landing page of your website. Normally `index.md`. |
-| Blog index | The blog index is a page that presents all of your blog posts in the order from the latest to the oldest. Normally `blog/index.md` To avoid producing overly long webpages and HTML files that are too large the blog index page is broken into separate HTML files according the website setting `blogPostsPerFile` (see "Website settings"). |
-| Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and the website config file. Tclssg's templating works in two stages: first input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template then one or several articles are inserted into the document template (one for normal pages and blog posts and several for the blog index). Templating in Tclssg is powered by Tcllib's [`textutil::expander`](http://tcllib.sourceforge.net/doc/expander.html). |
+| Blog index | The blog index is a page that presents all of your blog posts in the order from the latest to the oldest. Normally its input file is `blog/index.md`. To avoid producing overly long webpages and HTML files that are too large the blog index page can be broken into separate HTML files according the website setting `blogPostsPerFile` (see section "Website settings"). |
+| Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and the website config file. Tclssg's templating works in two stages: first input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template then one or several articles are inserted into the document template (one for normal pages and blog posts and several for the blog index). |
 | Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
-| Variable | A variable specifies a Tclssg setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies a setting for just that individual page. When a variable is set the configuration ("config") file it specifies a setting for the website as a whole. |
+| Variable | In Tclssg a variable specifies one setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies the corresponding setting for just that individual page. When a variable is set the configuration ("config") file it specifies a setting for the website as a whole. |
 | Static file | A file that should be copied verbatim into to the output directory. Those are stored in a subdirectory of the input directory (`inputDir/static`). File paths relative to `inputDir/static` are preserved, which means that, e.g., `website/input/static/blah/file.zip` will be copied to `website/output/blah/file.zip`.  |
+| Project skeleton | A starting point for Tclssg websites contained in the `skeleton` directory. |
 | Output | The static website ready to be deployed. Consists of HTML files created by Tclssg based on the content in the input directory plus the static files. It is placed in the output directory `outputDir`. |
 
 Usage
@@ -83,11 +84,11 @@ Usage
     usage: ./ssg.tcl <command> [options] [inputDir [outputDir]]
 
 `inputDir` specifies the directory where the input for Tclssg is located. It defaults to `website/input` in the current directory.
-`outputDir` is where the static website's files are placed when the output is generated. When neither `inputDir` nor `outputDir` is supplied on the command line it defaults to `website/output`; if `inputDir` is supplied but not `outputDir` then Tclssg will use the value of the variable `outputDir` in the configuration file `inputDir/website.conf`.
+`outputDir` is where the static website's files are placed when the output is generated. When neither `inputDir` nor `outputDir` is supplied on the command line `outputDir` defaults to `website/output`; if `inputDir` is supplied but not `outputDir` then Tclssg will use the value of the variable `outputDir` in the configuration file `inputDir/website.conf`.
 
 Possible commands are
 
-* `init [--templates]` — сreate a new project from the default project skeleton (a starting point for Tclssg websites contained in the `skeleton` directory).
+* `init [--templates]` — сreate a new website project from the default project skeleton.
 
 > The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `inputDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the websites' look using CSS (e.g., Bootstrap themes).
 
@@ -95,29 +96,26 @@ Possible commands are
 
 * `build` — build a static website in `outputDir` based on the data in `inputDir`.
 * `clean` — delete all files in `outputDir`.
-* `update [--templates]` — replace static files in `inputDir` that have matching ones in the project skeleton with those in the project skeleton. Do the same with templates if the option `--templates` is given. Tclssg will prompt you whether to replace each file. This is used to update your website project when Tclssg itself is updated.
+* `update [--templates] [--yes]` — replace static files in `inputDir` that have matching ones in the project skeleton with those in the project skeleton. Do the same with templates if the option `--templates` is given. Tclssg will prompt you whether to replace each file unless you specify the option `--yes`. This is used to update your website project when Tclssg itself is updated.
 * `deploy-copy` — copy files to the destination set in the configuration file (`website.conf`). This can be used if your build machine is your web server or if you have the server's documents directory mounted as a local path.
-* `deploy-ftp` — deploy files to the FTP server according to the settings specified in the configuration file.
+* `deploy-ftp` — deploy files to the FTP server according to the FTP settings in the configuration file.
 * `open` — open the index page in the default browser.
 
-The default layout of the input directory is
+The default layout of the input directory is as follows:
 
     .
     ├── pages <-- Markdown files from which HTML is generated.
     │   ├── blog <-- Blog posts.
-    │   │   └── index.md <-- Blog index page with tag list
-    │   │                    and links to blog posts.
-    │   ├── index.md <-- Website index page.
-    ├── static <-- Files copied verbatim to the output
-    │   │          directory.
-    │   └── main.css
+    │   │   └── index.md <-- Blog index page with the tag list and blog posts
+    │   │                    in a chronological order.
+    │   └── index.md <-- Website index page.
+    ├── static <-- Files copied verbatim to the output directory.
     ├── templates <-- The website's layout templates (HTML + Tcl).
     │   ├── article.thtml
     │   └── bootstrap.thtml
-    │
     └── website.conf <-- Configuration file.
 
-Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files. Those are two different sets of variables but the defaults for page variables can be set in `website.conf` (look for `pageVariables` below).
+Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files. Those are two different sets of variables but defaults for page variables can be set in `website.conf` (look for `pageVariables` below).
 
 Markup
 ------
@@ -140,9 +138,53 @@ Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!
     exercitation sed eu Excepteur dolore deserunt cupidatat aliquip irure in
     fugiat eu laborum est.
 
+Templating
+----------
+
+Templating involves including in one of the following constructs in your Markup. You can use templates in HTML or Markdown in page files when `expandMacrosInPages` is enabled.
+
+### 1. `<% raw code %>`
+
+Wrap code around content. This is typically used for loops.
+
+#### Examples
+##### In template files (HTML)
+
+    <ul>
+    <% foreach city $cities { %>
+        <li><%= $city %></li>
+    <% } %>
+    </ul>
+
+##### In a page file (Markdown)
+
+Using this requires setting `expandMacrosInPages` to `1` in `website.conf`.
+
+    <% foreach city $cities { %>
+    * <%= $city %>
+    <% } %>
+
+### 2. `<%= expression>`
+
+Inserts the value of an expression (including an expression consisting of just a single variable like `$city`) in the output.
+
+#### Examples
+
+* `<%= $content %>`
+
+* `<%= 1 + 2 %>`
+
+### 3. `<%! command %>`.
+
+Inserts the return value of a single command in the output.
+
+#### Examples
+
+* `<title><%! format-html-title %></title>`
+
 Page settings
 ------------------
-Page settings are specified using page variables. Each page variable alters some setting for just the page it is set on. Page variables are set at the top of a page source file using Tcl dict syntax. Example:
+Page settings are specified using page variables. Each page variable alters a setting for just the page it is set on. Page variables are set at in the front matter (immediately at the top of a page source file) using Tcl dict syntax. Example:
 
     {
         variableNameOne short_value
@@ -150,9 +192,9 @@ Page settings are specified using page variables. Each page variable alters some
     }
     Lorem ipsum... (The rest of the page content follows.)
 
-Values can be quoted with braces (`{value}`) or double quotes (`"value"`). To how to set a page variable for more than one page at once see `pageVariables` in the next section.
+Values can be quoted with braces (`{value}`) or double quotes (`"value"`). If you want to set a page variable for more than one page at once look at the website setting `pageVariables` in the next section.
 
-The following variables have an effect on any page they are set on:
+The following variables have an effect for any page they are set on:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -165,7 +207,7 @@ The following variables have an effect on any page they are set on:
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |
 
-The following variables only have affect blog posts:
+These variables only affect blog posts:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
@@ -174,26 +216,9 @@ The following variables only have affect blog posts:
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
-| moreText | `{(<a href="%s">read on</a>)}` | `(...)` (without a link) by default. |
+| moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
 
 All 0/1 settings default to `0`.
-
-Page variable values set as shown above can't exceed a single line. For multiline page variable values set `expandMacrosInPages` to `1` and put a macro like the following in the page:
-
-    <%
-    dict set pages $currentPageId variables headExtra {
-        <link rel="stylesheet"
-        href="./contact.css">
-    }
-    return
-    %>
-
-You can also use macros to manipulate website variables like the website title or the copyright notice just for the current page:
-
-    <%
-    set websiteTitle blah
-    return
-    %>
 
 Website settings
 ----------------
@@ -207,34 +232,33 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| websiteTitle | `{My Awesome Website}` | The text displayed at the top and at the top appended to the `<title>` tag of every page of HTML output. In this example if `pageTitle` of a page is `{Hello!}` the `<title>` tag will say "Hello! &#124; My Awesome Website".  |
-| url | `{http://example.com/}` | Currently not used. |
-| outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`; for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
-| articleTemplateFileName | `article.thtml` | The article template defines what goes between the `<article>...</article>` tags for each page. If none is specified then `article.thtml` is used. Tclssg looks for templates in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
-| documentTemplateFileName | `article.thtml` | The document template defines the HTML document structure (expect for article structure). If none is specified then `bootstrap.thtml` is used. Tclssg looks for templates in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
-| deployCopyPath | `{/var/www/}` | The location to copy the output (the generated static website) to when the command `deploy-copy` is given. |
-| deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the static website to when the command `deploy-ftp` is given. |
+| websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `pageTitle` is `{Hello!}` .  |
+| outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
+| articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
+| documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
+| deployCopyPath | `{/var/www/}` | The location to copy the output to when the command `deploy-copy` is run. |
+| deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the static website to when the command `deploy-ftp` is run. |
 | deployFtpPort | `21` | FTP server port. |
 | deployFtpPath | `{htdocs}` | The directory on the FTP server where to deploy the static website. |
 | deployFtpUser | `{user}` | FTP user name. |
-| deployFtpPassword | `{password}` | FTP password. Not displayed in Tclssg output. |
-| expandMacrosInPages | 0/1 | Whether template macros in the format of `<% tclcommand args %>` are allowed in pages. |
+| deployFtpPassword | `{password}` | FTP password. Not shown in Tclssg's logs. |
+| expandMacrosInPages | 0/1 | Whether template macros are allowed in pages. If set to `0` macro code in a page will be treated as Markdown text just like the rest of the page. |
 | charset | `utf-8` | The pages' character set. |
-| indexPage | `{index.md}` | The blog index page. |
+| indexPage | `{index.md}` | The index page. |
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If you blog index is `blog/index.md` the content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
-| tagPage | `{blog/index.md}` | The "tag page", i.e., the one that all tags on blog posts link to. Enable `showTagCloud` on the tag page. |
-| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | Default values for page variables. |
+| tagPage | `{blog/index.md}` | The page that contains the tag cloud that all tags on blog posts will link to. Enable `showTagCloud` on the tag page. |
+| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
-| commentsEngine | `none`/`disqus` | Select what comment engine to use on pages that specify `showUserComments 1`. |
+| commentsEngine | `none`/`disqus` | Selects what comment engine (external software or service for blog comments) to use on pages that set `showUserComments` to `1`. |
 | commentsDisqusShortname | `example` | Configuration for when `commentsEngine` is set to `disqus`. Specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 
-Like with page settings all 0/1 settings default to `0`.
+Like page settings all 0/1 website settings default to `0`.
 
 FAQ
 ---
 
-Answers to questions about Tclssg can be found on the [FAQ wiki page](https://github.com/dbohdan/tclssg/wiki/FAQ).
+Answers to frequently asked questions about Tclssg can be found on the [FAQ wiki page](https://github.com/dbohdan/tclssg/wiki/FAQ).
 
 Sample use session
 ------------------

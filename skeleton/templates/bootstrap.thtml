@@ -20,6 +20,7 @@ interp-source default-procs.tcl
     <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
+    <%! page-var-get-default headExtra "" %>
   </head>
 
   <body>

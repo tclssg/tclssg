@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.9.0
+    variable version 0.9.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -114,7 +114,7 @@ namespace eval tclssg {
                 }
             }
 
-            # Set up template interpreter and expander.
+            # Set up the template interpreter.
             proc up {inputDir} {
                 # Create safe interpreter and expander for templates. Those are
                 # global.
@@ -134,10 +134,6 @@ namespace eval tclssg {
                  } {
                     interp alias templateInterp $alias {} $command
                 }
-                interp eval templateInterp {
-                    proc = varName { return $varName }
-                    proc : args { return [expr $args] }
-                }
 
                 foreach builtIn {source} {
                     interp expose templateInterp $builtIn
@@ -156,7 +152,7 @@ namespace eval tclssg {
                         ]
             }
 
-            # Tear down template interpreter.
+            # Tear down the template interpreter.
             proc down {} {
                 interp delete templateInterp
             }
@@ -174,19 +170,22 @@ namespace eval tclssg {
                 interp eval templateInterp $command
             }
 
+            # Expand template template for page pageData.
             proc expand {template pageData websiteConfig {extraVariables {}}} {
                 up [dict get $websiteConfig inputDir]
                 inject $websiteConfig
                 # Page data overrides website config.
                 inject $pageData
                 inject $extraVariables
-                set result [parse $template {interp eval templateInterp}]
+                set listing [parse $template]
+                set result [interp eval templateInterp $listing]
                 down
                 return $result
             }
 
+            # Convert a template into Tcl code.
             # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl.tk/20363).
-            proc parse {template {evalCommand eval}} {
+            proc parse {template} {
                 set result {}
                 set regExpr {^(.*?)<%(.*?)%>(.*)$}
                 set listing "set _output {}\n"
@@ -211,8 +210,7 @@ namespace eval tclssg {
                     append listing \n
                 }
                 append listing [list append _output $template]\n
-                set result [{*}$evalCommand $listing]
-                return $result
+                return $listing
             }
         } ;# namespace interpreter
     } ;# namespace templating
