@@ -114,35 +114,6 @@ proc abbreviate-article {content {abbreviate 0}} {
     return $content
 }
 
-proc format-article-tag-list {} {
-    # Page tag list.
-    global pageLinks
-    global tagPage
-    set tagList {}
-    set tagPageLink {}
-    if {[website-var-get-default tagPage {}] ne ""} {
-        set tagPageLink [dict get $pageLinks $tagPage]
-    }
-    if {[page-var-get-default blogPost 0] && \
-        ![page-var-get-default hidePostTags 0]} {
-        set postTags [page-var-get-default tags {}]
-        if {[llength $postTags] > 0} {
-            append tagList {<nav class="tags"><ul>}
-
-            set listElems {}
-            foreach tag $postTags {
-                lappend listElems \
-                    "<li><a href=\"$tagPageLink#[slugify $tag]\">$tag</a></li>"
-            }
-            append tagList [join $listElems \
-                    "<span class='separator small'> </span>"]
-
-            append tagList {</ul></nav><!-- tags -->}
-        }
-    }
-    return $tagList
-}
-
 proc format-sidebar {} {
     # Blog sidebar.
     global pages
@@ -185,24 +156,49 @@ proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
     return $links
 }
 
+proc format-article-tag-list {} {
+    # Page tag list.
+    global pageLinks
+    global tagPage
+    global tags
+    set tagList {}
+    set tagPageLink {}
+    if {[website-var-get-default tagPage {}] ne ""} {
+        set tagPageLink [dict get $pageLinks $tagPage]
+    }
+    if {[page-var-get-default blogPost 0] && \
+        ![page-var-get-default hidePostTags 0]} {
+        set postTags [page-var-get-default tags {}]
+        if {[llength $postTags] > 0} {
+            append tagList {<nav class="tags"><ul>}
+
+            # No need to default-get the global variable tags here;
+            # [llength $postTags] > 0 guarantees it's defined.
+            foreach tag $postTags {
+                append tagList [format-link \
+                    [lindex [dict get $tags $tag tagPages] 0] \
+                    1 $tag]
+            }
+
+            append tagList {</ul></nav><!-- tags -->}
+        }
+    }
+    return $tagList
+}
+
 proc format-tag-cloud {} {
     # Blog tag cloud. For each tag it links to pages that are tagged with it.
     global tags
     global pages
     set tagCloud {}
-    if {[page-var-get-default showTagCloud 0]} {
-        append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><dl>}
-        foreach {tag ids} [website-var-get-default tags {}] {
-            append tagCloud "<dt id=\"[slugify $tag]\">$tag</dt><dd><ul>"
-
-            set listElems {}
-            foreach id $ids {
-                lappend listElems [format-link $id]
-            }
-            append tagCloud [join $listElems "<span class='separator small'> </span>"]
-            append tagCloud "</ul></dd>"
+    if {![page-var-get-default hideTagCloud 0]} {
+        append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
+        foreach tag [dict keys [website-var-get-default tags {}]] {
+            append tagCloud [format-link \
+                    [lindex [dict get $tags $tag tagPages] 0] \
+                    1 $tag]
         }
-        append tagCloud {</dl></nav><!-- tag-cloud -->}
+        append tagCloud {</ul></nav><!-- tag-cloud -->}
     }
     return $tagCloud
 }

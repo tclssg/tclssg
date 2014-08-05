@@ -17,7 +17,7 @@ Features
 * Output is valid HTML5 and CSS level 3.
 * External comment engine support (currently: Disqus)
 
-1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, have tags and the latest ones are featured on the blog index. A "tag cloud" can be placed on the blog index to find pages by tag.
+1\. Blog posts differ from plain old pages in that they have a sidebar with links to other blog posts sorted by recency, have tags and the latest ones are featured on the blog index. A "tag cloud" is generated to help find pages by tag.
 
 2\. Templating example:
 
@@ -214,7 +214,8 @@ These variables only affect blog posts:
 | hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
 | hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
-| showTagCloud | 0/1 | Show the list of all tags and links to those blog posts that have each. Presently does not actually look like a cloud. |
+| hideTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
+| hideFromCollections | 0/1 | |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to the page `tagPage`. |
 | moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
 
@@ -247,7 +248,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | indexPage | `{index.md}` | The index page. |
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If you blog index is `blog/index.md` the content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
-| tagPage | `{blog/index.md}` | The page that contains the tag cloud that all tags on blog posts will link to. Enable `showTagCloud` on the tag page. |
+| tagPage | `{blog/tag.md}` | |
 | pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 | commentsEngine | `none`/`disqus` | Selects what comment engine (external software or service for blog comments) to use on pages that set `showUserComments` to `1`. |

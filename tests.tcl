@@ -45,15 +45,16 @@ proc main {argv0 argv} {
     ] [
         incremental-clock-scan {2014/06/26 20:10}
     ] [
-        clock scan {2014-06-26-20-10} -format {%Y-%m-%d-%H-%M}
+        list [clock scan {2014-06-26-20-10} -format {%Y-%m-%d-%H-%M}] \
+                {%Y-%m-%dT%H:%M}
     ]
 
     assert-all-equal [
-        incremental-clock-scan {2014}
+        lindex [incremental-clock-scan {2014}] 0
     ] [
-        incremental-clock-scan {2014-01}
+        lindex [incremental-clock-scan {2014-01}] 0
     ] [
-        incremental-clock-scan {2014-01-01 00:00:00}
+        lindex [incremental-clock-scan {2014-01-01 00:00:00}] 0
     ] [
         clock scan {2014-01-01} -format {%Y-%m-%d}
     ]

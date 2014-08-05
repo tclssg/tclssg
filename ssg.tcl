@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.9.2
+    variable version 0.10.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -104,8 +104,8 @@ namespace eval tclssg {
                 }
             }
 
-            # If $varName exists return its value in the interpreter templateInterp
-            # else return the default value.
+            # If $varName exists return its value in the interpreter
+            # templateInterp else return the default value.
             proc website-var-get-default {varName default} {
                 if {[interp eval templateInterp "info exists $varName"]} {
                     return [interp eval templateInterp "set $varName"]
@@ -217,10 +217,11 @@ namespace eval tclssg {
 
     # Format one HTML article out of a page according to an article template.
     proc format-article {pageData articleTemplate websiteConfig \
-            {abbreviate 0}} {
+            {abbreviate 0} {extraVariables {}}} {
         set cookedContent [dict get $pageData cookedContent]
         templating apply-template $articleTemplate $cookedContent \
-                $pageData $websiteConfig [list abbreviate $abbreviate]
+                $pageData $websiteConfig \
+                [list abbreviate $abbreviate {*}$extraVariables]
     }
 
     # Format one HTML document according to an document template. Document
@@ -240,13 +241,15 @@ namespace eval tclssg {
         set gen {}
         set first 1
 
+        set topPageId [lindex [dict keys $pages] 0]
         foreach id $pageIds {
             set pageData [dict get $pages $id]
             if {!$first} {
                 dict set pageData variables collection 1
             }
             append gen [format-article $pageData $articleTemplate \
-                    $websiteConfig [expr {!$first}]]
+                    $websiteConfig [expr {!$first}] \
+                    [list collectionPageId $topPageId]]
             lappend inputFiles [dict get $pages $id inputFile]
             set first 0
         }
@@ -317,7 +320,12 @@ namespace eval tclssg {
         set topPageData [dict get $pages $topPageId]
         # Needed to move the key to the end of the dict.
         dict unset pages $topPageId
-        set pageIds [::struct::list filterfor x $pageIds { $x ne $topPageId }]
+
+        set pageIds [::struct::list filterfor x $pageIds {
+            $x ne $topPageId &&
+            ![utils::dict-default-get 0 \
+                    $pages $x variables hideFromCollections]
+        }]
 
         set prevIndexPageId {}
 
@@ -423,18 +431,35 @@ namespace eval tclssg {
         }
 
         dict set websiteConfig pages $pages
-        dict set websiteConfig tags [tag-list $pages]
+        dict set websiteConfig tags {}
+        foreach {tag pageIds} [tag-list $pages] {
+            dict set websiteConfig tags $tag pageIds $pageIds
+            dict set websiteConfig tags $tag tagPages {}
+        }
 
         # Add tag pages.
-        # foreach {tag taggedPages} [dict get $websiteConfig tags] {
-        #     set newPageId "blog/$tag.md"
-        #     lappend pages $newPageId [dict get $pages $blogIndexPage]
-        #     dict with pages $newPageId {
-        #         puts "$currentPageId $inputFile $outputFile"
-        #     }
-        #     add-article-collection pages $taggedPages \
-        #         $blogIndexPage $websiteConfig
-        # }
+        set tagPage [utils::dict-default-get {} $websiteConfig tagPage]
+        foreach tag [dict keys [dict get $websiteConfig tags]] {
+            set taggedPages [dict get $websiteConfig tags $tag pageIds]
+            set oldIdRepl [file rootname \
+                    [lindex [file split \
+                            [dict get $pages $tagPage currentPageId]] end]]
+            set newPageIdRepl "tag-[utils::slugify $tag]"
+            set newPageId [string map [list $oldIdRepl $newPageIdRepl] \
+                    [dict get $pages $tagPage currentPageId]]
+            lappend pages $newPageId [dict get $pages $tagPage]
+            dict with pages $newPageId {
+                foreach varName {currentPageId inputFile outputFile} {
+                    set $varName [string map [list $oldIdRepl $newPageIdRepl] [set $varName]]
+                }
+                #puts "------$currentPageId $inputFile $outputFile"
+            }
+            add-article-collection pages $taggedPages \
+                $newPageId $websiteConfig
+            dict with websiteConfig tags $tag {
+                lappend tagPages $newPageId
+            }
+        }
 
         dict for {id pageData} $pages {
             # Expand templates, first for the article then for the HTML
