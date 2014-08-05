@@ -193,7 +193,7 @@ namespace eval utils {
     }
 
     # Try several formats for clock scan.
-    proc incremental-clock-scan {date {debug 1}} {
+    proc incremental-clock-scan {date {debug 0}} {
         set date [regsub -all {[ :.T/]+} $date {-}]
 
         set resultTimeVal {}
