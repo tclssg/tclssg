@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.9.1
+    variable version 0.9.2
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -387,7 +387,7 @@ namespace eval tclssg {
             dict set pages $id variables \
                     [lindex [::tclssg::utils::get-page-variables \
                             [dict get $pages $id rawContent]] 0]
-            dict set pages $id variables dateUnix \
+            dict set pages $id variables dateScanned \
                     [::tclssg::utils::incremental-clock-scan \
                             [::tclssg::utils::dict-default-get {} \
                                     $pages $id variables date]]
@@ -403,8 +403,8 @@ namespace eval tclssg {
 
         # Sort pages by date.
         set pages [
-            tclssg::utils::dict-sort $pages {variables dateUnix} 0 \
-                    {-decreasing}
+            tclssg::utils::dict-sort $pages {variables dateScanned} 0 \
+                    {-decreasing} {x {lindex $x 0}}
         ]
 
         # Filter blog posts out of pages. This preserves the ordering.

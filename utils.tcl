@@ -193,37 +193,36 @@ namespace eval utils {
     }
 
     # Try several formats for clock scan.
-    proc incremental-clock-scan {date {debug 0}} {
+    proc incremental-clock-scan {date {debug 1}} {
         set date [regsub -all {[ :.T/]+} $date {-}]
 
-        set result {}
-        foreach {format padding} {
-            {%Y} {-01-01-00-00-00}
-            {%Y-%m} {-01-00-00-00}
-            {%Y-%m-%d} {-00-00-00}
-            {%Y-%m-%d-%H-%M} {-00}
-            {%Y-%m-%d-%H-%M-%S} {}
+        set resultTimeVal {}
+        set resultFormat {}
+        foreach {formatScan formatStandard padding} {
+            {%Y}                {%Y}                {-01-01-00-00-00}
+            {%Y-%m}             {%Y-%m}             {-01-00-00-00}
+            {%Y-%m-%d}          {%Y-%m-%d}          {-00-00-00}
+            {%Y-%m-%d-%H-%M}    {%Y-%m-%dT%H:%M}    {-00}
+            {%Y-%m-%d-%H-%M-%S} {%Y-%m-%dT%H:%M:%S} {}
         } {
             if {$debug} {
-                puts "$format $date"
+                puts "$formatScan $date"
             }
             if {![catch {
-                    set scan [clock scan $date -format $format]
+                    set scan [clock scan $date -format $formatScan]
                 }]} {
                 # Work around unexpected treatment %Y and %Y-%m dates, see
                 # http://wiki.tcl.tk/2525.
-                set result [
-                    clock scan [
-                        join [list $date $padding] ""
-                    ] -format {%Y-%m-%d-%H-%M-%S}
-                ]
+                set resultTimeVal [clock scan [join [list $date $padding] ""] \
+                        -format {%Y-%m-%d-%H-%M-%S}]
+                set resultFormat $formatStandard
                 if {$debug} {
                     puts "match"
                     puts [clock format $scan]
                 }
             }
         }
-        return $result
+        return [list $resultTimeVal $resultFormat]
     }
 
     # Find the first directory dir in list dirs in which path exists.

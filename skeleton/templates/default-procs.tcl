@@ -89,8 +89,13 @@ proc format-article-title {} {
 proc format-article-date {} {
     # Page date.
     set date [page-var-get-default date {}]
+    set dateScanned [page-var-get-default dateScanned {}]
+
     if {$date ne "" && ![page-var-get-default hideDate 0]} {
-        return "<header class=\"date\">$date</header>"
+        set datetime [clock format \
+                [lindex $dateScanned 0] \
+                -format [lindex $dateScanned 1]]
+        return "<time datetime=\"$datetime\" class=\"date\">$date</time>"
     } else {
         return ""
     }
