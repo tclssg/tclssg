@@ -244,8 +244,8 @@ namespace eval utils {
 
     # Return fileName with the number n inserted before its extension.
     proc add-number-before-extension {fileName n {numberFormat {-%d}}
-            {nothingOnZero 1}} {
-        if {$n == 0 && $nothingOnZero} {
+            {numberToSkip 0}} {
+        if {$n == $numberToSkip} {
             set s ""
         } else {
             set s [format $numberFormat $n]

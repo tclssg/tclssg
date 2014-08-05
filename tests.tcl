@@ -106,7 +106,7 @@ proc main {argv0 argv} {
     ] "filename.ext"
 
     assert-all-equal [
-        add-number-before-extension "filename.ext" 0 "-%d" 0
+        add-number-before-extension "filename.ext" 0 "-%d" 1
     ] "filename-0.ext"
 
     for {set i 1} {$i < 11} {incr i} {
@@ -116,7 +116,7 @@ proc main {argv0 argv} {
         assert-all-equal [
             add-number-before-extension "filename.ext" $i "%03d"
         ] [
-            add-number-before-extension "filename.ext" $i "%03d" 1
+            add-number-before-extension "filename.ext" $i "%03d" -1
         ] [
             format "filename%03d.ext" $i
         ]

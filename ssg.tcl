@@ -336,7 +336,7 @@ namespace eval tclssg {
                         ($id eq [lindex $pageIds end])} {
                 set newPageId \
                         [tclssg::utils::add-number-before-extension \
-                                $topPageId $pageNumber]
+                                $topPageId [expr {$pageNumber + 1}] {-%d} 1]
                 puts -nonewline \
                     "adding article collection $newPageId "
 
@@ -345,10 +345,12 @@ namespace eval tclssg {
                     set currentPageId $newPageId
                     set inputFile \
                             [tclssg::utils::add-number-before-extension \
-                                    $inputFile $pageNumber]
+                                    $inputFile \
+                                    [expr {$pageNumber + 1}] {-%d} 1]
                     set outputFile \
                             [tclssg::utils::add-number-before-extension \
-                                    $outputFile $pageNumber]
+                                    $outputFile \
+                                    [expr {$pageNumber + 1}] {-%d} 1]
                 }
                 dict set newPageData articlesToAppend $currentPageArticles
                 dict set newPageData variables collection 1
@@ -373,6 +375,35 @@ namespace eval tclssg {
             }
         }
 
+    }
+
+    proc add-tag-pages {pagesVarName websiteConfigVarName} {
+        upvar 1 $pagesVarName pages
+        upvar 1 $websiteConfigVarName websiteConfig
+
+        set tagPage [utils::dict-default-get {} $websiteConfig tagPage]
+        foreach tag [dict keys [dict get $websiteConfig tags]] {
+            set taggedPages [dict get $websiteConfig tags $tag pageIds]
+            set oldIdRepl [file rootname \
+                    [lindex [file split \
+                            [dict get $pages $tagPage currentPageId]] end]]
+            set newPageIdRepl "tag-[utils::slugify $tag]"
+            set newPageId [string map [list $oldIdRepl $newPageIdRepl] \
+                    [dict get $pages $tagPage currentPageId]]
+            lappend pages $newPageId [dict get $pages $tagPage]
+            dict with pages $newPageId {
+                foreach varName {currentPageId inputFile outputFile} {
+                    set $varName [string map [list $oldIdRepl $newPageIdRepl] \
+                            [set $varName]]
+                }
+                #puts "------$currentPageId $inputFile $outputFile"
+            }
+            add-article-collection pages $taggedPages \
+                $newPageId $websiteConfig
+            dict with websiteConfig tags $tag {
+                lappend tagPages $newPageId
+            }
+        }
     }
 
     # Process input files in inputDir to produce static website in outputDir.
@@ -437,29 +468,8 @@ namespace eval tclssg {
             dict set websiteConfig tags $tag tagPages {}
         }
 
-        # Add tag pages.
-        set tagPage [utils::dict-default-get {} $websiteConfig tagPage]
-        foreach tag [dict keys [dict get $websiteConfig tags]] {
-            set taggedPages [dict get $websiteConfig tags $tag pageIds]
-            set oldIdRepl [file rootname \
-                    [lindex [file split \
-                            [dict get $pages $tagPage currentPageId]] end]]
-            set newPageIdRepl "tag-[utils::slugify $tag]"
-            set newPageId [string map [list $oldIdRepl $newPageIdRepl] \
-                    [dict get $pages $tagPage currentPageId]]
-            lappend pages $newPageId [dict get $pages $tagPage]
-            dict with pages $newPageId {
-                foreach varName {currentPageId inputFile outputFile} {
-                    set $varName [string map [list $oldIdRepl $newPageIdRepl] [set $varName]]
-                }
-                #puts "------$currentPageId $inputFile $outputFile"
-            }
-            add-article-collection pages $taggedPages \
-                $newPageId $websiteConfig
-            dict with websiteConfig tags $tag {
-                lappend tagPages $newPageId
-            }
-        }
+        # Add pages with blog posts for each tag.
+        add-tag-pages pages websiteConfig
 
         dict for {id pageData} $pages {
             # Expand templates, first for the article then for the HTML
