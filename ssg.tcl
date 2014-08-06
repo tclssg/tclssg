@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.10.0
+    variable version 0.10.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -471,21 +471,22 @@ namespace eval tclssg {
         # Add pages with blog posts for each tag.
         add-tag-pages pages websiteConfig
 
+        puts "preparing content"
         dict for {id pageData} $pages {
             # Expand templates, first for the article then for the HTML
             # document. This modifies pages.
             dict set pages $id cookedContent [
                 templating prepare-content \
-                        [dict get $pages $id rawContent] \
-                        [dict get $pages $id] \
+                        [dict get $pageData rawContent] \
+                        [dict get $pageData] \
                         $websiteConfig
             ]
         }
 
         # Process page files into HTML output.
-        dict for {id _} $pages {
+        dict for {id pageData} $pages {
             # Links to other pages relative to the current one.
-            set outputFile [dict get $pages $id outputFile]
+            set outputFile [dict get $pageData outputFile]
             set pageLinks {}
             dict for {otherFile otherMetadata} $pages {
                 # pageLinks maps page id (= input FN relative to $contentDir) to
@@ -509,7 +510,7 @@ namespace eval tclssg {
             ]
 
             generate-html-file \
-                    [dict get $pages $id outputFile] \
+                    [dict get $pageData outputFile] \
                     $pages \
                     [list $id \
                             {*}[::tclssg::utils::dict-default-get {} \
@@ -517,21 +518,6 @@ namespace eval tclssg {
                     $articleTemplate \
                     $documentTemplate \
                     $websiteConfig
-        }
-
-        set blogPosts {}
-        # Can't use $pages here because by now they may have lost how they
-        # sorted.
-        foreach {id _} [dict get $websiteConfig pages] {
-            if {$id eq [::tclssg::utils::dict-default-get {} \
-                    $websiteConfig blogIndexPage]} {
-                continue
-            }
-            set pageData [dict get $pages $id]
-            if {[::tclssg::utils::dict-default-get 0 \
-                        $pageData variables blogPost]} {
-                lappend blogPosts $pageData
-            }
         }
 
         # Copy static files verbatim.

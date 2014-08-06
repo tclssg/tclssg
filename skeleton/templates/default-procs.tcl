@@ -121,10 +121,10 @@ proc format-sidebar {} {
     if {[page-var-get-default blogPost 0] && \
         ![page-var-get-default hideSidebar 0]} {
         append sidebar {<nav class="sidebar"><h3>Posts</h3><ul>}
-        foreach {id _} $pages {
+        foreach {id pageData} $pages {
             # Only add links to other blog entries.
-            if {[page-var-get-default blogPost 0 $id] && \
-                ![page-var-get-default hideFromSidebar 0 $id]} {
+            if {[dict-default-get 0 $pageData blogPost] && \
+                ![dict-default-get 0 $pageData hideFromSidebar]} {
                 append sidebar [format-link $id]
             }
         }
