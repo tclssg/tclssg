@@ -12,7 +12,8 @@ Features
 * Distinguishes between plain old pages and blog posts; [2]
 * Generates only relative links;
 * Output is valid HTML5 and CSS level 3;
-* Can deploy over FTP with a single command;
+* Deploy over FTP with a single command;
+* Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols;
 * Supports external comment engines (currently: Disqus).
 
 1\. Template example:
@@ -65,10 +66,10 @@ Glossary
 
 | Term | Explanation |
 |---------|-------------|
-| Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content based on which a single page of HTML output is produced. When a page from the input directory is processed by Tclssg the HTML file is placed under the same relative path in the output directory with the same file name. E.g., placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
+| Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content based on which a single page of HTML output is produced. When a page from the input directory is processed by Tclssg the HTML file is placed under the same relative path in the output directory with the same file name. For example, placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
 | Blog post | Blog posts are pages with special features enabled that help navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are presented in a chronological order  (based on their the `date` variables) on the blog index page. The order in which the links to blog posts appear on the sidebar is also determined by the posts' dates. The sidebar, tags and other features can be selectively disabled for an individual blog post. |
 | Index | The home/landing page of your website. Normally `index.md`. |
-| Blog index | The blog index is a page that presents all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerFile` (see section "Website settings"). |
+| Blog index | The blog index is a page that presents all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerFile` (see section ["Website settings"](#website-settings)). |
 | Tag page | A tag page is a page that shows all blog posts that have a certain tag in a chronological order. When you build your static website a tag page is created for each tag. Like the blog index a tag page will be broken into separate HTML files according the website setting `blogPostsPerFile`. The website setting `tagPage` (normally set to `blog/tag.md`) determines what page is used as the basis for tag pages. If you have a tag `space` then the content of `blog/tag.md` will be copied to `blog/tag-space.md`  |
 | Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and the website config file. Tclssg's templating works in two stages: first input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template then one or several articles are inserted into the document template (one for normal pages and blog posts and several for the blog index). |
 | Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
@@ -89,7 +90,7 @@ Possible commands are
 
 * `init [--templates]` — сreate a new website project from the default project skeleton.
 
-> The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `inputDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the websites' look using CSS (e.g., Bootstrap themes).
+> The option `--templates` will make `init` copy the template files from the project skeleton into a subdirectory named `templates` in `inputDir`. You should only use it if you intend to customize your page's layout (HTML code); it is not necessary if you only intend to customize the websites' look using CSS (including Bootstrap themes).
 
 >By default your project will directly use the page template of the project skeleton. Not keeping a separate copy of the template is a good idea because it means you won't have to update it manually when a new version of Tclssg introduces changes to templating (which at this point in development it may).
 
@@ -97,6 +98,7 @@ Possible commands are
 * `clean` — delete all files in `outputDir`.
 * `update [--templates] [--yes]` — replace static files in `inputDir` that have matching ones in the project skeleton with those in the project skeleton. Do the same with templates if the option `--templates` is given. Tclssg will prompt you whether to replace each file unless you specify the option `--yes`. This is used to update your website project when Tclssg itself is updated.
 * `deploy-copy` — copy files to the destination set in the configuration file (`website.conf`). This can be used if your build machine is your web server or if you have the server's documents directory mounted as a local path.
+* `deploy-custom` — execute a custom deploy command.
 * `deploy-ftp` — deploy files to the FTP server according to the FTP settings in the configuration file.
 * `open` — open the index page in the default browser.
 
@@ -237,6 +239,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
 | deployCopyPath | `{/var/www/}` | The location to copy the output to when the command `deploy-copy` is run. |
+| deployCustomCommand | | See [the respective section](#using-deploycustomcommand) below. |
 | deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the static website to when the command `deploy-ftp` is run. |
 | deployFtpPort | `21` | FTP server port. |
 | deployFtpPath | `{htdocs}` | The directory on the FTP server where to deploy the static website. |
@@ -254,6 +257,20 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | commentsDisqusShortname | `example` | Configuration for when `commentsEngine` is set to `disqus`. Specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 
 Like page settings all 0/1 website settings default to `0`.
+
+### Using `deployCustomCommand`
+
+The setting `deployCustomCommand` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustomCommand` consists of three key: `start`, `file` and `end`. The command with the key `file` is run for each file while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example `website.conf` fragment that shows how to configure SCP deployment:
+
+    [...]
+    deployCustomCommand {
+        start {scp -rp "$outputDir" host:/var/www/}
+        file {}
+        end {}
+    }
+    [...]
+
+In the above example `$outputDir` is replaced with the actual output directory path. In each of commands in `start`, `file` and `end` the following variables are recognized and substituted: `$outputDir` (output directory), `$file` (file path), `$fileRel` (file path relative to `outputDir`). For example, `file {echo "$fileRel"}` will print the relative paths of all files.
 
 FAQ
 ---

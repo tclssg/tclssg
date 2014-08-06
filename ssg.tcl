@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.10.1
+    variable version 0.11.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -627,6 +627,30 @@ namespace eval tclssg {
             ::tclssg::utils::copy-files $outputDir $deployDest 1
         }
 
+        proc deploy-custom {inputDir outputDir {options {}}} {
+            proc exec-deploy-command {key} {
+                foreach varName {deployCustomCommand outputDir file fileRel} {
+                    upvar 1 $varName $varName
+                }
+                if {[dict exists $deployCustomCommand $key] &&
+                    ([dict get $deployCustomCommand $key] ne "")} {
+                    puts [exec -- {*}[subst -nocommands \
+                            [dict get $deployCustomCommand $key]]]
+                }
+            }
+            set websiteConfig [::tclssg::load-config $inputDir]
+
+            set deployCustomCommand \
+                    [dict get $websiteConfig deployCustomCommand]
+
+            exec-deploy-command start
+            foreach file [fileutil::find $outputDir {file isfile}] {
+                set fileRel [::fileutil::relative $outputDir $file]
+                exec-deploy-command file
+            }
+            exec-deploy-command end
+        }
+
         proc deploy-ftp {inputDir outputDir {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
@@ -709,8 +733,10 @@ namespace eval tclssg {
                                         those of project skeleton
                                 --templates update template files as well
                                 --yes       assume "yes" to all questions
-                            deploy-copy copy result to location set in config
-                            deploy-ftp  upload result to FTP server set in
+                            deploy-copy copy output to location set in config
+                            deploy-custom
+                                        run custom commands to deploy output
+                            deploy-ftp  upload output to FTP server set in
                                         config
                             open        open index page in default browser
                             version     print version number and exit
