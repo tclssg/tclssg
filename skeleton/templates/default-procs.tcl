@@ -116,17 +116,13 @@ proc abbreviate-article {content {abbreviate 0}} {
 
 proc format-sidebar {} {
     # Blog sidebar.
-    global pages
+    global sidebarPostIds
     set sidebar {}
-    if {[page-var-get-default blogPost 0] && \
+    if {[page-var-get-default blogPost 0] &&
         ![page-var-get-default hideSidebar 0]} {
         append sidebar {<nav class="sidebar"><h3>Posts</h3><ul>}
-        foreach {id pageData} $pages {
-            # Only add links to other blog entries.
-            if {[dict-default-get 0 $pageData blogPost] && \
-                ![dict-default-get 0 $pageData hideFromSidebar]} {
-                append sidebar [format-link $id]
-            }
+        foreach id $sidebarPostIds {
+            append sidebar [format-link $id]
         }
         append sidebar {</ul></nav><!-- sidebar -->}
     }

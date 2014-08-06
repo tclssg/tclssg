@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.11.0
+    variable version 0.11.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -270,7 +270,7 @@ namespace eval tclssg {
         fileutil::writeFile $outputFile $output
     }
 
-    # Generate tag list in the format of dict tag -> {id id id...}.
+    # Generate tag list in the format of dict {tag {id id id ...} ...}.
     proc tag-list {pages} {
         set tags {}
         dict for {page pageData} $pages {
@@ -454,6 +454,14 @@ namespace eval tclssg {
             }
         ]
 
+        set sidebarPostIds {}
+        foreach {id pageData} $posts {
+            if {![::tclssg::utils::dict-default-get 0 \
+                    $pageData variables hideFromSidebar]} {
+                lappend sidebarPostIds $id
+            }
+        }
+
         # Add chronological blog index.
         set blogIndexPage [utils::dict-default-get {} $websiteConfig blogIndexPage]
         if {$blogIndexPage ne ""} {
@@ -462,6 +470,7 @@ namespace eval tclssg {
         }
 
         dict set websiteConfig pages $pages
+        dict set websiteConfig sidebarPostIds $sidebarPostIds
         dict set websiteConfig tags {}
         foreach {tag pageIds} [tag-list $pages] {
             dict set websiteConfig tags $tag pageIds $pageIds
