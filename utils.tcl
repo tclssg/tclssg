@@ -107,9 +107,10 @@ namespace eval utils {
     }
 
     # Sort the keys of a dictionary of dictionaries by value index. The index
-    # can be one or more key names. TODO: sort by value itself if index is {}.
-    # Optionally set default value for keys that are missing the index, pass
-    # option to lsort or applying lambda to each value.
+    # can be one or more key names (for nested keys). TODO: sort by value itself
+    # if index is {}. Optionally set the default value for those keys that are
+    # missing the index value, pass options to lsort or apply lambda to each
+    # value before its used for sorting.
     proc dict-sort {dictionary \
                     index \
                     {default 0} \

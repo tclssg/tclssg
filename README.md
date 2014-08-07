@@ -1,28 +1,22 @@
 Tclssg
 =======
 
-A static site generator with template support written in Tcl for danyilbohdan.com. Intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout with Bootstrap theme support and Tcl code embedded in HTML for templating.
+A static site generator with template support written in Tcl for danyilbohdan.com. Intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
 Features
 --------
 
-* Markdown, Bootstrap themes, Tcl code for templates; [1]
-* Distinguishes between plain old pages and blog posts; [2]
+* [Markdown](#markup), Bootstrap themes, Tcl code for [templates](#templating);
+* Distinguishes between plain old pages and blog posts; [1]
 * Generates only relative links;
 * Output is valid HTML5 and CSS level 3;
 * Deploy over FTP with a single command;
 * Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols;
 * Supports external comment engines (currently: Disqus).
 
-1\. Template example:
-
-        <article>
-        <%! textutil::indent $content {        } %>
-        </article>
-
-2\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
+1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 
 Page screenshot
 ---------------
@@ -121,32 +115,34 @@ Once you've initialized your website project with `init` you can customize it by
 Markup
 ------
 
-Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate the break between the teaser (the part of the article shown on the blog index) and the rest of the content. Use page variables to customize page settings. Example:
+Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate the break between the teaser (the part of the article shown on the blog index and on tag pages) and the rest of the content. Use page variables to customize page settings. Example:
 
-    {
-        pageTitle {Test page}
-        blogPost 1
-        tags {test {a long tag with spaces}}
-        date 2014-01-02
-        hideDate 1
-    }
-    **Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id
-    voluptate proident enim eu aliqua sit.
+```markdown
+{
+    pageTitle {Test page}
+    blogPost 1
+    tags {test {a long tag with spaces}}
+    date 2014-01-02
+    hideDate 1
+}
+**Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id
+voluptate proident enim eu aliqua sit.
 
-    <!-- more -->
+<!-- more -->
 
-    Mollit ex cillum pariatur anim [exemplum](http://example.com) tempor
-    exercitation sed eu Excepteur dolore deserunt cupidatat aliquip irure in
-    fugiat eu laborum est.
+Mollit ex cillum pariatur anim [exemplum](http://example.com) tempor
+exercitation sed eu Excepteur dolore deserunt cupidatat aliquip irure in
+fugiat eu laborum est.
+```
 
 Templating
 ----------
 
-Templating involves including in one of the following constructs in your Markup. You can use templates in HTML or Markdown in page files when `expandMacrosInPages` is enabled.
+Templating involves including one of the following constructs in your markup. You can use templates in HTML in templates or in Markdown in page files when `expandMacrosInPages` is enabled.
 
 ### 1. `<% raw code %>`
 
-Wrap code around content. This is typically used for loops.
+Wraps code around content. This is typically used for loops.
 
 #### Examples
 ##### In template files (HTML)
@@ -239,7 +235,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
 | deployCopyPath | `{/var/www/}` | The location to copy the output to when the command `deploy-copy` is run. |
-| deployCustomCommand | | See [the respective section](#using-deploycustomcommand) below. |
+| deployCustomCommand | | See [the corresponding section](#using-deploycustomcommand) below. |
 | deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the static website to when the command `deploy-ftp` is run. |
 | deployFtpPort | `21` | FTP server port. |
 | deployFtpPath | `{htdocs}` | The directory on the FTP server where to deploy the static website. |
@@ -251,6 +247,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If your blog index is `blog/index.md` the processed content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
+| sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
 | pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 | commentsEngine | `none`/`disqus` | Selects what comment engine (external software or service for blog comments) to use on pages that set `showUserComments` to `1`. |
@@ -260,17 +257,17 @@ Like page settings all 0/1 website settings default to `0`.
 
 ### Using `deployCustomCommand`
 
-The setting `deployCustomCommand` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustomCommand` consists of three key: `start`, `file` and `end`. The command with the key `file` is run for each file while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example `website.conf` fragment that shows how to configure SCP deployment:
+The setting `deployCustomCommand` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustomCommand` consists of three keys, `start`, `file` and `end`, followed by their respective values. The command under the key `file` is run for every file in `outputDir` while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example of a `website.conf` that does SCP deployment on `deploy-custom`:
 
     [...]
     deployCustomCommand {
-        start {scp -rp "$outputDir" host:/var/www/}
+        start {scp -rp "$outputDir" host.example.net:/var/www/}
         file {}
         end {}
     }
     [...]
 
-In the above example `$outputDir` is replaced with the actual output directory path. In each of commands in `start`, `file` and `end` the following variables are recognized and substituted: `$outputDir` (output directory), `$file` (file path), `$fileRel` (file path relative to `outputDir`). For example, `file {echo "$fileRel"}` will print the relative paths of all files.
+In the above example `$outputDir` is replaced with the actual output directory path when the command is run. In the commands for `start`, `file` and `end` the following variables are recognized and substituted: `$outputDir` (the output directory), `$file` (file path), `$fileRel` (file path relative to `outputDir`). This means that if you put `file {echo "$fileRel"}` in `deployCustomCommand` and run Tclssg with the command `./ssg.tcl deploy-custom ./website/input ./website/output` it will print the relative paths of all files in `./website/output`.
 
 FAQ
 ---

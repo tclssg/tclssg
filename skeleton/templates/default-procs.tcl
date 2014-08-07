@@ -8,11 +8,12 @@ proc relative-link {id} {
     return [dict get $pageLinks $id]
 }
 
-set indexLink [relative-link $indexPage]
-if {[website-var-get-default blogIndexPage {}] ne ""} {
-    set blogIndexLink [relative-link $blogIndexPage]
-} else {
-    set blogIndexLink {}
+foreach varNamePrefix {index blogIndex} {
+    if {[website-var-get-default ${varNamePrefix}Page {}] ne ""} {
+        set ${varNamePrefix}Link [relative-link [set ${varNamePrefix}Page]]
+    } else {
+        set ${varNamePrefix}Link {}
+    }
 }
 
 proc page-var-get-default {varName explicitDefault {pageId {}}} {

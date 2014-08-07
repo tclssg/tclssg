@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.11.1
+    variable version 0.12.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -23,11 +23,7 @@ namespace eval tclssg {
        # Utility functions.
         source [file join $::tclssg::config(scriptLocation) utils.tcl]
 
-        set ::tclssg::config(version) [
-            string trim [
-                read-file [file join $::tclssg::config(scriptLocation) VERSION]
-            ]
-        ]
+        set ::tclssg::config(version) $::tclssg::version
 
         set ::tclssg::config(markdownProcessor) [
             concat perl [
@@ -360,10 +356,9 @@ namespace eval tclssg {
                     dict set pages \
                             $prevIndexPageId variables nextPage $newPageId
                 }
-                # Hack alert! Add key while keeping the dictionary's ordering.
-                # This is needed, among other things, to make sure the pageLinks
-                # for normal pages are generated before they are included into
-                # multiarticle ones.
+                # Add a key at the end of the dictionary pages while keeping it
+                # sorted. This is needed to make sure the pageLinks for normal
+                # pages are generated before they are included into collections.
                 lappend pages $newPageId $newPageData
                 puts "with posts $currentPageArticles"
                 set prevIndexPageId $newPageId
@@ -475,7 +470,23 @@ namespace eval tclssg {
         foreach {tag pageIds} [tag-list $pages] {
             dict set websiteConfig tags $tag pageIds $pageIds
             dict set websiteConfig tags $tag tagPages {}
+            # This is a hack that allows us to sort tags alphabetically with
+            # dict-sort.
+            dict set websiteConfig tags $tag tagText $tag
         }
+        # Sort tags.
+        dict set websiteConfig tags [
+            set sortBy [utils::dict-default-get {} $websiteConfig sortTagsBy]
+            if {$sortBy eq "frequency"} {
+                tclssg::utils::dict-sort [dict get $websiteConfig tags] \
+                        {pageIds} 0 {-decreasing} {x {llength $x}}
+            } elseif {($sortBy eq "name") || ($sortBy eq "")} {
+                tclssg::utils::dict-sort [dict get $websiteConfig tags] \
+                        {tagText} 0 {-increasing}
+            } else {
+                error "unknown tag sorting option: $sortBy"
+            }
+        ]
 
         # Add pages with blog posts for each tag.
         add-tag-pages pages websiteConfig
@@ -665,7 +676,6 @@ namespace eval tclssg {
 
             package require ftp
             global errorInfo
-
             set conn [
                 ::ftp::Open \
                         [dict get $websiteConfig deployFtpServer] \
@@ -682,12 +692,17 @@ namespace eval tclssg {
             foreach file [fileutil::find $outputDir {file isfile}] {
                 set destFile [::tclssg::utils::replace-path-root \
                         $file $outputDir $deployFtpPath]
-                set dir [file dirname $destFile]
-                if {[ftp::Cd $conn $dir]} {
-                    ftp::Cd $conn /
-                } else {
-                    puts "creating directory $dir"
-                    ::ftp::MkDir $conn $dir
+                set path [file split [file dirname $destFile]]
+                set partialPath {}
+
+                foreach dir $path {
+                    set partialPath [file join $partialPath $dir]
+                    if {[ftp::Cd $conn $partialPath]} {
+                        ftp::Cd $conn /
+                    } else {
+                        puts "creating directory $partialPath"
+                        ::ftp::MkDir $conn $partialPath
+                    }
                 }
                 puts "uploading $file as $destFile"
                 if {![::ftp::Put $conn $file $destFile]} {
