@@ -48,7 +48,8 @@ proc format-link {id {li 1} {customTitle ""}} {
     if {$customTitle ne ""} {
         set title $customTitle
     } else {
-        set title [page-var-get-default pageTitle $link $id]
+        set title [page-var-get-default title \
+                [page-var-get-default pageTitle $link $id] $id]
     }
     set linkHTML "<a href=\"$link\">$title</a>"
     if {$li} {
@@ -59,7 +60,8 @@ proc format-link {id {li 1} {customTitle ""}} {
 
 proc format-html-title {} {
     global websiteTitle
-    set pageTitle [page-var-get-default pageTitle {}]
+    set pageTitle [page-var-get-default title \
+            [page-var-get-default pageTitle {}]]
     set hideTitle [page-var-get-default hideTitle 0]
     if {$hideTitle || ($pageTitle == "")} {
         return $websiteTitle
@@ -71,7 +73,8 @@ proc format-html-title {} {
 proc format-article-title {} {
     # Article title.
     global currentPageId
-    set title [page-var-get-default pageTitle {}]
+    set title [page-var-get-default title \
+            [page-var-get-default pageTitle {}]]
     if {$title ne "" && ![page-var-get-default hideTitle 0]} {
         set result {<header class="page-title"><h2>}
         if {[page-var-get-default blogPost 0] &&
@@ -115,19 +118,29 @@ proc abbreviate-article {content {abbreviate 0}} {
     return $content
 }
 
-proc format-sidebar {} {
+proc format-sidebar-links {} {
     # Blog sidebar.
     global sidebarPostIds
     set sidebar {}
     if {[page-var-get-default blogPost 0] &&
-        ![page-var-get-default hideSidebar 0]} {
-        append sidebar {<nav class="sidebar"><h3>Posts</h3><ul>}
+        ![page-var-get-default hideSidebarLinks 0]} {
+        append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
         foreach id $sidebarPostIds {
             append sidebar [format-link $id]
         }
-        append sidebar {</ul></nav><!-- sidebar -->}
+        append sidebar {</ul></nav><!-- sidebar-links -->}
     }
     return $sidebar
+}
+
+proc format-sidebar-note {} {
+    global sidebarNote
+    if {[page-var-get-default blogPost 0] &&
+        ![page-var-get-default hideSidebarNote 0]} {
+        return [format \
+                {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
+                [page-var-get-default sidebarNote ""]]
+    }
 }
 
 proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
@@ -152,6 +165,7 @@ proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
     }
     return $links
 }
+
 
 proc format-article-tag-list {} {
     # Page tag list.

@@ -1,5 +1,5 @@
 {
-    pageTitle Blog
+    title Blog
     blogPost 1
     hideFromSidebar 1
     hideTitle 1

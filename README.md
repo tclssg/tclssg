@@ -9,7 +9,7 @@ Features
 --------
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](#templating);
-* Distinguishes between plain old pages and blog posts; [1]
+* Distinguishes between plain old pages and blog posts [1];
 * Generates only relative links;
 * Output is valid HTML5 and CSS level 3;
 * Deploy over FTP with a single command;
@@ -105,6 +105,7 @@ The default layout of the input directory is as follows:
     │   │                    in a chronological order.
     │   └── index.md <-- Website index page.
     ├── static <-- Files copied verbatim to the output directory.
+    │   └── images <-- The default location for image files.
     ├── templates <-- The website's layout templates (HTML + Tcl).
     │   ├── article.thtml
     │   └── bootstrap.thtml
@@ -119,7 +120,7 @@ Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!
 
 ```markdown
 {
-    pageTitle {Test page}
+    title {Test page}
     blogPost 1
     tags {test {a long tag with spaces}}
     date 2014-01-02
@@ -179,6 +180,35 @@ Inserts the return value of a single command in the output.
 
 * `<title><%! format-html-title %></title>`
 
+### Page template example: responsive images with Bootstrap
+
+This subsection describes template commands included with Tclssg that are intended for use in page files. They solve the problem of responsive images being awkward to include in Markdown and show how page template commands can be useful.
+
+The problem is as follows: Bootstrap allows you to make images responsive (automatically and proportionally scaled to the width of your page) and centered (if they aren't wide enough to fill the entire page width) by giving them appropriate classes through the `class` attribute, however, Markdown doesn't allow you to specify the `class` attribute of an image. You could do it manually with HTML markup like
+
+    <img src="../images/picture.png" class="img-responsive center-block" alt="Alt text">
+
+but with many images it introduces unnecessary repetition and you have to put in the image path manually. The following macros allow you to include responsive images in a page with a concise command.
+
+To use this feature first set `expandMacrosInPages` to `1` and put `<% interp-source img-procs.tcl %>` after the frontmatter in the file where you intend to use responsive images:
+
+    {
+        title {Hello!}
+    }
+    <% interp-source img-procs.tcl %>
+
+Now you can use the command
+
+    <%! local-image picture.png "Alt text" %>`
+
+to include an image from `inputDir/static/images` (`inputDir/static/images/picture.png` in this case). This command generates the same HTML markup as seen above.
+
+You can also use
+
+    <%! image http://example.com/image.png "Alt text" %>
+
+to make images sourced from anywhere responsive.
+
 Page settings
 ------------------
 Page settings are specified using page variables. Each page variable alters a setting for just the page it is set on. Page variables are set at in the front matter (immediately at the top of a page source file) using Tcl dict syntax. Example:
@@ -195,26 +225,29 @@ The following variables have an effect for any page they are set on:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| pageTitle | `{Some title}` | Title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar links to the page. |
-| hideTitle | 0/1 | Do not put `pageTitle` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
+| title | `{Some title}` | The title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar links to the page. |
+| hideTitle | 0/1 | Do not put `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
 | blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | hideDate | 0/1 | Do not put show the page date. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |
+| navbarItems | { Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html} |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
 
 These variables only affect blog posts:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
-| hideSidebar | 0/1 | Don't show the sidebar *on the present page.* |
+| hideSidebarLinks | 0/1 | Don't show links to other blog posts in the sidebar on the present page. |
+| hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | hideTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
 | hideFromCollections | 0/1 | Do no include the content of this post in article collections like the tag pages and the blog index. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
 | moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
+| sidebarNote | {<h3>About</h3> This is my blog.} | The text of the sidebar note in HTML. The note is displayed about the sidebar links and the tag cloud. |
 
 All 0/1 settings default to `0`.
 
@@ -230,7 +263,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `pageTitle` is `{Hello!}` .  |
+| websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `title` is `{Hello!}` .  |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
@@ -248,7 +281,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
-| pageVariables | `{ hideSidebar 1 pageTitle {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
+| pageVariables | `{ hideSidebar 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
 | commentsEngine | `none`/`disqus` | Selects what comment engine (external software or service for blog comments) to use on pages that set `showUserComments` to `1`. |
 | commentsDisqusShortname | `example` | Configuration for when `commentsEngine` is set to `disqus`. Specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |

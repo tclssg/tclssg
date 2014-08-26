@@ -12,7 +12,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.12.0
+    variable version 0.13.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -20,11 +20,13 @@ namespace eval tclssg {
         # vary from project to project.
         set ::tclssg::config(scriptLocation) $scriptLocation
 
-       # Utility functions.
+        # Source utility functions.
         source [file join $::tclssg::config(scriptLocation) utils.tcl]
 
         set ::tclssg::config(version) $::tclssg::version
 
+        # Replace Markdown.pl with, e.g., sundown for improved performance.
+        #set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
         set ::tclssg::config(markdownProcessor) [
             concat perl [
                 file join $::tclssg::config(scriptLocation) \
@@ -57,7 +59,9 @@ namespace eval tclssg {
             exec -- {*}$::tclssg::config(markdownProcessor) << $markdown
         }
 
-        # Make HTML out of content plus article template.
+        # Make HTML out of rawContent (remove frontmatter, if any, expand macros
+        # if expandMacrosInPages is enabled in websiteConfig, convert Markdown
+        # to HTML).
         proc prepare-content {rawContent pageData websiteConfig \
                 {extraVariables {}}} {
             set choppedContent \
@@ -76,7 +80,9 @@ namespace eval tclssg {
             return $cookedContent
         }
 
-        # Expand template with (HTML) content.
+        # Expand template substituting in (already HTMLized) content from
+        # cookedContent according to the settings in pageData. This is just
+        # a wrapper for [interpreter expand] for now.
         proc apply-template {template cookedContent pageData websiteConfig \
                 {extraVariables {}}} {
             set result [interpreter expand \
@@ -84,7 +90,6 @@ namespace eval tclssg {
                     $pageData \
                     $websiteConfig \
                     [list content $cookedContent {*}$extraVariables]]
-            # Expand template with content substituted in.
             return $result
         }
 
@@ -93,7 +98,7 @@ namespace eval tclssg {
             namespace ensemble create
 
             # Set variable $key to $value in the template interpreter for each
-            # key- value pair in a dictionary.
+            # key-value pair in a dictionary.
             proc inject {dictionary} {
                 dict for {key value} $dictionary {
                     var-set $key $value
@@ -112,30 +117,35 @@ namespace eval tclssg {
 
             # Set up the template interpreter.
             proc up {inputDir} {
-                # Create safe interpreter and expander for templates. Those are
-                # global.
+                # Create a safe interpreter to use for expanding templates (the
+                # template interpreter).
                 interp create -safe templateInterp
-                # Set variable $name to $value in the template interpreter.
+                # A command to set variable $name to $value in the template
+                # interpreter.
                 interp alias {} [namespace current]::var-set templateInterp set
 
+                # Alias commands to be used in templates.
                 foreach {command alias} {
                     ::tclssg::utils::replace-path-root  replace-path-root
                     ::tclssg::utils::dict-default-get   dict-default-get
                     textutil::indent                    textutil::indent
                     ::tclssg::utils::slugify            slugify
                     ::tclssg::utils::choose-dir         choose-dir
+                    ::md5::md5                          ::md5::md5
                     puts                                puts
                     ::tclssg::templating::interpreter::website-var-get-default \
                             website-var-get-default
-                 } {
+                } {
                     interp alias templateInterp $alias {} $command
                 }
 
+                # Expose built-ins.
                 foreach builtIn {source} {
                     interp expose templateInterp $builtIn
                 }
 
-                # Allow templates to source Tcl files with directory failover.
+                # Allow templates to source Tcl files with directory failover
+                # with the command interp-source.
                 interp alias templateInterp interp-source {} \
                         ::tclssg::templating::interpreter::source-dirs [
                             list [
@@ -153,8 +163,8 @@ namespace eval tclssg {
                 interp delete templateInterp
             }
 
-            # Source fileName into templateInterp from the first directory out
-            # of dirs where it exists.
+            # Source fileName into templateInterp from the first directory where
+            # it exists out of those in dirs.
             proc source-dirs {dirs fileName} {
                 set command [
                     subst -nocommands {
@@ -166,7 +176,7 @@ namespace eval tclssg {
                 interp eval templateInterp $command
             }
 
-            # Expand template template for page pageData.
+            # Expand template for page pageData.
             proc expand {template pageData websiteConfig {extraVariables {}}} {
                 up [dict get $websiteConfig inputDir]
                 inject $websiteConfig
@@ -188,6 +198,8 @@ namespace eval tclssg {
                 while {[regexp $regExpr $template \
                         match preceding token template]} {
                     append listing [list append _output $preceding]\n
+                    # Process <%= ... %> (expression), <%! ... %> (command)
+                    # and <% ... %> (raw code) syntax.
                     switch -exact -- [string index $token 0] {
                         = {
                             append listing \
@@ -211,7 +223,7 @@ namespace eval tclssg {
         } ;# namespace interpreter
     } ;# namespace templating
 
-    # Format one HTML article out of a page according to an article template.
+    # Make one HTML article out of a page according to an article template.
     proc format-article {pageData articleTemplate websiteConfig \
             {abbreviate 0} {extraVariables {}}} {
         set cookedContent [dict get $pageData cookedContent]
@@ -220,17 +232,17 @@ namespace eval tclssg {
                 [list abbreviate $abbreviate {*}$extraVariables]
     }
 
-    # Format one HTML document according to an document template. Document
-    # content is taken from in the variable content while page variables are
-    # taken from pageData.
+    # Format an HTML document according to a document template. The document
+    # content is taken from the variable content while page settings are taken
+    # from pageData.
     proc format-document {content pageData documentTemplate websiteConfig} {
         templating apply-template $documentTemplate $content \
                 $pageData $websiteConfig
     }
 
-    # Generate an HTML document out pages and store it as outputFile. Articles
-    # are taken from those pages in the dict pages the ids of which are listed
-    # in pageIds.
+    # Generate an HTML document out of the pages listed in pageIds and
+    # store it as outputFile. The page data corresponding to the ids in
+    # pageIds must be present in the dict pages.
     proc generate-html-file {outputFile pages pageIds articleTemplate
             documentTemplate websiteConfig} {
         set inputFiles {}
@@ -246,7 +258,7 @@ namespace eval tclssg {
             append gen [format-article $pageData $articleTemplate \
                     $websiteConfig [expr {!$first}] \
                     [list collectionPageId $topPageId]]
-            lappend inputFiles [dict get $pages $id inputFile]
+            lappend inputFiles [dict get $pageData inputFile]
             set first 0
         }
 
@@ -266,7 +278,7 @@ namespace eval tclssg {
         fileutil::writeFile $outputFile $output
     }
 
-    # Generate tag list in the format of dict {tag {id id id ...} ...}.
+    # Generate a tag list in the format of dict {tag {id id id ...} ...}.
     proc tag-list {pages} {
         set tags {}
         dict for {page pageData} $pages {
@@ -278,13 +290,11 @@ namespace eval tclssg {
         return $tags
     }
 
-    # Read template from $inputDir or ::tclssg::config(skeletonDir). The
-    # template is either the default (determined by
-    # $::tclssg::config(templateFileName)) or the one specified in the
-    # configuration file. Can later be made per-directory or metadata-based.
+    # Read the template named in $varName from $inputDir or (if it is not found
+    # in $inputDir) from ::tclssg::config(skeletonDir). The name resolution
+    # scheme is a bit convoluted right now. Can later be made per- directory or
+    # metadata-based.
     proc read-template-file {inputDir varName websiteConfig} {
-
-
         set templateFile [
             ::tclssg::utils::choose-dir [
                 ::tclssg::utils::dict-default-get $::tclssg::config($varName) \
@@ -298,7 +308,7 @@ namespace eval tclssg {
         return [read-file $templateFile]
     }
 
-    # Appends to ordered dict pagesVarName a page or a series of pages that
+    # Appends to the ordered dict pagesVarName a page or a series of pages that
     # collect the articles of those pages that are listed in pageIds. The number
     # of pages added equals ([llength pageIds] / $blogPostsPerFile) rounded to
     # the nearest whole number. Page settings are taken from the page topPageId
@@ -329,7 +339,7 @@ namespace eval tclssg {
             lappend currentPageArticles $id
             # If there is enough posts for a page or this is the last post...
             if {($i == $blogPostsPerFile - 1) ||
-                        ($id eq [lindex $pageIds end])} {
+                    ($id eq [lindex $pageIds end])} {
                 set newPageId \
                         [tclssg::utils::add-number-before-extension \
                                 $topPageId [expr {$pageNumber + 1}] {-%d} 1]
@@ -372,6 +382,8 @@ namespace eval tclssg {
 
     }
 
+    # For each tag add a page that collects the articles tagged with it using
+    # add-article-collection.
     proc add-tag-pages {pagesVarName websiteConfigVarName} {
         upvar 1 $pagesVarName pages
         upvar 1 $websiteConfigVarName websiteConfig
@@ -391,7 +403,6 @@ namespace eval tclssg {
                     set $varName [string map [list $oldIdRepl $newPageIdRepl] \
                             [set $varName]]
                 }
-                #puts "------$currentPageId $inputFile $outputFile"
             }
             add-article-collection pages $taggedPages \
                 $newPageId $websiteConfig
@@ -401,7 +412,7 @@ namespace eval tclssg {
         }
     }
 
-    # Process input files in inputDir to produce static website in outputDir.
+    # Process input files in inputDir to produce a static website in outputDir.
     proc compile-website {inputDir outputDir websiteConfig} {
         dict set websiteConfig inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
@@ -441,26 +452,23 @@ namespace eval tclssg {
                     {-decreasing} {x {lindex $x 0}}
         ]
 
-        # Filter blog posts out of pages. This preserves the ordering.
-        set posts [
-            dict filter $pages script {id pageData} {
-                ::tclssg::utils::dict-default-get 0 \
-                        $pageData variables blogPost
-            }
-        ]
-
+        set blogPostIds {}
         set sidebarPostIds {}
-        foreach {id pageData} $posts {
-            if {![::tclssg::utils::dict-default-get 0 \
-                    $pageData variables hideFromSidebar]} {
-                lappend sidebarPostIds $id
+        foreach {id pageData} $pages {
+            if {[::tclssg::utils::dict-default-get 0 \
+                    $pageData variables blogPost]} {
+                lappend blogPostIds $id
+                if {![::tclssg::utils::dict-default-get 0 \
+                        $pageData variables hideFromSidebar]} {
+                    lappend sidebarPostIds $id
+                }
             }
         }
 
         # Add chronological blog index.
         set blogIndexPage [utils::dict-default-get {} $websiteConfig blogIndexPage]
         if {$blogIndexPage ne ""} {
-            add-article-collection pages [dict keys $posts] \
+            add-article-collection pages $blogPostIds \
                     $blogIndexPage $websiteConfig
         }
 
@@ -471,9 +479,10 @@ namespace eval tclssg {
             dict set websiteConfig tags $tag pageIds $pageIds
             dict set websiteConfig tags $tag tagPages {}
             # This is a hack that allows us to sort tags alphabetically with
-            # dict-sort.
+            # dict-sort below.
             dict set websiteConfig tags $tag tagText $tag
         }
+
         # Sort tags.
         dict set websiteConfig tags [
             set sortBy [utils::dict-default-get {} $websiteConfig sortTagsBy]
@@ -491,34 +500,35 @@ namespace eval tclssg {
         # Add pages with blog posts for each tag.
         add-tag-pages pages websiteConfig
 
-        puts "preparing content"
-        dict for {id pageData} $pages {
-            # Expand templates, first for the article then for the HTML
-            # document. This modifies pages.
-            dict set pages $id cookedContent [
-                templating prepare-content \
-                        [dict get $pageData rawContent] \
-                        [dict get $pageData] \
-                        $websiteConfig
-            ]
-        }
-
         # Process page files into HTML output.
+        set prevPageLinks {}
+        set prevOutputFile {}
+
         dict for {id pageData} $pages {
             # Links to other pages relative to the current one.
             set outputFile [dict get $pageData outputFile]
-            set pageLinks {}
-            dict for {otherFile otherMetadata} $pages {
-                # pageLinks maps page id (= input FN relative to $contentDir) to
-                # relative link to it.
-                lappend pageLinks $otherFile [
-                    ::fileutil::relative [
-                        file dirname $outputFile
-                    ] [
-                        dict get $otherMetadata outputFile
+
+            # Use the previous list of relative links in the current file is
+            # in the same directory as the previous one.
+            if {[file dirname $prevOutputFile] eq [file dirname $outputFile]} {
+                set pageLinks $prevPageLinks
+            } else {
+                # Compute new pageLinks for the current page.
+                set pageLinks {}
+                dict for {otherFile otherMetadata} $pages {
+                    # pageLinks maps page id (= input FN relative to
+                    # $contentDir) to relative link to it.
+                    lappend pageLinks $otherFile [
+                        ::fileutil::relative [
+                            file dirname $outputFile
+                        ] [
+                            dict get $otherMetadata outputFile
+                        ]
                     ]
-                ]
+                }
             }
+            set prevPageLinks $pageLinks
+            set prevOutputFile $outputFile
 
             # Store links to other pages and website root path relative to the
             # current page.
@@ -527,6 +537,15 @@ namespace eval tclssg {
                 ::fileutil::relative [
                     file dirname $outputFile
                 ] $outputDir
+            ]
+
+            # Expand templates, first for the article then for the HTML
+            # document. This modifies pages.
+            dict set pages $id cookedContent [
+                templating prepare-content \
+                        [dict get $pages $id rawContent] \
+                        [dict get $pages $id] \
+                        $websiteConfig
             ]
 
             generate-html-file \
@@ -547,7 +566,7 @@ namespace eval tclssg {
                 1
     }
 
-    # Load website configuration file from directory.
+    # Load the website configuration file from the directory inputDir.
     proc load-config {inputDir {verbose 1}} {
         set websiteConfig [
             read-file [file join $inputDir \
@@ -569,6 +588,7 @@ namespace eval tclssg {
         return $websiteConfig
     }
 
+    # Commands that can be given to Tclssg on the command line.
     namespace eval command {
         namespace export *
         namespace ensemble create \
@@ -842,7 +862,7 @@ namespace eval tclssg {
             tclssg command $command $inputDir $outputDir $options
         } else {
             if {[catch {tclssg command \
-                    $command $inputDir $outputDir $options } errorMessage]} {
+                    $command $inputDir $outputDir $options} errorMessage]} {
                 puts $errorMessage
                 exit 1
             }

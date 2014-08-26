@@ -37,9 +37,9 @@ interp-source default-procs.tcl
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-          <li><!-- class="active" --><a href="<%= $indexLink %>">Home</a></li>
-          <li><a href="<%= $blogIndexLink %>">Blog</a></li>
-          <li><a href="<%= $rootDirPath %>/contact.html">Contact</a></li>
+          <% foreach {item link} [page-var-get-default navbarItems {}] { %>
+            <li><a href="<%! subst $link %>"><%= $item %></a></li>
+          <% } %>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -49,14 +49,16 @@ interp-source default-procs.tcl
     <div class="container">
       <div class="row">
         <% if {[page-var-get-default blogPost 0] &&
-              !([page-var-get-default hideSidebar 0] &&
+              !([page-var-get-default hideSidebarLinks 0] &&
+                [page-var-get-default hideSidebarNote 0] &&
                 [page-var-get-default hideTagCloud 0])} { %>
           <div class="col-md-8">
             <%= $content %>
             <%! format-prev-next-links {Previous page} {Next page} %>
           </div>
           <div class="col-md-4 well">
-            <%! format-sidebar %>
+            <%! format-sidebar-note %>
+            <%! format-sidebar-links %>
             <%! format-tag-cloud %>
           </div>
          <% } else { %>

@@ -1,5 +1,5 @@
 {
-    pageTitle {Test page}
+    title {Test page}
     blogPost 1
     tags {test {a long tag with spaces}}
     date 2014-01-02
