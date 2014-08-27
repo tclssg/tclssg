@@ -247,7 +247,7 @@ These variables only affect blog posts:
 | hideFromCollections | 0/1 | Do no include the content of this post in article collections like the tag pages and the blog index. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
 | moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
-| sidebarNote | {<h3>About</h3> This is my blog.} | The text of the sidebar note in HTML. The note is displayed about the sidebar links and the tag cloud. |
+| sidebarNote | `{<h3>About</h3> This is my blog.}` | The text of the sidebar note in HTML. The note is displayed about the sidebar links and the tag cloud. |
 
 All 0/1 settings default to `0`.
 

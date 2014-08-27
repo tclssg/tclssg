@@ -35,14 +35,6 @@ proc page-var-get-default {varName explicitDefault {pageId {}}} {
     }
 }
 
-proc either {condition value} {
-    if {$condition} {
-        return $value
-    } else {
-        return {}
-    }
-}
-
 proc format-link {id {li 1} {customTitle ""}} {
     set link [relative-link $id]
     if {$customTitle ne ""} {
@@ -57,6 +49,7 @@ proc format-link {id {li 1} {customTitle ""}} {
     }
     return $linkHTML
 }
+
 
 proc format-html-title {} {
     global websiteTitle
@@ -121,14 +114,18 @@ proc abbreviate-article {content {abbreviate 0}} {
 proc format-sidebar-links {} {
     # Blog sidebar.
     global sidebarPostIds
+    global outputFile
     set sidebar {}
     if {[page-var-get-default blogPost 0] &&
-        ![page-var-get-default hideSidebarLinks 0]} {
-        append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
-        foreach id $sidebarPostIds {
-            append sidebar [format-link $id]
+            ![page-var-get-default hideSidebarLinks 0]} {
+        if {![cache-retrieve! $outputFile sidebar sidebar]} {
+            append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
+            foreach id $sidebarPostIds {
+                append sidebar [format-link $id]
+            }
+            append sidebar {</ul></nav><!-- sidebar-links -->}
+            cache-update $outputFile sidebar $sidebar
         }
-        append sidebar {</ul></nav><!-- sidebar-links -->}
     }
     return $sidebar
 }

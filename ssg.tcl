@@ -7,6 +7,12 @@ package require Tcl 8.5
 package require struct
 package require fileutil
 package require textutil
+package require profiler
+
+set PROFILE 0
+if {$PROFILE} {
+    ::profiler::init
+}
 
 namespace eval tclssg {
     namespace export *
@@ -26,13 +32,11 @@ namespace eval tclssg {
         set ::tclssg::config(version) $::tclssg::version
 
         # Replace Markdown.pl with, e.g., sundown for improved performance.
-        #set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
-        set ::tclssg::config(markdownProcessor) [
-            concat perl [
-                file join $::tclssg::config(scriptLocation) \
-                        external Markdown_1.0.1 Markdown.pl
-            ]
-        ]
+        set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
+        #set ::tclssg::config(markdownProcessor) \
+                [concat perl \
+                        [file join $::tclssg::config(scriptLocation) \
+                                external Markdown_1.0.1 Markdown.pl]]
 
         set ::tclssg::config(contentDirName) pages
         set ::tclssg::config(templateDirName) templates
@@ -135,6 +139,8 @@ namespace eval tclssg {
                     puts                                puts
                     ::tclssg::templating::interpreter::website-var-get-default \
                             website-var-get-default
+                    ::tclssg::templating::cache::update cache-update
+                    ::tclssg::templating::cache::retrieve! cache-retrieve!
                 } {
                     interp alias templateInterp $alias {} $command
                 }
@@ -221,6 +227,47 @@ namespace eval tclssg {
                 return $listing
             }
         } ;# namespace interpreter
+
+        namespace eval cache {
+            namespace export *
+            namespace ensemble create
+
+            variable cachedFile {}
+            variable data {}
+
+            proc fresh? {newFile} {
+                variable cachedFile
+                variable data
+
+                set result [expr {
+                    [file dirname $cachedFile] eq [file dirname $newFile]
+                }]
+                return $result
+            }
+
+            proc update {newFile key value} {
+                variable cachedFile
+                variable data
+
+                if {![fresh? $newFile]} {
+                    set data {}
+                    set cachedFile $newFile
+                }
+                dict set data $key $value
+            }
+
+            proc retrieve! {newFile key varName} {
+                upvar 1 varName value
+
+                variable data
+
+                if {![fresh? $newFile] || ![dict exists $data $key]} {
+                    return 0
+                }
+                set value [dict get $data $key]
+                return 1
+            }
+         };# namespace cache
     } ;# namespace templating
 
     # Make one HTML article out of a page according to an article template.
@@ -314,7 +361,7 @@ namespace eval tclssg {
     # the nearest whole number. Page settings are taken from the page topPageId
     # and its content is prepended to every output page. Used for making the
     # blog index page.
-    proc add-article-collection {pagesVarName pageIds topPageId websiteConfig} {
+    proc add-article-collection! {pagesVarName pageIds topPageId websiteConfig} {
         upvar 1 $pagesVarName pages
 
         set blogPostsPerFile [::tclssg::utils::dict-default-get 10 \
@@ -384,7 +431,7 @@ namespace eval tclssg {
 
     # For each tag add a page that collects the articles tagged with it using
     # add-article-collection.
-    proc add-tag-pages {pagesVarName websiteConfigVarName} {
+    proc add-tag-pages! {pagesVarName websiteConfigVarName} {
         upvar 1 $pagesVarName pages
         upvar 1 $websiteConfigVarName websiteConfig
 
@@ -404,7 +451,7 @@ namespace eval tclssg {
                             [set $varName]]
                 }
             }
-            add-article-collection pages $taggedPages \
+            add-article-collection! pages $taggedPages \
                 $newPageId $websiteConfig
             dict with websiteConfig tags $tag {
                 lappend tagPages $newPageId
@@ -452,6 +499,8 @@ namespace eval tclssg {
                     {-decreasing} {x {lindex $x 0}}
         ]
 
+        # Create list of pages that are blog posts and blog posts that should be
+        # linked to from the sidebar.
         set blogPostIds {}
         set sidebarPostIds {}
         foreach {id pageData} $pages {
@@ -468,7 +517,7 @@ namespace eval tclssg {
         # Add chronological blog index.
         set blogIndexPage [utils::dict-default-get {} $websiteConfig blogIndexPage]
         if {$blogIndexPage ne ""} {
-            add-article-collection pages $blogPostIds \
+            add-article-collection! pages $blogPostIds \
                     $blogIndexPage $websiteConfig
         }
 
@@ -498,7 +547,7 @@ namespace eval tclssg {
         ]
 
         # Add pages with blog posts for each tag.
-        add-tag-pages pages websiteConfig
+        add-tag-pages! pages websiteConfig
 
         # Process page files into HTML output.
         set prevPageLinks {}
@@ -510,10 +559,10 @@ namespace eval tclssg {
 
             # Use the previous list of relative links in the current file is
             # in the same directory as the previous one.
-            if {[file dirname $prevOutputFile] eq [file dirname $outputFile]} {
-                set pageLinks $prevPageLinks
-            } else {
-                # Compute new pageLinks for the current page.
+            if {![templating cache retrieve! $outputFile pageLinks pageLinks]} {
+                # Compute new pageLinks for the current page. Beware: in the
+                # worst case scenario (each page is in its own directory) this
+                # gives us n^2 operations for n pages.
                 set pageLinks {}
                 dict for {otherFile otherMetadata} $pages {
                     # pageLinks maps page id (= input FN relative to
@@ -526,10 +575,8 @@ namespace eval tclssg {
                         ]
                     ]
                 }
+                templating cache update $outputFile pageLinks $pageLinks
             }
-            set prevPageLinks $pageLinks
-            set prevOutputFile $outputFile
-
             # Store links to other pages and website root path relative to the
             # current page.
             dict set pages $id pageLinks $pageLinks
@@ -889,4 +936,7 @@ proc main-script? {} {
 
 if {[main-script?]} {
     ::tclssg::main $argv0 $argv
+    if {$PROFILE} {
+        puts [::profiler::sortFunctions exclusiveRuntime]
+    }
 }
