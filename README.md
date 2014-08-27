@@ -14,7 +14,8 @@ Features
 * Output is valid HTML5 and CSS level 3;
 * Deploy over FTP with a single command;
 * Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols;
-* Supports external comment engines (currently: Disqus).
+* Supports external comment engines (currently: Disqus);
+* [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance).
 
 1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 

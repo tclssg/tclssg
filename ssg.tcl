@@ -18,7 +18,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.13.0
+    variable version 0.14.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -139,8 +139,7 @@ namespace eval tclssg {
                     puts                                puts
                     ::tclssg::templating::interpreter::website-var-get-default \
                             website-var-get-default
-                    ::tclssg::templating::cache::update cache-update
-                    ::tclssg::templating::cache::retrieve! cache-retrieve!
+                    ::tclssg::templating::interpreter::with-cache with-cache
                 } {
                     interp alias templateInterp $alias {} $command
                 }
@@ -226,6 +225,17 @@ namespace eval tclssg {
                 append listing [list append _output $template]\n
                 return $listing
             }
+
+            proc with-cache {outputFile script} {
+                set result {}
+                if {![[namespace parent]::cache::retrieve-key! \
+                            $outputFile $script result]} {
+                    set result [interp eval templateInterp $script]
+                    [namespace parent]::cache::update-key \
+                            $outputFile $script result
+                }
+                return $result
+            }
         } ;# namespace interpreter
 
         namespace eval cache {
@@ -245,27 +255,39 @@ namespace eval tclssg {
                 return $result
             }
 
-            proc update {newFile key value} {
+            proc update-key {newFile key varName} {
                 variable cachedFile
                 variable data
+
+                upvar 1 $varName var
 
                 if {![fresh? $newFile]} {
                     set data {}
                     set cachedFile $newFile
                 }
-                dict set data $key $value
+                dict set data $key $var
             }
 
-            proc retrieve! {newFile key varName} {
-                upvar 1 varName value
+            proc update {newFile varName} {
+                upvar 1 $varName localVar
+                update-key $newFile $varName localVar
+            }
+
+            proc retrieve-key! {newFile key varName} {
+                upvar 1 $varName var
 
                 variable data
 
                 if {![fresh? $newFile] || ![dict exists $data $key]} {
                     return 0
                 }
-                set value [dict get $data $key]
+                set var [dict get $data $key]
                 return 1
+            }
+
+            proc retrieve! {newFile varName} {
+                upvar 1 $varName localVar
+                retrieve-key! $newFile $varName localVar
             }
          };# namespace cache
     } ;# namespace templating
@@ -559,7 +581,8 @@ namespace eval tclssg {
 
             # Use the previous list of relative links in the current file is
             # in the same directory as the previous one.
-            if {![templating cache retrieve! $outputFile pageLinks pageLinks]} {
+            if {![templating cache retrieve! $outputFile pageLinks]} {
+                puts RECOMP
                 # Compute new pageLinks for the current page. Beware: in the
                 # worst case scenario (each page is in its own directory) this
                 # gives us n^2 operations for n pages.
@@ -575,7 +598,7 @@ namespace eval tclssg {
                         ]
                     ]
                 }
-                templating cache update $outputFile pageLinks $pageLinks
+                templating cache update $outputFile pageLinks
             }
             # Store links to other pages and website root path relative to the
             # current page.

@@ -35,6 +35,10 @@ proc page-var-get-default {varName explicitDefault {pageId {}}} {
     }
 }
 
+proc blog-post? {} {
+    page-var-get-default blogPost 0
+}
+
 proc format-link {id {li 1} {customTitle ""}} {
     set link [relative-link $id]
     if {$customTitle ne ""} {
@@ -111,33 +115,41 @@ proc abbreviate-article {content {abbreviate 0}} {
     return $content
 }
 
+proc sidebar-links? {} {
+    return [expr {
+        [page-var-get-default blogPost 0] && \
+                ![page-var-get-default hideSidebarLinks 0]
+    }]
+}
+
 proc format-sidebar-links {} {
     # Blog sidebar.
     global sidebarPostIds
-    global outputFile
     set sidebar {}
-    if {[page-var-get-default blogPost 0] &&
-            ![page-var-get-default hideSidebarLinks 0]} {
-        if {![cache-retrieve! $outputFile sidebar sidebar]} {
-            append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
-            foreach id $sidebarPostIds {
-                append sidebar [format-link $id]
-            }
-            append sidebar {</ul></nav><!-- sidebar-links -->}
-            cache-update $outputFile sidebar $sidebar
+    if {[sidebar-links?]} {
+        append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
+        foreach id $sidebarPostIds {
+            append sidebar [format-link $id]
         }
+        append sidebar {</ul></nav><!-- sidebar-links -->}
     }
     return $sidebar
 }
 
+proc sidebar-note? {} {
+    return [expr {
+        [page-var-get-default blogPost 0] &&
+                ![page-var-get-default hideSidebarNote 0]
+    }]
+}
+
 proc format-sidebar-note {} {
     global sidebarNote
-    if {[page-var-get-default blogPost 0] &&
-        ![page-var-get-default hideSidebarNote 0]} {
+
         return [format \
                 {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
                 [page-var-get-default sidebarNote ""]]
-    }
+
 }
 
 proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
@@ -174,8 +186,8 @@ proc format-article-tag-list {} {
     if {[website-var-get-default tagPage {}] ne ""} {
         set tagPageLink [dict get $pageLinks $tagPage]
     }
-    if {[page-var-get-default blogPost 0] && \
-        ![page-var-get-default hidePostTags 0]} {
+
+
         set postTags [page-var-get-default tags {}]
         if {[llength $postTags] > 0} {
             append tagList {<nav class="tags"><ul>}
@@ -190,8 +202,15 @@ proc format-article-tag-list {} {
 
             append tagList {</ul></nav><!-- tags -->}
         }
-    }
+
     return $tagList
+}
+
+proc tag-cloud? {} {
+    return [expr {
+        [page-var-get-default blogPost 0] &&
+                ![page-var-get-default hideTagCloud 0]
+    }]
 }
 
 proc format-tag-cloud {} {
@@ -199,7 +218,7 @@ proc format-tag-cloud {} {
     global tags
     global pages
     set tagCloud {}
-    if {![page-var-get-default hideTagCloud 0]} {
+
         append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
         foreach tag [dict keys [website-var-get-default tags {}]] {
             append tagCloud [format-link \
@@ -207,7 +226,7 @@ proc format-tag-cloud {} {
                     1 $tag]
         }
         append tagCloud {</ul></nav><!-- tag-cloud -->}
-    }
+
     return $tagCloud
 }
 
