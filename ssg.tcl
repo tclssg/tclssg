@@ -14,11 +14,16 @@ if {$PROFILE} {
     ::profiler::init
 }
 
+# Code conventions: Procedures ("procs") are named-like-this; variables are
+# namedLikeThis. "!" at the end of a proc's name (e.g., "unqueue!") means the
+# proc modifies one or more of the variables it is passed by name. This is
+# similar to the use of "!" in Scheme. "?" means it returns a boolean value.
+
 namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.14.0
+    variable version 0.14.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -32,8 +37,8 @@ namespace eval tclssg {
         set ::tclssg::config(version) $::tclssg::version
 
         # Replace Markdown.pl with, e.g., sundown for improved performance.
-        set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
-        #set ::tclssg::config(markdownProcessor) \
+        #set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
+        set ::tclssg::config(markdownProcessor) \
                 [concat perl \
                         [file join $::tclssg::config(scriptLocation) \
                                 external Markdown_1.0.1 Markdown.pl]]
@@ -135,13 +140,12 @@ namespace eval tclssg {
                     textutil::indent                    textutil::indent
                     ::tclssg::utils::slugify            slugify
                     ::tclssg::utils::choose-dir         choose-dir
-                    ::md5::md5                          ::md5::md5
                     puts                                puts
                     ::tclssg::templating::interpreter::website-var-get-default \
                             website-var-get-default
                     ::tclssg::templating::interpreter::with-cache with-cache
                 } {
-                    interp alias templateInterp $alias {} $command
+                    interp alias templateInterp $alias {} {*}$command
                 }
 
                 # Expose built-ins.
@@ -245,6 +249,10 @@ namespace eval tclssg {
             variable cachedFile {}
             variable data {}
 
+            # Check if the cache is fresh for file newFile. Fresh in our case
+            # means it's either the same file or a file located in the same
+            # directory (because relative link paths for the sidebar and the tag
+            # cloud are the same for such files).
             proc fresh? {newFile} {
                 variable cachedFile
                 variable data
@@ -255,6 +263,8 @@ namespace eval tclssg {
                 return $result
             }
 
+            # Update cache item $key. If the rest of the cache is no longer
+            # fresh discard it.
             proc update-key {newFile key varName} {
                 variable cachedFile
                 variable data
@@ -268,11 +278,14 @@ namespace eval tclssg {
                 dict set data $key $var
             }
 
+            # Use varName as the key in update-key.
             proc update {newFile varName} {
                 upvar 1 $varName localVar
                 update-key $newFile $varName localVar
             }
 
+            # If fresh for newFile retrieve the cached value under key and put
+            # it in variable varName.
             proc retrieve-key! {newFile key varName} {
                 upvar 1 $varName var
 
@@ -285,11 +298,12 @@ namespace eval tclssg {
                 return 1
             }
 
+            # Use varName as key for retrieve-key!.
             proc retrieve! {newFile varName} {
                 upvar 1 $varName localVar
                 retrieve-key! $newFile $varName localVar
             }
-         };# namespace cache
+         } ;# namespace cache
     } ;# namespace templating
 
     # Make one HTML article out of a page according to an article template.
@@ -572,9 +586,6 @@ namespace eval tclssg {
         add-tag-pages! pages websiteConfig
 
         # Process page files into HTML output.
-        set prevPageLinks {}
-        set prevOutputFile {}
-
         dict for {id pageData} $pages {
             # Links to other pages relative to the current one.
             set outputFile [dict get $pageData outputFile]
@@ -582,7 +593,6 @@ namespace eval tclssg {
             # Use the previous list of relative links in the current file is
             # in the same directory as the previous one.
             if {![templating cache retrieve! $outputFile pageLinks]} {
-                puts RECOMP
                 # Compute new pageLinks for the current page. Beware: in the
                 # worst case scenario (each page is in its own directory) this
                 # gives us n^2 operations for n pages.
@@ -882,15 +892,15 @@ namespace eval tclssg {
         }
 
         # Get command line options, including directories to operate on.
-        set command [utils::unqueue argv]
+        set command [utils::unqueue! argv]
 
         set options {}
         while {[lindex $argv 0] ne "--" &&
                 [string match -* [lindex $argv 0]]} {
-            lappend options [string trimleft [::tclssg::utils::unqueue argv] -]
+            lappend options [string trimleft [::tclssg::utils::unqueue! argv] -]
         }
-        set inputDir [::tclssg::utils::unqueue argv]
-        set outputDir [::tclssg::utils::unqueue argv]
+        set inputDir [::tclssg::utils::unqueue! argv]
+        set outputDir [::tclssg::utils::unqueue! argv]
 
         # Defaults for inputDir and outputDir.
         if {$inputDir eq "" && $outputDir eq ""} {

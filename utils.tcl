@@ -138,7 +138,7 @@ namespace eval utils {
     }
 
     # Remove first n elements from varName and return them.
-    proc unqueue {varName {n 1}} {
+    proc unqueue! {varName {n 1}} {
         upvar 1 $varName var
         if {$n == 1} {
             set result [lindex $var 0]

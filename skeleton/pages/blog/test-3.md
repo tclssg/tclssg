@@ -1,6 +1,8 @@
 {
     title {Test page 3}
     blogPost 1
+    author {It's a secret.}
+    hideAuthor 1
     tags {test {another thing}}
     date {2014-05-06 17:08}
 	sidebarNote {

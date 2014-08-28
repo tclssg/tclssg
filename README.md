@@ -1,7 +1,7 @@
 Tclssg
 =======
 
-A static site generator with template support written in Tcl for danyilbohdan.com. Intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+A static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
@@ -15,7 +15,8 @@ Features
 * Deploy over FTP with a single command;
 * Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols;
 * Supports external comment engines (currently: Disqus);
-* [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance).
+* [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
+* Few dependencies.
 
 1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 
@@ -231,6 +232,8 @@ The following variables have an effect for any page they are set on:
 | blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | hideDate | 0/1 | Do not put show the page date. |
+| author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
+| hideAuthor | 0/1 | Do not put show the page author. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |

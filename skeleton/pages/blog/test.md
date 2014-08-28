@@ -1,5 +1,6 @@
 {
     title {Test page}
+    author {Jane Bloggs}
     blogPost 1
     tags {test {a long tag with spaces}}
     date 2014-01-02

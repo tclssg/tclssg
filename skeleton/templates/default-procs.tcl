@@ -35,6 +35,12 @@ proc page-var-get-default {varName explicitDefault {pageId {}}} {
     }
 }
 
+rename with-cache with-cache-custom
+proc with-cache script {
+    global outputFile
+    with-cache-custom $outputFile $script
+}
+
 proc blog-post? {} {
     page-var-get-default blogPost 0
 }
@@ -67,20 +73,29 @@ proc format-html-title {} {
     }
 }
 
+proc format-article-author {} {
+    set author [page-var-get-default author ""]
+    if {$author ne "" && ![page-var-get-default hideAuthor 0]} {
+        return [format {<address class="author">%s</address>} $author]
+    } else {
+        return ""
+    }
+}
+
 proc format-article-title {} {
     # Article title.
     global currentPageId
     set title [page-var-get-default title \
             [page-var-get-default pageTitle {}]]
     if {$title ne "" && ![page-var-get-default hideTitle 0]} {
-        set result {<header class="page-title"><h2>}
+        set result {<h2 class="page-title">}
         if {[page-var-get-default blogPost 0] &&
             [page-var-get-default collection 0]} {
             append result [format-link $currentPageId 0 $title]
         } else {
             append result $title
         }
-        append result {</h2></header>}
+        append result {</h2>}
         return $result
     } else {
         return ""
@@ -117,7 +132,7 @@ proc abbreviate-article {content {abbreviate 0}} {
 
 proc sidebar-links? {} {
     return [expr {
-        [page-var-get-default blogPost 0] && \
+        [page-var-get-default blogPost 0] &&
                 ![page-var-get-default hideSidebarLinks 0]
     }]
 }
@@ -138,18 +153,17 @@ proc format-sidebar-links {} {
 
 proc sidebar-note? {} {
     return [expr {
-        [page-var-get-default blogPost 0] &&
-                ![page-var-get-default hideSidebarNote 0]
+        ([page-var-get-default blogPost 0] &&
+                ![page-var-get-default hideSidebarNote 0]) ||
+        [page-var-get-default showSidebarNote 0]
     }]
 }
 
 proc format-sidebar-note {} {
     global sidebarNote
-
-        return [format \
-                {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
-                [page-var-get-default sidebarNote ""]]
-
+    return [format \
+            {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
+            [page-var-get-default sidebarNote ""]]
 }
 
 proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
@@ -187,21 +201,20 @@ proc format-article-tag-list {} {
         set tagPageLink [dict get $pageLinks $tagPage]
     }
 
+    set postTags [page-var-get-default tags {}]
+    if {[llength $postTags] > 0} {
+        append tagList {<nav class="tags"><ul>}
 
-        set postTags [page-var-get-default tags {}]
-        if {[llength $postTags] > 0} {
-            append tagList {<nav class="tags"><ul>}
-
-            # No need to default-get the global variable tags here;
-            # [llength $postTags] > 0 guarantees it's defined.
-            foreach tag $postTags {
-                append tagList [format-link \
-                    [lindex [dict get $tags $tag tagPages] 0] \
-                    1 $tag]
-            }
-
-            append tagList {</ul></nav><!-- tags -->}
+        # No need to default-get the global variable tags here;
+        # [llength $postTags] > 0 guarantees it's defined.
+        foreach tag $postTags {
+            append tagList [format-link \
+                [lindex [dict get $tags $tag tagPages] 0] \
+                1 $tag]
         }
+
+        append tagList {</ul></nav><!-- tags -->}
+    }
 
     return $tagList
 }
@@ -219,13 +232,14 @@ proc format-tag-cloud {} {
     global pages
     set tagCloud {}
 
-        append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
-        foreach tag [dict keys [website-var-get-default tags {}]] {
-            append tagCloud [format-link \
-                    [lindex [dict get $tags $tag tagPages] 0] \
-                    1 $tag]
-        }
-        append tagCloud {</ul></nav><!-- tag-cloud -->}
+    append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
+    foreach tag [dict keys [website-var-get-default tags {}]] {
+        append tagCloud [format-link \
+                [lindex [dict get $tags $tag tagPages] 0] \
+                1 \
+                $tag]
+    }
+    append tagCloud {</ul></nav><!-- tag-cloud -->}
 
     return $tagCloud
 }

@@ -48,22 +48,17 @@ interp-source default-procs.tcl
 
     <div class="container">
       <div class="row">
-        <% if {[blog-post?] &&
-                  ([sidebar-note?] ||
-                  [sidebar-links?] ||
-                  [tag-cloud?])} { %>
+        <% if {[sidebar-note?] ||
+                  ([blog-post?] &&
+                      ([sidebar-links?] || [tag-cloud?]))} { %>
           <div class="col-md-8">
             <%= $content %>
             <%! format-prev-next-links {Previous page} {Next page} %>
           </div>
           <div class="col-md-4 well">
             <%! if {[sidebar-note?]} format-sidebar-note %>
-            <%! if {[sidebar-links?]} {
-                with-cache $outputFile format-sidebar-links
-            } %>
-            <%! if {[sidebar-note?]} {
-                with-cache $outputFile format-tag-cloud
-            } %>
+            <%! if {[sidebar-links?]} { with-cache format-sidebar-links } %>
+            <%! if {[tag-cloud?]} { with-cache format-tag-cloud } %>
           </div>
          <% } else { %>
           <div class="col-md-12">
