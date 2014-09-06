@@ -8,13 +8,17 @@ proc relative-link {id} {
     return [dict get $pageLinks $id]
 }
 
-foreach varNamePrefix {index blogIndex} {
-    if {[website-var-get-default ${varNamePrefix}Page {}] ne ""} {
-        set ${varNamePrefix}Link [relative-link [set ${varNamePrefix}Page]]
+proc link-or-nothing {websiteVarName} {
+    global $websiteVarName
+    if {[website-var-get-default websiteVarName {}] ne ""} {
+        lindex [relative-link [set $websiteVarName]]
     } else {
-        set ${varNamePrefix}Link {}
+        lindex {}
     }
 }
+
+set indexLink [link-or-nothing indexPage]
+set blogIndexLink [link-or-nothing blogIndexPage]
 
 proc page-var-get-default {varName explicitDefault {pageId {}}} {
     global variables
@@ -35,10 +39,10 @@ proc page-var-get-default {varName explicitDefault {pageId {}}} {
     }
 }
 
-rename with-cache with-cache-custom
+rename with-cache with-cache-filename
 proc with-cache script {
     global outputFile
-    with-cache-custom $outputFile $script
+    with-cache-filename $outputFile $script
 }
 
 proc blog-post? {} {

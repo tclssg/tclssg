@@ -7,17 +7,18 @@ package require Tcl 8.5
 package require struct
 package require fileutil
 package require textutil
-package require profiler
 
 set PROFILE 0
 if {$PROFILE} {
+    package require profiler
     ::profiler::init
 }
 
-# Code conventions: Procedures ("procs") are named-like-this; variables are
-# namedLikeThis. "!" at the end of a proc's name (e.g., "unqueue!") means the
-# proc modifies one or more of the variables it is passed by name. This is
-# similar to the use of "!" in Scheme. "?" means it returns a boolean value.
+# Code conventions: Procedures ("procs") have names-like-this; variables have
+# namesLikeThis. "!" at the end of a proc's name means the proc modifies one or
+# more of the variables it is passed by name (e.g., "unqueue!"). This is
+# similar to the use of "!" in Scheme. "?" in the same position means it returns
+# a boolean value.
 
 namespace eval tclssg {
     namespace export *
