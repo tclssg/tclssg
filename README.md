@@ -1,6 +1,6 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-A static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
@@ -236,7 +236,7 @@ The following variables have an effect for any page they are set on:
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |
-| navbarItems | { Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html} |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
+| navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
 
 These variables only affect blog posts:
 
@@ -356,6 +356,8 @@ License
 -------
 
 MIT. See the file `LICENSE` for details.
+
+Tclssg logo images are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Markdown 1.0.1 is copyright (c) 2004 John Gruber and is distributed under a three-clause BSD license. See `external/Markdown_1.0.1/License.text`.
 
