@@ -445,7 +445,7 @@ namespace eval tclssg {
         set tagPageId [tclssg pages get-website-config-variable tagPage ""]
         if {[string is integer -strict $tagPageId]} {
             foreach tag [tclssg pages get-tag-list] {
-                set taggedPages [tclssg pages get-pages-with-tag $tag]
+                set taggedPages [tclssg pages with-tag $tag]
                 set newPageId [tclssg pages copy $tagPageId 1]
                 set toReplace [file rootname \
                         [lindex [file split [tclssg pages get-data \
@@ -476,9 +476,9 @@ namespace eval tclssg {
         proc init {} {
             catch {file delete /tmp/debug.sqlite3}
             sqlite3 tclssg-db /tmp/debug.sqlite3
-            # Do not store variable values as columns because this allows pages
-            # to set custom variables to be parsed by templates without
-            # changes to the static site generator source itself.
+            # Do not store variable values as columns to allow pages to set
+            # custom variables. These variables can then be parsed by templates
+            # without changes to the static site generator source itself.
             tclssg-db eval {
                 CREATE TABLE pages(
                     id INTEGER PRIMARY KEY,
@@ -521,6 +521,9 @@ namespace eval tclssg {
         }
 
         proc add {inputFile outputFile rawContent cookedContent dateScanned} {
+            if {![string is integer -strict $dateScanned]} {
+                set dateScanned 0
+            }
             tclssg-db eval {
                 INSERT INTO pages(
                     inputFile,
@@ -597,7 +600,7 @@ namespace eval tclssg {
         }
         proc sorted-by-date {} {
             set result [tclssg-db eval {
-                SELECT id FROM pages ORDER BY dateScanned;
+                SELECT id FROM pages ORDER BY dateScanned DESC;
             }]
             return $result
         }
@@ -627,12 +630,6 @@ namespace eval tclssg {
                 SELECT COALESCE(MAX(value), $default) FROM variables
                 WHERE id = $id AND name = $name;
             }] 0]
-            return $result
-        }
-        proc get-pages-with-variable-value {name value} {
-            set result [tclssg-db eval {
-                SELECT id FROM variables WHERE name = $name AND value = $value;
-            }]
             return $result
         }
 
@@ -677,9 +674,12 @@ namespace eval tclssg {
                 VALUES ($tag, $pageNumber, $id);
             }
         }
-        proc get-pages-with-tag {tag} {
+        proc with-tag {tag} {
             set result [tclssg-db eval {
-                SELECT id FROM tags WHERE tag = $tag;
+                SELECT pages.id FROM pages
+                JOIN tags ON tags.id = pages.id
+                WHERE tag = $tag
+                ORDER BY dateScanned DESC;
             }]
             return $result
         }
@@ -752,11 +752,14 @@ namespace eval tclssg {
 
 
         # Create list of pages that are blog posts and blog posts that should be
-        # linked to from the sidebar.
-        set blogPostIds [tclssg pages get-pages-with-variable-value blogPost 1]
-        # TODO: FIXME
-        set sidebarPostIds $blogPostIds;
-        #[database get-pages-with-variable-value hideFromSidebar 0]
+        # linked to from the sidebar. This can be replaced with SQL queries.
+        set blogPostIds [struct::list filterfor id \
+                [tclssg pages sorted-by-date] \
+                {[tclssg pages get-variable $id blogPost 0]}]
+        set sidebarPostIds [struct::list filterfor id \
+                $blogPostIds \
+                {![tclssg pages get-variable $id hideFromSidebar 0]}]
+
         tclssg pages set-website-config-variable  sidebarPostIds $sidebarPostIds
 
         # Find the numerical ids that correspond to page names in the config.
@@ -805,6 +808,7 @@ namespace eval tclssg {
             # Store links to other pages and website root path relative to the
             # current page.
             foreach {targetId link} $pageLinks {
+                #puts "$id -> $targetId $link"
                 tclssg pages add-link $id $targetId $link
             }
             tclssg pages set-data $id rootDirPath \
