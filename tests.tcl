@@ -93,13 +93,6 @@ proc main {argv0 argv} {
                          someKey anotherKey
     ] "testValue"
 
-    # dict-sort
-    assert-all-equal [
-        dict-sort {a {k 5} b {k 1} c {k 2}} k
-    ] [
-        dict-sort {a {k 5} b {k 1} c {k 2}} k 0 {} {x {lindex $x}}
-    ] {b {k 1} c {k 2} a {k 5}}
-
     # add-number-before-extension
     assert-all-equal [
         add-number-before-extension "filename.ext" 0
