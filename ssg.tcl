@@ -79,7 +79,8 @@ namespace eval tclssg {
                     [lindex [::tclssg::utils::get-page-variables $rawContent] 1]
             # Macroexpand content if needed then convert it from Markdown to
             # HTML.
-            if {[tclssg pages get-website-config-variable expandMacrosInPages 0]} {
+            if {[tclssg pages get-website-config-variable \
+                        expandMacrosInPages 0]} {
                 set choppedContent [interpreter expand \
                         $choppedContent \
                         $id \
@@ -133,7 +134,8 @@ namespace eval tclssg {
 
                     ::tclssg::pages::get-variable get-page-variable
                     ::tclssg::pages::get-data get-page-data
-                    ::tclssg::pages::get-website-config-variable website-var-get-default
+                    ::tclssg::pages::get-website-config-variable
+                            website-var-get-default
                     ::tclssg::pages::get-tag-list get-tag-list
                     ::tclssg::pages::get-link get-page-link
                     ::tclssg::pages::get-tags get-page-tags
@@ -405,15 +407,16 @@ namespace eval tclssg {
                         [tclssg::utils::add-number-before-extension \
                                 [tclssg pages get-data $newId inputFile] \
                                 [expr {$pageNumber + 1}] {-%d} 1]
-                puts -nonewline \
-                    "adding article collection [tclssg pages get-data $newId inputFile]"
+                puts -nonewline "adding article collection\
+                        [tclssg pages get-data $newId inputFile]"
                 tclssg pages set-data \
                         $newId \
                         outputFile \
                         [tclssg::utils::add-number-before-extension \
                                 [tclssg pages get-data $newId outputFile] \
                                 [expr {$pageNumber + 1}] {-%d} 1]
-                tclssg pages set-data $newId articlesToAppend $currentPageArticles
+                tclssg pages set-data $newId \
+                        articlesToAppend $currentPageArticles
 
                 tclssg pages set-variable $newId collection 1
                 if {$pageNumber > 0} {
@@ -445,8 +448,8 @@ namespace eval tclssg {
                 set taggedPages [tclssg pages get-pages-with-tag $tag]
                 set newPageId [tclssg pages copy $tagPageId 1]
                 set toReplace [file rootname \
-                        [lindex [file split \
-                                [tclssg pages get-data $newPageId inputFile ""]] end]]
+                        [lindex [file split [tclssg pages get-data \
+                                $newPageId inputFile ""]] end]]
                 set replaceWith "tag-[utils::slugify $tag]"
                 foreach varName {inputFile outputFile} {
                     tclssg pages set-data \
@@ -454,7 +457,8 @@ namespace eval tclssg {
                             $varName \
                             [string map \
                                     [list $toReplace $replaceWith] \
-                                    [tclssg pages get-data $newPageId $varName ""]]
+                                    [tclssg pages get-data \
+                                            $newPageId $varName ""]]
                 }
                 set resultIds [add-article-collection $taggedPages $newPageId]
                 for {set i 0} {$i < [llength $resultIds]} {incr i} {
@@ -464,18 +468,18 @@ namespace eval tclssg {
         }
     }
 
-    # Website database
+    # Website page database.
     namespace eval pages {
         namespace export *
         namespace ensemble create
 
         proc init {} {
             catch {file delete /tmp/debug.sqlite3}
-            sqlite3 db /tmp/debug.sqlite3
+            sqlite3 tclssg-db /tmp/debug.sqlite3
             # Do not store variable values as columns because this allows pages
             # to set custom variables to be parsed by templates without
             # changes to the static site generator source itself.
-            db eval {
+            tclssg-db eval {
                 CREATE TABLE pages(
                     id INTEGER PRIMARY KEY,
                     inputFile TEXT,
@@ -517,7 +521,7 @@ namespace eval tclssg {
         }
 
         proc add {inputFile outputFile rawContent cookedContent dateScanned} {
-            db eval {
+            tclssg-db eval {
                 INSERT INTO pages(
                     inputFile,
                     outputFile,
@@ -527,10 +531,10 @@ namespace eval tclssg {
                 VALUES ($inputFile, $outputFile, $rawContent, $cookedContent,
                     $dateScanned);
             }
-            return [db last_insert_rowid]
+            return [tclssg-db last_insert_rowid]
         }
         proc copy {id copyVariables} {
-            db eval {
+            tclssg-db eval {
                 INSERT INTO pages(
                     inputFile,
                     outputFile,
@@ -549,8 +553,8 @@ namespace eval tclssg {
                     dateScanned
                 FROM pages WHERE id = $id;
             }
-            set newPageId [db last_insert_rowid]
-            db eval {
+            set newPageId [tclssg-db last_insert_rowid]
+            tclssg-db eval {
                 INSERT INTO links(
                     id,
                     targetId,
@@ -562,7 +566,7 @@ namespace eval tclssg {
                 FROM links WHERE id = $id;
             }
             if {$copyVariables} {
-                db eval {
+                tclssg-db eval {
                     INSERT INTO variables(
                         id,
                         name,
@@ -577,12 +581,12 @@ namespace eval tclssg {
             return $newPageId
         }
         proc set-data {id field value} {
-            db eval [format {
+            tclssg-db eval [format {
                 UPDATE pages SET %s=$value WHERE id = $id;
             } $field]
         }
         proc get-data {id field {default ""}} {
-            db eval {
+            tclssg-db eval {
                 SELECT * FROM pages WHERE id = $id;
             } arr {}
             if {[info exists arr($field)]} {
@@ -592,85 +596,89 @@ namespace eval tclssg {
             }
         }
         proc sorted-by-date {} {
-            set result [db eval {
+            set result [tclssg-db eval {
                 SELECT id FROM pages ORDER BY dateScanned;
             }]
             return $result
         }
 
         proc add-link {sourceId targetId link} {
-            db eval {
+            tclssg-db eval {
                 INSERT INTO links(id, targetId, link)
                 VALUES ($sourceId, $targetId, $link);
             }
         }
         proc get-link {sourceId targetId} {
-            set result [db eval {
-                SELECT link FROM links WHERE id = $sourceId AND targetId = $targetId;
+            set result [tclssg-db eval {
+                SELECT link FROM links
+                WHERE id = $sourceId AND targetId = $targetId;
             }]
             return $result
         }
 
         proc set-variable {id name value} {
-            db eval {
+            tclssg-db eval {
                 INSERT OR REPLACE INTO variables(id, name, value)
                 VALUES ($id, $name, $value);
             }
         }
         proc get-variable {id name default} {
-            set result [lindex [db eval {
-                SELECT COALESCE(MAX(value), $default) FROM variables WHERE id = $id AND name = $name;
+            set result [lindex [tclssg-db eval {
+                SELECT COALESCE(MAX(value), $default) FROM variables
+                WHERE id = $id AND name = $name;
             }] 0]
             return $result
         }
         proc get-pages-with-variable-value {name value} {
-            set result [db eval {
+            set result [tclssg-db eval {
                 SELECT id FROM variables WHERE name = $name AND value = $value;
             }]
             return $result
         }
 
         proc set-website-config-variable {name value} {
-            db eval {
+            tclssg-db eval {
                 INSERT OR REPLACE INTO websiteConfig(name, value)
                 VALUES ($name, $value);
             }
         }
         proc get-website-config-variable {name default} {
-            set result [lindex [db eval {
-                SELECT COALESCE(MAX(value), $default) FROM websiteConfig WHERE name = $name;
+            set result [lindex [tclssg-db eval {
+                SELECT COALESCE(MAX(value), $default) FROM websiteConfig
+                WHERE name = $name;
             }] 0]
             return $result
         }
 
         proc add-tags {id tagList} {
             foreach tag $tagList {
-                db eval {
+                tclssg-db eval {
                     INSERT INTO tags(id, tag)
                     VALUES ($id, $tag);
                 }
             }
         }
         proc get-tags {id} {
-            set result [db eval {
+            set result [tclssg-db eval {
                 SELECT tag FROM tags WHERE id = $id;
             }]
             return $result
         }
         proc get-tag-page {tag pageNumber} {
-            set result [db eval {
-                SELECT id FROM tagPages WHERE tag = $tag AND pageNumber = $pageNumber;
+            set result [tclssg-db eval {
+                SELECT id FROM tagPages
+                WHERE tag = $tag AND pageNumber = $pageNumber;
             }]
             return $result
         }
         proc add-tag-page {id tag pageNumber} {
-            db eval {
+            tclssg-db eval {
                 INSERT INTO tagPages(tag, pageNumber, id)
                 VALUES ($tag, $pageNumber, $id);
             }
         }
         proc get-pages-with-tag {tag} {
-            set result [db eval {
+            set result [tclssg-db eval {
                 SELECT id FROM tags WHERE tag = $tag;
             }]
             return $result
@@ -678,13 +686,13 @@ namespace eval tclssg {
         proc get-tag-list {{sortBy "name"}} {
             switch -exact -- $sortBy {
                 frequency {
-                    set result [db eval {
+                    set result [tclssg-db eval {
                         SELECT DISTINCT tag FROM tags
                         GROUP BY tag ORDER BY count(id) DESC;
                     }]
                 }
                 name {
-                    set result [db eval {
+                    set result [tclssg-db eval {
                         SELECT DISTINCT tag FROM tags ORDER BY tag;
                     }]
                 }
@@ -695,7 +703,7 @@ namespace eval tclssg {
             return $result
         }
 
-    } ;# namespace database
+    } ;# namespace pages
 
     # Process input files in inputDir to produce a static website in outputDir.
     proc compile-website {inputDir outputDir websiteConfig} {
@@ -747,20 +755,23 @@ namespace eval tclssg {
         # linked to from the sidebar.
         set blogPostIds [tclssg pages get-pages-with-variable-value blogPost 1]
         # TODO: FIXME
-        set sidebarPostIds $blogPostIds;#[database get-pages-with-variable-value hideFromSidebar 0]
+        set sidebarPostIds $blogPostIds;
+        #[database get-pages-with-variable-value hideFromSidebar 0]
         tclssg pages set-website-config-variable  sidebarPostIds $sidebarPostIds
 
         # Find the numerical ids that correspond to page names in the config.
         foreach varName {indexPage blogIndexPage tagPage} {
-            set value [file join $contentDir [tclssg pages get-website-config-variable $varName ""]]
-            tclssg pages set-website-config-variable  $varName [db eval {
+            set value [file join $contentDir \
+                    [tclssg pages get-website-config-variable $varName ""]]
+            tclssg pages set-website-config-variable  $varName [tclssg-db eval {
                 SELECT id FROM pages WHERE inputFile = $value LIMIT 1;
             }]
         }
 
 
         # Add chronological blog index.
-        set blogIndexPage [tclssg pages get-website-config-variable blogIndexPage ""]
+        set blogIndexPage \
+                [tclssg pages get-website-config-variable blogIndexPage ""]
         if {$blogIndexPage ne ""} {
             add-article-collection $blogPostIds $blogIndexPage
         }
