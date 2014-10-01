@@ -7,6 +7,7 @@ package require Tcl 8.5
 package require struct
 package require fileutil
 package require textutil
+package require sqlite3
 
 set PROFILE 0
 if {$PROFILE} {
@@ -17,15 +18,16 @@ if {$PROFILE} {
 # Code conventions: Procedures ("procs") have names-like-this; variables have
 # namesLikeThis. "!" at the end of a proc's name means the proc modifies one or
 # more of the variables it is passed by name (e.g., "unqueue!"). This is
-# similar to the use of "!" in Scheme. "?" in the same position means it returns
-# a boolean value.
+# somewhat similar to the use of "!" in Scheme. "?" in the same position means
+# it returns a boolean value.
 
 namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.14.1
+    variable version 0.15.0
     variable debugMode 1
+    variable database {}
 
     proc configure {{scriptLocation .}} {
         # What follows is the configuration that is generally not supposed to
@@ -72,18 +74,15 @@ namespace eval tclssg {
         # Make HTML out of rawContent (remove frontmatter, if any, expand macros
         # if expandMacrosInPages is enabled in websiteConfig, convert Markdown
         # to HTML).
-        proc prepare-content {rawContent pageData websiteConfig \
-                {extraVariables {}}} {
+        proc prepare-content {rawContent id {extraVariables {}}} {
             set choppedContent \
                     [lindex [::tclssg::utils::get-page-variables $rawContent] 1]
             # Macroexpand content if needed then convert it from Markdown to
             # HTML.
-            if {[::tclssg::utils::dict-default-get 0 \
-                        $websiteConfig expandMacrosInPages]} {
+            if {[tclssg database get-website-config-variable expandMacrosInPages 0]} {
                 set choppedContent [interpreter expand \
                         $choppedContent \
-                        $pageData \
-                        $websiteConfig \
+                        $id \
                         $extraVariables]
             }
             set cookedContent [markdown-to-html $choppedContent]
@@ -93,12 +92,10 @@ namespace eval tclssg {
         # Expand template substituting in (already HTMLized) content from
         # cookedContent according to the settings in pageData. This is just
         # a wrapper for [interpreter expand] for now.
-        proc apply-template {template cookedContent pageData websiteConfig \
-                {extraVariables {}}} {
+        proc apply-template {template cookedContent id {extraVariables {}}} {
             set result [interpreter expand \
                     $template \
-                    $pageData \
-                    $websiteConfig \
+                    $id \
                     [list content $cookedContent {*}$extraVariables]]
             return $result
         }
@@ -112,16 +109,6 @@ namespace eval tclssg {
             proc inject {dictionary} {
                 dict for {key value} $dictionary {
                     var-set $key $value
-                }
-            }
-
-            # If $varName exists return its value in the interpreter
-            # templateInterp else return the default value.
-            proc website-var-get-default {varName default} {
-                if {[interp eval templateInterp "info exists $varName"]} {
-                    return [interp eval templateInterp "set $varName"]
-                } else {
-                    return $default
                 }
             }
 
@@ -142,9 +129,15 @@ namespace eval tclssg {
                     ::tclssg::utils::slugify            slugify
                     ::tclssg::utils::choose-dir         choose-dir
                     puts                                puts
-                    ::tclssg::templating::interpreter::website-var-get-default \
-                            website-var-get-default
                     ::tclssg::templating::interpreter::with-cache with-cache
+
+                    ::tclssg::database::get-page-variable get-page-variable
+                    ::tclssg::database::get-page-data get-page-data
+                    ::tclssg::database::get-website-config-variable website-var-get-default
+                    ::tclssg::database::get-tag-list get-tag-list
+                    ::tclssg::database::get-page-link get-page-link
+                    ::tclssg::database::get-page-tags get-page-tags
+                    ::tclssg::database::get-tag-page get-tag-page
                 } {
                     interp alias templateInterp $alias {} {*}$command
                 }
@@ -187,11 +180,12 @@ namespace eval tclssg {
             }
 
             # Expand template for page pageData.
-            proc expand {template pageData websiteConfig {extraVariables {}}} {
-                up [dict get $websiteConfig inputDir]
-                inject $websiteConfig
+            proc expand {template id {extraVariables {}}} {
+                up [tclssg database get-website-config-variable inputDir ""]
+                #TODO VERIFY
+                #inject $websiteConfig
                 # Page data overrides website config.
-                inject $pageData
+                var-set currentPageId $id
                 inject $extraVariables
                 set listing [parse $template]
                 set result [interp eval templateInterp $listing]
@@ -231,6 +225,8 @@ namespace eval tclssg {
                 return $listing
             }
 
+            # Run $script and cache the result. Return that result immediately
+            # if the script has already been run for $outputFile.
             proc with-cache {outputFile script} {
                 set result {}
                 if {![[namespace parent]::cache::retrieve-key! \
@@ -308,41 +304,35 @@ namespace eval tclssg {
     } ;# namespace templating
 
     # Make one HTML article out of a page according to an article template.
-    proc format-article {pageData articleTemplate websiteConfig \
-            {abbreviate 0} {extraVariables {}}} {
-        set cookedContent [dict get $pageData cookedContent]
+    proc format-article {id articleTemplate {abbreviate 0} \
+            {extraVariables {}}} {
+        set cookedContent [tclssg database get-page-data $id cookedContent]
         templating apply-template $articleTemplate $cookedContent \
-                $pageData $websiteConfig \
-                [list abbreviate $abbreviate {*}$extraVariables]
+                $id [list abbreviate $abbreviate {*}$extraVariables]
     }
 
     # Format an HTML document according to a document template. The document
     # content is taken from the variable content while page settings are taken
     # from pageData.
-    proc format-document {content pageData documentTemplate websiteConfig} {
-        templating apply-template $documentTemplate $content \
-                $pageData $websiteConfig
+    proc format-document {content id documentTemplate} {
+        templating apply-template $documentTemplate $content $id
     }
 
     # Generate an HTML document out of the pages listed in pageIds and
     # store it as outputFile. The page data corresponding to the ids in
     # pageIds must be present in the dict pages.
-    proc generate-html-file {outputFile pages pageIds articleTemplate
-            documentTemplate websiteConfig} {
+    proc generate-html-file {outputFile topPageId articleTemplate
+            documentTemplate} {
         set inputFiles {}
         set gen {}
         set first 1
 
-        set topPageId [lindex [dict keys $pages] 0]
+        set pageIds [list $topPageId \
+                {*}[tclssg database get-page-data $topPageId articlesToAppend {}]]
         foreach id $pageIds {
-            set pageData [dict get $pages $id]
-            if {!$first} {
-                dict set pageData variables collection 1
-            }
-            append gen [format-article $pageData $articleTemplate \
-                    $websiteConfig [expr {!$first}] \
+            append gen [format-article $id $articleTemplate [expr {!$first}] \
                     [list collectionPageId $topPageId]]
-            lappend inputFiles [dict get $pageData inputFile]
+            lappend inputFiles [tclssg database get-page-data $id inputFile]
             set first 0
         }
 
@@ -356,33 +346,22 @@ namespace eval tclssg {
         puts "processing page file $inputFiles into $outputFile"
         # Take page settings form the first page.
         set output [
-            format-document $gen [dict get $pages [lindex $pageIds 0]] \
-                    $documentTemplate $websiteConfig
+            format-document $gen $topPageId \
+                    $documentTemplate
         ]
         fileutil::writeFile $outputFile $output
-    }
-
-    # Generate a tag list in the format of dict {tag {id id id ...} ...}.
-    proc tag-list {pages} {
-        set tags {}
-        dict for {page pageData} $pages {
-            foreach tag [::tclssg::utils::dict-default-get {} \
-                    $pageData variables tags] {
-                dict lappend tags $tag $page
-            }
-        }
-        return $tags
     }
 
     # Read the template named in $varName from $inputDir or (if it is not found
     # in $inputDir) from ::tclssg::config(skeletonDir). The name resolution
     # scheme is a bit convoluted right now. Can later be made per- directory or
     # metadata-based.
-    proc read-template-file {inputDir varName websiteConfig} {
+    proc read-template-file {inputDir varName} {
         set templateFile [
             ::tclssg::utils::choose-dir [
-                ::tclssg::utils::dict-default-get $::tclssg::config($varName) \
-                        $websiteConfig $varName
+                tclssg database get-website-config-variable \
+                        $varName \
+                        $::tclssg::config($varName)
             ] [
                 list [file join $inputDir $::tclssg::config(templateDirName)] \
                         [file join $::tclssg::config(skeletonDir) \
@@ -392,29 +371,23 @@ namespace eval tclssg {
         return [read-file $templateFile]
     }
 
-    # Appends to the ordered dict pagesVarName a page or a series of pages that
+    # Appends to the pages database table a page or a series of pages that
     # collect the articles of those pages that are listed in pageIds. The number
     # of pages added equals ([llength pageIds] / $blogPostsPerFile) rounded to
     # the nearest whole number. Page settings are taken from the page topPageId
     # and its content is prepended to every output page. Used for making the
     # blog index page.
-    proc add-article-collection! {pagesVarName pageIds topPageId websiteConfig} {
-        upvar 1 $pagesVarName pages
-
-        set blogPostsPerFile [::tclssg::utils::dict-default-get 10 \
-                $websiteConfig blogPostsPerFile]
+    proc add-article-collection {pageIds topPageId} {
+        set blogPostsPerFile [tclssg database get-website-config-variable \
+                blogPostsPerFile 10]
         set i 0
         set currentPageArticles {}
         set pageNumber 0
-
-        set topPageData [dict get $pages $topPageId]
-        # Needed to move the key to the end of the dict.
-        dict unset pages $topPageId
+        set resultIds {}
 
         set pageIds [::struct::list filterfor x $pageIds {
             $x ne $topPageId &&
-            ![utils::dict-default-get 0 \
-                    $pages $x variables hideFromCollections]
+            ![tclssg database get-page-variable $x hideFromCollections 0]
         }]
 
         set prevIndexPageId {}
@@ -424,38 +397,35 @@ namespace eval tclssg {
             # If there is enough posts for a page or this is the last post...
             if {($i == $blogPostsPerFile - 1) ||
                     ($id eq [lindex $pageIds end])} {
-                set newPageId \
-                        [tclssg::utils::add-number-before-extension \
-                                $topPageId [expr {$pageNumber + 1}] {-%d} 1]
-                puts -nonewline \
-                    "adding article collection $newPageId "
 
-                set newPageData $topPageData
-                dict with newPageData {
-                    set currentPageId $newPageId
-                    set inputFile \
-                            [tclssg::utils::add-number-before-extension \
-                                    $inputFile \
-                                    [expr {$pageNumber + 1}] {-%d} 1]
-                    set outputFile \
-                            [tclssg::utils::add-number-before-extension \
-                                    $outputFile \
-                                    [expr {$pageNumber + 1}] {-%d} 1]
-                }
-                dict set newPageData articlesToAppend $currentPageArticles
-                dict set newPageData variables collection 1
+                set newId [tclssg database copy-page $topPageId 1]
+                tclssg database set-page-data \
+                        $newId \
+                        inputFile \
+                        [tclssg::utils::add-number-before-extension \
+                                [tclssg database get-page-data $newId inputFile] \
+                                [expr {$pageNumber + 1}] {-%d} 1]
+                puts -nonewline \
+                    "adding article collection [tclssg database get-page-data $newId inputFile]"
+                tclssg database set-page-data \
+                        $newId \
+                        outputFile \
+                        [tclssg::utils::add-number-before-extension \
+                                [tclssg database get-page-data $newId outputFile] \
+                                [expr {$pageNumber + 1}] {-%d} 1]
+                tclssg database set-page-data $newId articlesToAppend $currentPageArticles
+
+                tclssg database set-page-variable $newId collection 1
                 if {$pageNumber > 0} {
-                    dict set newPageData \
-                            variables prevPage $prevIndexPageId
-                    dict set pages \
-                            $prevIndexPageId variables nextPage $newPageId
+                    tclssg database set-page-variable $newId \
+                            prevPage $prevIndexPageId
+                    tclssg database set-page-variable $prevIndexPageId \
+                            nextPage $newId
                 }
-                # Add a key at the end of the dictionary pages while keeping it
-                # sorted. This is needed to make sure the pageLinks for normal
-                # pages are generated before they are included into collections.
-                lappend pages $newPageId $newPageData
-                puts "with posts $currentPageArticles"
-                set prevIndexPageId $newPageId
+
+                puts " with posts $currentPageArticles"
+                lappend resultIds $newId
+                set prevIndexPageId $newId
                 set i 0
                 set currentPageArticles {}
                 incr pageNumber
@@ -463,133 +433,344 @@ namespace eval tclssg {
                 incr i
             }
         }
-
+        return $resultIds
     }
 
     # For each tag add a page that collects the articles tagged with it using
     # add-article-collection.
-    proc add-tag-pages! {pagesVarName websiteConfigVarName} {
-        upvar 1 $pagesVarName pages
-        upvar 1 $websiteConfigVarName websiteConfig
-
-        set tagPage [utils::dict-default-get {} $websiteConfig tagPage]
-        foreach tag [dict keys [dict get $websiteConfig tags]] {
-            set taggedPages [dict get $websiteConfig tags $tag pageIds]
-            set oldIdRepl [file rootname \
-                    [lindex [file split \
-                            [dict get $pages $tagPage currentPageId]] end]]
-            set newPageIdRepl "tag-[utils::slugify $tag]"
-            set newPageId [string map [list $oldIdRepl $newPageIdRepl] \
-                    [dict get $pages $tagPage currentPageId]]
-            lappend pages $newPageId [dict get $pages $tagPage]
-            dict with pages $newPageId {
-                foreach varName {currentPageId inputFile outputFile} {
-                    set $varName [string map [list $oldIdRepl $newPageIdRepl] \
-                            [set $varName]]
+    proc add-tag-pages {} {
+        set tagPageId [tclssg database get-website-config-variable tagPage ""]
+        if {[string is integer -strict $tagPageId]} {
+            foreach tag [tclssg database get-tag-list] {
+                set taggedPages [tclssg database get-pages-with-tag $tag]
+                set newPageId [tclssg database copy-page $tagPageId 1]
+                set toReplace [file rootname \
+                        [lindex [file split \
+                                [tclssg database get-page-data $newPageId inputFile ""]] end]]
+                set replaceWith "tag-[utils::slugify $tag]"
+                foreach varName {inputFile outputFile} {
+                    tclssg database set-page-data \
+                            $newPageId \
+                            $varName \
+                            [string map \
+                                    [list $toReplace $replaceWith] \
+                                    [tclssg database get-page-data $newPageId $varName ""]]
                 }
-            }
-            add-article-collection! pages $taggedPages \
-                $newPageId $websiteConfig
-            dict with websiteConfig tags $tag {
-                lappend tagPages $newPageId
+                set resultIds [add-article-collection $taggedPages $newPageId]
+                for {set i 0} {$i < [llength $resultIds]} {incr i} {
+                    tclssg database add-tag-page [lindex $resultIds $i] $tag $i
+                }
             }
         }
     }
 
+    # Website database
+    namespace eval database {
+        namespace export *
+        namespace ensemble create
+
+        proc init {} {
+            catch {file delete /tmp/debug.sqlite3}
+            sqlite3 db /tmp/debug.sqlite3
+            # Do not store variable values as columns because this allows pages
+            # to set custom variables to be parsed by templates without
+            # changes to the static site generator source itself.
+            db eval {
+                CREATE TABLE pages(
+                    id INTEGER PRIMARY KEY,
+                    inputFile TEXT,
+                    outputFile TEXT,
+                    rawContent TEXT,
+                    cookedContent TEXT,
+                    pageLinks TEXT,
+                    rootDirPath TEXT,
+                    articlesToAppend TEXT,
+                    dateScanned INTEGER
+                );
+                CREATE TABLE links(
+                    id INTEGER,
+                    targetId INTEGER,
+                    link TEXT,
+                    PRIMARY KEY (id, targetId)
+                );
+                CREATE TABLE variables(
+                    id INTEGER,
+                    name TEXT,
+                    value TEXT,
+                    PRIMARY KEY (id, name)
+                );
+                CREATE TABLE websiteConfig(
+                    name TEXT PRIMARY KEY,
+                    value TEXT
+                );
+                CREATE TABLE tags(
+                    id INTEGER,
+                    tag TEXT
+                );
+                CREATE TABLE tagPages(
+                    tag TEXT,
+                    pageNumber INTEGER,
+                    id INTEGER,
+                    PRIMARY KEY (tag, pageNumber)
+                );
+            }
+        }
+
+        proc add-page-data {inputFile outputFile rawContent cookedContent dateScanned} {
+            db eval {
+                INSERT INTO pages(
+                    inputFile,
+                    outputFile,
+                    rawContent,
+                    cookedContent,
+                    dateScanned)
+                VALUES ($inputFile, $outputFile, $rawContent, $cookedContent, $dateScanned);
+            }
+            return [db last_insert_rowid]
+        }
+        proc copy-page {id copyVariables} {
+            db eval {
+                INSERT INTO pages(
+                    inputFile,
+                    outputFile,
+                    rawContent,
+                    cookedContent,
+                    rootDirPath,
+                    articlesToAppend,
+                    dateScanned)
+                SELECT
+                    inputFile,
+                    outputFile,
+                    rawContent,
+                    cookedContent,
+                    rootDirPath,
+                    articlesToAppend,
+                    dateScanned
+                FROM pages WHERE id = $id;
+            }
+            set newPageId [db last_insert_rowid]
+            db eval {
+                INSERT INTO links(
+                    id,
+                    targetId,
+                    link)
+                SELECT
+                    $newPageId,
+                    targetId,
+                    link
+                FROM links WHERE id = $id;
+            }
+            if {$copyVariables} {
+                db eval {
+                    INSERT INTO variables(
+                        id,
+                        name,
+                        value)
+                    SELECT
+                        $newPageId,
+                        name,
+                        value
+                    FROM variables WHERE id = $id;
+                }
+            }
+            return $newPageId
+        }
+        proc set-page-data {id field value} {
+            db eval [format {
+                UPDATE pages SET %s=$value WHERE id = $id;
+            } $field]
+        }
+        proc get-page-data {id field {default ""}} {
+            db eval {
+                SELECT * FROM pages WHERE id = $id;
+            } arr {}
+            if {[info exists arr($field)]} {
+                return $arr($field)
+            } else {
+                return $default
+            }
+        }
+        proc pages-sorted-by-date {} {
+            set result [db eval {
+                SELECT id FROM pages ORDER BY dateScanned;
+            }]
+            return $result
+        }
+
+        proc add-page-link {sourceId targetId link} {
+            db eval {
+                INSERT INTO links(id, targetId, link)
+                VALUES ($sourceId, $targetId, $link);
+            }
+        }
+        proc get-page-link {sourceId targetId} {
+            set result [db eval {
+                SELECT link FROM links WHERE id = $sourceId AND targetId = $targetId;
+            }]
+            return $result
+        }
+
+        proc set-page-variable {id name value} {
+            db eval {
+                INSERT OR REPLACE INTO variables(id, name, value)
+                VALUES ($id, $name, $value);
+            }
+        }
+        proc get-page-variable {id name default} {
+            set result [lindex [db eval {
+                SELECT COALESCE(MAX(value), $default) FROM variables WHERE id = $id AND name = $name;
+            }] 0]
+            return $result
+        }
+        proc get-pages-with-variable-value {name value} {
+            set result [db eval {
+                SELECT id FROM variables WHERE name = $name AND value = $value;
+            }]
+            return $result
+        }
+
+        proc set-website-config-variable {name value} {
+            db eval {
+                INSERT OR REPLACE INTO websiteConfig(name, value)
+                VALUES ($name, $value);
+            }
+        }
+        proc get-website-config-variable {name default} {
+            set result [lindex [db eval {
+                SELECT COALESCE(MAX(value), $default) FROM websiteConfig WHERE name = $name;
+            }] 0]
+            return $result
+        }
+
+        proc add-page-tags {id tagList} {
+            foreach tag $tagList {
+                db eval {
+                    INSERT INTO tags(id, tag)
+                    VALUES ($id, $tag);
+                }
+            }
+        }
+        proc get-page-tags {id} {
+            set result [db eval {
+                SELECT tag FROM tags WHERE id = $id;
+            }]
+            return $result
+        }
+        proc get-tag-page {tag pageNumber} {
+            set result [db eval {
+                SELECT id FROM tagPages WHERE tag = $tag AND pageNumber = $pageNumber;
+            }]
+            return $result
+        }
+        proc add-tag-page {id tag pageNumber} {
+            db eval {
+                INSERT INTO tagPages(tag, pageNumber, id)
+                VALUES ($tag, $pageNumber, $id);
+            }
+        }
+        proc get-pages-with-tag {tag} {
+            set result [db eval {
+                SELECT id FROM tags WHERE tag = $tag;
+            }]
+            return $result
+        }
+        proc get-tag-list {{sortBy "name"}} {
+            switch -exact -- $sortBy {
+                frequency {
+                    set result [db eval {
+                        SELECT DISTINCT tag FROM tags
+                        GROUP BY tag ORDER BY count(id) DESC;
+                    }]
+                }
+                name {
+                    set result [db eval {
+                        SELECT DISTINCT tag FROM tags ORDER BY tag;
+                    }]
+                }
+                default {
+                    error "unknown tag sorting option: $sortBy"
+                }
+            }
+            return $result
+        }
+
+    } ;# namespace database
+
     # Process input files in inputDir to produce a static website in outputDir.
     proc compile-website {inputDir outputDir websiteConfig} {
-        dict set websiteConfig inputDir $inputDir
+        tclssg database init
+        foreach {key value} $websiteConfig {
+            tclssg database set-website-config-variable $key $value
+        }
+
+        tclssg database set-website-config-variable inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
 
-        # Build page data from input files.
-        set pages {}
         foreach file [fileutil::findByPattern $contentDir -glob *.md] {
-            set id [::fileutil::relative $contentDir $file]
-            dict set pages $id currentPageId $id
-            dict set pages $id inputFile $file
-            dict set pages $id outputFile \
-                    [file rootname [::tclssg::utils::replace-path-root \
-                            $file $contentDir $outputDir]].html
-            # May want to change this preloading behavior for very large
-            # websites.
-            dict set pages $id rawContent [read-file $file]
-            dict set pages $id variables \
-                    [lindex [::tclssg::utils::get-page-variables \
-                            [dict get $pages $id rawContent]] 0]
-            dict set pages $id variables dateScanned \
-                    [::tclssg::utils::incremental-clock-scan \
-                            [::tclssg::utils::dict-default-get {} \
-                                    $pages $id variables date]]
+            # May want to change the rawContent preloading behavior for very
+            # large (larger than memory) websites.
+            set rawContent [read-file $file]
+            set variables [lindex \
+                    [::tclssg::utils::get-page-variables $rawContent] 0]
+            set dateScanned [::tclssg::utils::incremental-clock-scan \
+                    [::tclssg::utils::dict-default-get {} $variables date]]
+            dict set variables dateScanned $dateScanned
+            set id_ [tclssg database add-page-data \
+                            $file \
+                            [file rootname \
+                                    [::tclssg::utils::replace-path-root \
+                                            $file $contentDir $outputDir]].html\
+                            $rawContent \
+                            "" \
+                            [lindex $dateScanned 0]]
+
+            tclssg database add-page-tags $id_ \
+                    [::tclssg::utils::dict-default-get {} $variables tags]
+            dict unset variables tags
+
+            foreach {var value} $variables {
+                tclssg database set-page-variable $id_ $var $value
+            }
         }
 
         # Read template files.
         set articleTemplate [
-            read-template-file $inputDir articleTemplateFileName $websiteConfig
+            read-template-file $inputDir articleTemplateFileName
         ]
         set documentTemplate [
-            read-template-file $inputDir documentTemplateFileName $websiteConfig
+            read-template-file $inputDir documentTemplateFileName
         ]
 
-        # Sort pages by date.
-        set pages [
-            tclssg::utils::dict-sort $pages {variables dateScanned} 0 \
-                    {-decreasing} {x {lindex $x 0}}
-        ]
 
         # Create list of pages that are blog posts and blog posts that should be
         # linked to from the sidebar.
-        set blogPostIds {}
-        set sidebarPostIds {}
-        foreach {id pageData} $pages {
-            if {[::tclssg::utils::dict-default-get 0 \
-                    $pageData variables blogPost]} {
-                lappend blogPostIds $id
-                if {![::tclssg::utils::dict-default-get 0 \
-                        $pageData variables hideFromSidebar]} {
-                    lappend sidebarPostIds $id
-                }
-            }
+        set blogPostIds [database get-pages-with-variable-value blogPost 1]
+        # TODO: FIXME
+        set sidebarPostIds $blogPostIds;#[database get-pages-with-variable-value hideFromSidebar 0]
+        tclssg database set-website-config-variable  sidebarPostIds $sidebarPostIds
+
+        # Find the numerical ids that correspond to page names in the config.
+        foreach varName {indexPage blogIndexPage tagPage} {
+            set value [file join $contentDir [tclssg database get-website-config-variable $varName ""]]
+            tclssg database set-website-config-variable  $varName [db eval {
+                SELECT id FROM pages WHERE inputFile = $value LIMIT 1;
+            }]
         }
+
 
         # Add chronological blog index.
-        set blogIndexPage [utils::dict-default-get {} $websiteConfig blogIndexPage]
+        set blogIndexPage [tclssg database get-website-config-variable blogIndexPage ""]
         if {$blogIndexPage ne ""} {
-            add-article-collection! pages $blogPostIds \
-                    $blogIndexPage $websiteConfig
+            add-article-collection $blogPostIds $blogIndexPage
         }
-
-        dict set websiteConfig pages $pages
-        dict set websiteConfig sidebarPostIds $sidebarPostIds
-        dict set websiteConfig tags {}
-        foreach {tag pageIds} [tag-list $pages] {
-            dict set websiteConfig tags $tag pageIds $pageIds
-            dict set websiteConfig tags $tag tagPages {}
-            # This is a hack that allows us to sort tags alphabetically with
-            # dict-sort below.
-            dict set websiteConfig tags $tag tagText $tag
-        }
-
-        # Sort tags.
-        dict set websiteConfig tags [
-            set sortBy [utils::dict-default-get {} $websiteConfig sortTagsBy]
-            if {$sortBy eq "frequency"} {
-                tclssg::utils::dict-sort [dict get $websiteConfig tags] \
-                        {pageIds} 0 {-decreasing} {x {llength $x}}
-            } elseif {($sortBy eq "name") || ($sortBy eq "")} {
-                tclssg::utils::dict-sort [dict get $websiteConfig tags] \
-                        {tagText} 0 {-increasing}
-            } else {
-                error "unknown tag sorting option: $sortBy"
-            }
-        ]
 
         # Add pages with blog posts for each tag.
-        add-tag-pages! pages websiteConfig
+        add-tag-pages
 
         # Process page files into HTML output.
-        dict for {id pageData} $pages {
+        foreach id [tclssg database pages-sorted-by-date] {
             # Links to other pages relative to the current one.
-            set outputFile [dict get $pageData outputFile]
+            set outputFile [tclssg database get-page-data $id outputFile]
 
             # Use the previous list of relative links in the current file is
             # in the same directory as the previous one.
@@ -598,46 +779,40 @@ namespace eval tclssg {
                 # worst case scenario (each page is in its own directory) this
                 # gives us n^2 operations for n pages.
                 set pageLinks {}
-                dict for {otherFile otherMetadata} $pages {
+                foreach otherFileId [tclssg database pages-sorted-by-date] {
                     # pageLinks maps page id (= input FN relative to
                     # $contentDir) to relative link to it.
-                    lappend pageLinks $otherFile [
-                        ::fileutil::relative [
-                            file dirname $outputFile
-                        ] [
-                            dict get $otherMetadata outputFile
-                        ]
-                    ]
+                    lappend pageLinks $otherFileId \
+                            [::fileutil::relative \
+                                    [file dirname $outputFile] \
+                                    [tclssg database get-page-data \
+                                            $otherFileId outputFile]]
                 }
                 templating cache update $outputFile pageLinks
             }
             # Store links to other pages and website root path relative to the
             # current page.
-            dict set pages $id pageLinks $pageLinks
-            dict set pages $id rootDirPath [
-                ::fileutil::relative [
-                    file dirname $outputFile
-                ] $outputDir
-            ]
+            foreach {targetId link} $pageLinks {
+                tclssg database add-page-link $id $targetId $link
+            }
+            tclssg database set-page-data $id rootDirPath \
+                    [::fileutil::relative \
+                            [file dirname $outputFile] \
+                            $outputDir]
 
             # Expand templates, first for the article then for the HTML
             # document. This modifies pages.
-            dict set pages $id cookedContent [
+            tclssg database set-page-data $id cookedContent [
                 templating prepare-content \
-                        [dict get $pages $id rawContent] \
-                        [dict get $pages $id] \
-                        $websiteConfig
+                        [tclssg database get-page-data $id rawContent] \
+                        $id \
             ]
 
             generate-html-file \
-                    [dict get $pageData outputFile] \
-                    $pages \
-                    [list $id \
-                            {*}[::tclssg::utils::dict-default-get {} \
-                                    $pages $id articlesToAppend]] \
+                    [tclssg database get-page-data $id outputFile] \
+                    $id \
                     $articleTemplate \
                     $documentTemplate \
-                    $websiteConfig
         }
 
         # Copy static files verbatim.

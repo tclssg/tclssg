@@ -106,37 +106,6 @@ namespace eval utils {
         return $result
     }
 
-    # Sort the keys of a dictionary of dictionaries by value index. The index
-    # can be one or more key names (for nested keys). TODO: sort by value itself
-    # if index is {}. Optionally set the default value for those keys that are
-    # missing the index value, pass options to lsort or apply lambda to each
-    # value before its used for sorting.
-    proc dict-sort {dictionary \
-                    index \
-                    {default 0} \
-                    {lsortOptions {}} \
-                    {lambda {x {lindex $x}}}} {
-        set lp {}
-        dict for {key value} $dictionary {
-            lappend lp [
-                list $key $value [
-                    apply $lambda [
-                        dict-default-get $default $value {*}$index
-                    ]
-                ]
-            ]
-        }
-        return [
-            concat {*}[
-                struct::list mapfor x [
-                    lsort -index 2 {*}$lsortOptions $lp
-                ] {
-                    lrange $x 0 1
-                }
-            ]
-        ]
-    }
-
     # Remove first n elements from varName and return them.
     proc unqueue! {varName {n 1}} {
         upvar 1 $varName var

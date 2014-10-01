@@ -4,40 +4,49 @@
 # LICENSE for details.
 
 proc relative-link {id} {
-    global pageLinks
-    return [dict get $pageLinks $id]
+    global currentPageId
+    return [get-page-link $currentPageId $id]
 }
 
 proc link-or-nothing {websiteVarName} {
     global $websiteVarName
-    if {[website-var-get-default websiteVarName {}] ne ""} {
+    if {[website-var-get-default $websiteVarName {}] ne ""} {
         lindex [relative-link [set $websiteVarName]]
     } else {
         lindex {}
     }
 }
 
+# Old template compatibility.
+if 1 {
+    set pageLinks [get-page-data $currentPageId pageLinks]
+    set rootDirPath [get-page-data $currentPageId rootDirPath]
+    set outputFile [get-page-data $currentPageId outputFile]
+    set tagPage [website-var-get-default tagPage {}]
+    set websiteTitle [website-var-get-default websiteTitle {}]
+    set sidebarPostIds [website-var-get-default sidebarPostIds {}]
+
+    proc page-var-get-default {varName explicitDefault {pageId {}}} {
+        global currentPageId
+
+        # Account for config defaults.
+        set default [dict-default-get $explicitDefault \
+                [website-var-get-default pageVariables {}] \
+                $varName]
+
+        if {$pageId eq ""} {
+            set pageId $currentPageId
+        }
+        set result [get-page-variable $pageId $varName $default]
+        return $result
+    }
+}
+
+set indexPage [website-var-get-default indexPage {}]
+set blogIndexPage [website-var-get-default blogIndexPage {}]
 set indexLink [link-or-nothing indexPage]
 set blogIndexLink [link-or-nothing blogIndexPage]
 
-proc page-var-get-default {varName explicitDefault {pageId {}}} {
-    global variables
-    global currentPageId
-    global pages
-    global pageVariables
-
-    # Account for config defaults.
-    set default [dict-default-get \
-            $explicitDefault \
-            [website-var-get-default pageVariables {}] \
-            $varName]
-
-    if {$pageId eq ""} {
-        dict-default-get $default $variables $varName
-    } else {
-        dict-default-get $default $pages $pageId variables $varName
-    }
-}
 
 rename with-cache with-cache-filename
 proc with-cache script {
@@ -57,6 +66,7 @@ proc format-link {id {li 1} {customTitle ""}} {
         set title [page-var-get-default title \
                 [page-var-get-default pageTitle $link $id] $id]
     }
+
     set linkHTML "<a href=\"$link\">$title</a>"
     if {$li} {
         set linkHTML "<li>$linkHTML</li>"
@@ -196,31 +206,23 @@ proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
 
 proc format-article-tag-list {} {
     # Page tag list.
-    global pageLinks
     global tagPage
-    global tags
-    set tagList {}
-    set tagPageLink {}
-    if {[website-var-get-default tagPage {}] ne ""} {
-        set tagPageLink [dict get $pageLinks $tagPage]
-    }
 
-    set postTags [page-var-get-default tags {}]
+    global currentPageId
+    set tagListHtml {}
+
+    set postTags [get-page-tags $currentPageId]
     if {[llength $postTags] > 0} {
-        append tagList {<nav class="tags"><ul>}
+        append tagListHtml {<nav class="tags"><ul>}
 
-        # No need to default-get the global variable tags here;
-        # [llength $postTags] > 0 guarantees it's defined.
         foreach tag $postTags {
-            append tagList [format-link \
-                [lindex [dict get $tags $tag tagPages] 0] \
-                1 $tag]
+            append tagListHtml [format-link [get-tag-page $tag 0] 1 $tag]
         }
 
-        append tagList {</ul></nav><!-- tags -->}
+        append tagListHtml {</ul></nav><!-- tags -->}
     }
 
-    return $tagList
+    return $tagListHtml
 }
 
 proc tag-cloud? {} {
@@ -237,11 +239,8 @@ proc format-tag-cloud {} {
     set tagCloud {}
 
     append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
-    foreach tag [dict keys [website-var-get-default tags {}]] {
-        append tagCloud [format-link \
-                [lindex [dict get $tags $tag tagPages] 0] \
-                1 \
-                $tag]
+    foreach tag [get-tag-list [website-var-get-default sortTagsBy "name"]] {
+        append tagCloud [format-link [get-tag-page $tag 0] 1 $tag]
     }
     append tagCloud {</ul></nav><!-- tag-cloud -->}
 
