@@ -12,7 +12,8 @@ proc image {relativeSrc {alt ""} {center 1}} {
 }
 
 proc local-image args {
-	global rootDirPath
+	global currentPageId
+	set rootDirPath [get-page-data $currentPageId rootDirPath]
     lset args 0 "$rootDirPath/images/[lindex $args 0]"
     image {*}$args
 }
