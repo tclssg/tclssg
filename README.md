@@ -32,12 +32,12 @@ To use it you will need Tcl 8.5 or newer and Tcllib installed. You will also nee
 
 To install Tcl and Tcllib on **Debian/Ubuntu** run the following command:
 
-    sudo apt-get install tcl tcllib
+    sudo apt-get install tcl tcllib libsqlite3-tcl
 
 On **Fedora/RHEL/CentOS**:
 
     su -
-    yum install tcl tcllib
+    yum install tcl tcllib sqlite-tcl
 
 On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't include Tcllib, so it won't run Tclssg out of the box.
 

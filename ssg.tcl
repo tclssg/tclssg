@@ -333,7 +333,8 @@ namespace eval tclssg {
                 {*}[tclssg pages get-data $topPageId articlesToAppend {}]]
         foreach id $pageIds {
             append gen [format-article $id $articleTemplate [expr {!$first}] \
-                    [list collectionPageId $topPageId]]
+                    [list collectionPageId $topPageId \
+                            collection [expr {!$first}]]]
             lappend inputFiles [tclssg pages get-data $id inputFile]
             set first 0
         }
@@ -418,7 +419,6 @@ namespace eval tclssg {
                 tclssg pages set-data $newId \
                         articlesToAppend $currentPageArticles
 
-                tclssg pages set-variable $newId collection 1
                 if {$pageNumber > 0} {
                     tclssg pages set-variable $newId \
                             prevPage $prevIndexPageId
@@ -531,7 +531,11 @@ namespace eval tclssg {
                     rawContent,
                     cookedContent,
                     dateScanned)
-                VALUES ($inputFile, $outputFile, $rawContent, $cookedContent,
+                VALUES (
+                    $inputFile,
+                    $outputFile,
+                    $rawContent,
+                    $cookedContent,
                     $dateScanned);
             }
             return [tclssg-db last_insert_rowid]

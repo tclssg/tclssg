@@ -99,12 +99,12 @@ proc format-article-author {} {
 proc format-article-title {} {
     # Article title.
     global currentPageId
+    global collection
     set title [page-var-get-default title \
             [page-var-get-default pageTitle {}]]
     if {$title ne "" && ![page-var-get-default hideTitle 0]} {
         set result {<h2 class="page-title">}
-        if {[page-var-get-default blogPost 0] &&
-            [page-var-get-default collection 0]} {
+        if {[page-var-get-default blogPost 0] && $collection} {
             append result [format-link $currentPageId 0 $title]
         } else {
             append result $title
