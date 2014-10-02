@@ -2,7 +2,7 @@
 
 Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small* personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
-* Under 2000 pages.
+\* "Small" meaning under about 2000 pages.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
@@ -14,7 +14,7 @@ Features
 * Generates only relative links;
 * Output is valid HTML5 and CSS level 3;
 * Deploy over FTP with a single command;
-* Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols;
+* Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols with a single command;
 * Supports external comment engines (currently: Disqus);
 * [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
 * Few dependencies.
@@ -41,7 +41,7 @@ On **Fedora/RHEL/CentOS**:
     su -
     yum install tcl tcllib sqlite-tcl
 
-On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't include Tcllib, so it won't run Tclssg out of the box.
+On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't include Tcllib or an SQLite3 module, so it won't run Tclssg out of the box.
 
 Once you have the requirements installed clone this repository, `cd` into it then run
 
@@ -295,7 +295,7 @@ Like page settings all 0/1 website settings default to `0`.
 
 ### Using `deployCustomCommand`
 
-The setting `deployCustomCommand` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustomCommand` consists of three keys, `start`, `file` and `end`, followed by their respective values. The command under the key `file` is run for every file in `outputDir` while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example of a `website.conf` that does SCP deployment on `deploy-custom`:
+The setting `deployCustomCommand` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustomCommand` consists of three keys, `start`, `file` and `end`, followed by their respective values. The command under the key `file` is run for every file in `outputDir` while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example of a `website.conf` that does SCP deployment on `./ssg.tcl deploy-custom`:
 
     [...]
     deployCustomCommand {
@@ -317,40 +317,84 @@ Sample use session
 
     $ ./ssg.tcl build
     Loaded config file:
-        websiteTitle Danyil Bohdan
-        url http://danyilbohdan.com/
-        deployCopyPath /tmp/dest
-        deployFtpServer ftp.<webhost>.com
-        deployFtpPath danyilbohdan.com
-        deployFtpUser dbohdan
-        deployFtpPassword ***
-        expandMacrosInPages 0
+        websiteTitle SSG Test
         indexPage index.md
-        tagPage blog/index.md
+        blogIndexPage blog/index.md
+        tagPage blog/tag.md
+        outputDir ../output
+        blogPostsPerFile 10
+        pageVariables
+            moreText {(<a href="%s">read more</a>)}
+            showUserComments 0
+            sidebarNote {
+                <h3>About</h3>
+                This is the blog of the sample Tclssg project.
+            }
+            navbarItems {
+                Home $indexLink
+                Blog $blogIndexLink
+                Contact {$rootDirPath/contact.html}
+            }
+
+        deployCustomCommand
+            start {scp -rp "$outputDir" testvm:/var/www/}
+            file {}
+            end {}
+
+        expandMacrosInPages 0
+        commentsEngine none
+        commentsDisqusShortname
+    adding article collection website/input/pages/blog/index.md with posts {website/input/pages/blog/test-3.md website/input/pages/blog/test-2.md website/input/pages/blog/test.md}
+    adding article collection website/input/pages/blog/tag-a-long-tag-with-spaces.md with posts website/input/pages/blog/test.md
+    adding article collection website/input/pages/blog/tag-another-thing.md with posts website/input/pages/blog/test-3.md
+    adding article collection website/input/pages/blog/tag-something.md with posts website/input/pages/blog/test-2.md
+    adding article collection website/input/pages/blog/tag-test.md with posts {website/input/pages/blog/test-3.md website/input/pages/blog/test-2.md website/input/pages/blog/test.md}
+    processing page file website/input/pages/blog/test-3.md into website/output/blog/test-3.html
+    processing page file website/input/pages/blog/test-2.md into website/output/blog/test-2.html
+    processing page file website/input/pages/blog/test.md into website/output/blog/test.html
     processing page file website/input/pages/contact.md into website/output/contact.html
     processing page file website/input/pages/index.md into website/output/index.html
-    processing page file website/input/pages/total.md into website/output/total.html
     processing page file website/input/pages/blog/index.md into website/output/blog/index.html
-    copying file website/input/static/main.css to website/output/main.css
-    copying file website/input/static/contact.css to website/output/contact.css
-    $ ./ssg.tcl deploy-ftp
+    processing page file website/input/pages/blog/tag.md into website/output/blog/tag.html
+    processing page file website/input/pages/blog/index.md into website/output/blog/index.html
+    processing page file website/input/pages/blog/tag-a-long-tag-with-spaces.md into website/output/blog/tag-a-long-tag-with-spaces.html
+    processing page file website/input/pages/blog/tag-another-thing.md into website/output/blog/tag-another-thing.html
+    processing page file website/input/pages/blog/tag-something.md into website/output/blog/tag-something.html
+    processing page file website/input/pages/blog/tag-test.md into website/output/blog/tag-test.html
+    overwriting website/output/tclssg.css with website/input/static/tclssg.css
+    [...]
+    overwriting website/output/external/bootstrap-3.2.0-dist/js/bootstrap.min.js with website/input/static/external/bootstrap-3.2.0-dist/js/bootstrap.min.js
+    $ ./ssg.tcl deploy-custom
     Loaded config file:
-        websiteTitle Danyil Bohdan
-        url http://danyilbohdan.com/
-        deployCopyPath /tmp/dest
-        deployFtpServer ftp.<webhost>.com
-        deployFtpPath danyilbohdan.com
-        deployFtpUser dbohdan
-        deployFtpPassword ***
-        expandMacrosInPages 0
+        websiteTitle SSG Test
         indexPage index.md
-        tagPage blog/index.md
-    uploading website/output/index.html as danyilbohdan.com/index.html
-    uploading website/output/total.html as danyilbohdan.com/total.html
-    uploading website/output/contact.html as danyilbohdan.com/contact.html
-    uploading website/output/main.css as danyilbohdan.com/main.css
-    uploading website/output/contact.css as danyilbohdan.com/contact.css
-    uploading website/output/blog/index.html as danyilbohdan.com/blog/index.html
+        blogIndexPage blog/index.md
+        tagPage blog/tag.md
+        outputDir ../output
+        blogPostsPerFile 10
+        pageVariables
+            moreText {(<a href="%s">read more</a>)}
+            showUserComments 0
+            sidebarNote {
+                <h3>About</h3>
+                This is the blog of the sample Tclssg project.
+            }
+            navbarItems {
+                Home $indexLink
+                Blog $blogIndexLink
+                Contact {$rootDirPath/contact.html}
+            }
+
+        deployCustomCommand
+            start {scp -rp "$outputDir" testvm:/var/www/}
+            file {}
+            end {}
+
+        expandMacrosInPages 0
+        commentsEngine none
+        commentsDisqusShortname
+    deploying...
+    done.
 
 (The password value was automatically replaced with "***" in Tclssg's log output.)
 

@@ -653,7 +653,7 @@ namespace eval tclssg {
             file mkdir $subdir
         }
 
-        puts "processing page file $inputFiles into $outputFile"
+        puts "processing page file [lindex $inputFiles 0] into $outputFile"
         # Take page settings form the first page.
         set output [
             format-document $gen $topPageId $documentTemplate
@@ -1019,8 +1019,31 @@ namespace eval tclssg {
                 }
                 if {[dict exists $deployCustomCommand $key] &&
                     ([dict get $deployCustomCommand $key] ne "")} {
-                    puts [exec -- {*}[subst -nocommands \
-                            [dict get $deployCustomCommand $key]]]
+                    set preparedCommand [subst -nocommands \
+                            [dict get $deployCustomCommand $key]]
+                    set exitStatus 0
+                    set error [catch \
+                            {set output \
+                                [exec -ignorestderr -- {*}$preparedCommand]}\
+                            _ \
+                            options]
+                    if {$error} {
+                        set details [dict get $options -errorcode]
+                        if {[lindex $details 0] eq "CHILDSTATUS"} {
+                            set exitStatus [lindex $details 2]
+                        } else {
+                            puts ---------$options
+                            error [dict get $options -errorinfo]
+                        }
+                    }
+                    if {$exitStatus == 0} {
+                        if {$output ne ""} {
+                            puts $output
+                        }
+                    } else {
+                        puts "command '$preparedCommand' returned exit code\
+                                $exitStatus."
+                    }
                 }
             }
             set websiteConfig [::tclssg::load-config $inputDir]
@@ -1028,12 +1051,14 @@ namespace eval tclssg {
             set deployCustomCommand \
                     [dict get $websiteConfig deployCustomCommand]
 
+            puts "deploying..."
             exec-deploy-command start
             foreach file [fileutil::find $outputDir {file isfile}] {
                 set fileRel [::fileutil::relative $outputDir $file]
                 exec-deploy-command file
             }
             exec-deploy-command end
+            puts "done."
         }
 
         proc deploy-ftp {inputDir outputDir {options {}}} {
