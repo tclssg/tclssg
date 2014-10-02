@@ -478,6 +478,12 @@ namespace eval tclssg {
             }]
             return $result
         }
+        proc input-file-to-id {filename} {
+            set result [tclssg-db eval {
+                SELECT id FROM pages WHERE inputFile = $filename LIMIT 1;
+            }]
+            return $result
+        }
         proc output-file-to-id {filename} {
             set result [tclssg-db eval {
                 SELECT id FROM pages WHERE outputFile = $filename LIMIT 1;
@@ -706,21 +712,30 @@ namespace eval tclssg {
             if {($i == $blogPostsPerFile - 1) ||
                     ($id eq [lindex $pageIds end])} {
 
-                set newId [tclssg pages copy $topPageId 1]
+                set newInputFile \
+                        [tclssg::utils::add-number-before-extension \
+                                [tclssg pages get-data $topPageId inputFile] \
+                                [expr {$pageNumber + 1}] {-%d} 1]
+                set newOutputFile \
+                        [tclssg::utils::add-number-before-extension \
+                                [tclssg pages get-data $topPageId outputFile] \
+                                [expr {$pageNumber + 1}] {-%d} 1]
+                if {$id eq $topPageId} {
+                    # Overwrite page $topPageId.
+                    set newId $id
+                } else {
+                    set newId [tclssg pages copy $topPageId 1]
+                }
+
+                puts -nonewline "adding article collection $newInputFile"
                 tclssg pages set-data \
                         $newId \
                         inputFile \
-                        [tclssg::utils::add-number-before-extension \
-                                [tclssg pages get-data $newId inputFile] \
-                                [expr {$pageNumber + 1}] {-%d} 1]
-                puts -nonewline "adding article collection\
-                        [tclssg pages get-data $newId inputFile]"
+                        $newInputFile
                 tclssg pages set-data \
                         $newId \
                         outputFile \
-                        [tclssg::utils::add-number-before-extension \
-                                [tclssg pages get-data $newId outputFile] \
-                                [expr {$pageNumber + 1}] {-%d} 1]
+                        $newOutputFile
                 tclssg pages set-data $newId \
                         articlesToAppend $currentPageArticles
 
@@ -838,9 +853,8 @@ namespace eval tclssg {
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [file join $contentDir \
                     [tclssg pages get-website-config-variable $varName ""]]
-            tclssg pages set-website-config-variable  $varName [tclssg-db eval {
-                SELECT id FROM pages WHERE inputFile = $value LIMIT 1;
-            }]
+            tclssg pages set-website-config-variable $varName \
+                    [tclssg pages input-file-to-id $value]
         }
 
         # Add a chronological blog index.
@@ -861,7 +875,9 @@ namespace eval tclssg {
             # Use the previous list of relative links in the current file is
             # in the same directory as the previous one.
             if {[templating cache retrieve! $outputFile pageLinks]} {
-                tclssg pages copy-links [tclssg pages output-file-to-id [templating cache fileName]] $id
+                tclssg pages copy-links \
+                        [tclssg pages output-file-to-id \
+                                [templating cache fileName]] $id
             } else {
                 # Compute new pageLinks for the current page. Beware: in the
                 # worst case scenario (each page is in its own directory) this
@@ -1032,7 +1048,6 @@ namespace eval tclssg {
                         if {[lindex $details 0] eq "CHILDSTATUS"} {
                             set exitStatus [lindex $details 2]
                         } else {
-                            puts ---------$options
                             error [dict get $options -errorinfo]
                         }
                     }
