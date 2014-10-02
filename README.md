@@ -10,16 +10,16 @@ Features
 --------
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](#templating);
-* Distinguishes between plain old pages and blog posts [1];
+* Distinguishes between plain old pages and blog posts*;
 * Generates only relative links;
 * Output is valid HTML5 and CSS level 3;
 * Deploy over FTP with a single command;
-* Use [custom commands](#using-deploycustomcommand) to deploy over SCP and other protocols with a single command;
+* Use the [custom command setting](#using-deploycustomcommand) to deploy over SCP or another protocol with a single command as well;
 * Supports external comment engines (currently: Disqus);
 * [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
 * Few dependencies.
 
-1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
+\* A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 
 Page screenshot
 ---------------
@@ -112,7 +112,7 @@ The default layout of the input directory is as follows:
     ├── templates <-- The website's layout templates (HTML + Tcl).
     │   ├── article.thtml
     │   └── bootstrap.thtml
-    └── website.conf <-- Configuration file.
+    └── website.conf <-- The configuration file.
 
 Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files. Those are two different sets of variables but defaults for page variables can be set in `website.conf` (look for `pageVariables` below).
 
@@ -396,14 +396,14 @@ Sample use session
     deploying...
     done.
 
-(The password value was automatically replaced with "***" in Tclssg's log output.)
+(If you specify an FTP password in the config the password automatically replaced with "***" in Tclssg's log output.)
 
 License
 -------
 
 MIT. See the file `LICENSE` for details.
 
-Tclssg logo images are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The Tclssg logo images are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 Markdown 1.0.1 is copyright (c) 2004 John Gruber and is distributed under a three-clause BSD license. See `external/Markdown_1.0.1/License.text`.
 

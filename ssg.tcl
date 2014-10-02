@@ -24,7 +24,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.15.0
+    variable version 0.15.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -1147,36 +1147,62 @@ namespace eval tclssg {
         proc help {{inputDir ""} {outputDir ""} {options ""}} {
             global argv0
 
-            puts [
-                format [
+            # Format: {command description {option optionDescription ...} ...}.
+            set commandHelp [list {*}{
+                init {create a project skeleton} {
+                    --templates {copy template files to inputDir}
+                }
+                build {build the static website} {}
+                clean {delete the files in outputDir} {}
+                update {replace the static files (e.g., CSS) in inputDir with\
+                        those of the project skeleton asking the user to\
+                        confirm each} {
+                    --templates {update files in the template subdirectory as\
+                            well}
+                    --yes       {assume the answer "yes" to all questions}
+                }
+                deploy-copy {copy the output to the file system path set in the\
+                        config} {}
+                deploy-custom {run the custom commands specified in the config\
+                        to deploy the output} {}
+                deploy-ftp  {upload output to the FTP server set in the\
+                        config} {}
+                open {open the index page in the default browser} {}
+                version {print version number and exit} {}
+                help {show this message}
+            }]
+
+            set commandHelpText {}
+            foreach {command description options} $commandHelp {
+                append commandHelpText \
+                        [::tclssg::utils::text-columns \
+                                "" 4 \
+                                $command 15 \
+                                $description 43]
+                foreach {option optionDescr} $options {
+                    append commandHelpText \
+                            [::tclssg::utils::text-columns \
+                                    "" 8 \
+                                    $option 12 \
+                                    $optionDescr 42]
+                }
+            }
+
+            puts [format [
                     ::tclssg::utils::trim-indentation {
                         usage: %s <command> [options] [inputDir [outputDir]]
 
                         Possible commands are:
-                            init        create project skeleton
-                                --templates copy template files as well
-                            build       build static website
-                            clean       delete files in outputDir
-                            update      selectively replace static
-                                        files (e.g., CSS) in inputDir with
-                                        those of project skeleton
-                                --templates update template files as well
-                                --yes       assume "yes" to all questions
-                            deploy-copy copy output to location set in config
-                            deploy-custom
-                                        run custom commands to deploy output
-                            deploy-ftp  upload output to FTP server set in
-                                        config
-                            open        open index page in default browser
-                            version     print version number and exit
-                            help        show this message
+                        %s
 
                         inputDir defaults to "%s"
                         outputDir defaults to "%s"
                     }
-                ] $argv0 $::tclssg::config(defaultInputDir) \
-                $::tclssg::config(defaultOutputDir)
-            ]
+                ] \
+                $argv0 \
+                $commandHelpText \
+                $::tclssg::config(defaultInputDir) \
+                $::tclssg::config(defaultOutputDir)]
         }
 
         proc unknown args {

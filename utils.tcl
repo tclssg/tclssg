@@ -250,4 +250,62 @@ namespace eval utils {
 
         return [list $vars $markup]
     }
+
+    # Take {column1 width1 column2 width2 ...} and return text formatted in
+    # columns of the specified width.
+    proc text-columns args {
+        set result {}
+
+        # Remove a substring from variable stringVarName without break words and
+        # return that fragment.
+        proc getFragment {stringVarName length} {
+            upvar 1 $stringVarName stringVar
+
+            # Longest substring of length <= $length that can be taken from
+            # stringVarName breaking on non-blank characters.
+            set lst [::textutil::splitx $stringVar]
+            set result [lindex $lst 0]
+            set i 1
+            while {([string length "$result"] < $length) &&
+                    ($i < [llength $lst])} {
+                append result " [lindex $lst $i]"
+                incr i
+            }
+
+            # Remove fragment from string.
+            set stringVar [string range $stringVar [string length $result] end]
+
+            set result [string trim $result]
+            # Pad result to length $length.
+            if {[string length $result] < $length} {
+                append result [::textutil::blank \
+                        [expr {$length - [string length $result]}]]
+            }
+            return $result
+        }
+
+        set error [catch {
+                set content [dict keys $args]
+                set widths [dict values $args]
+        }]
+        if {$error} {
+            error {wrong # args: should be "columns {content width ...}"}
+        }
+
+        # For all columns...
+        while 1 {
+            set allEmpty 1
+            for {set i 0} {$i < [llength $content]} {incr i} {
+                set s [lindex $content $i]
+                append result [getFragment s [lindex $widths $i]]
+                lset content $i $s
+                set allEmpty [expr {$allEmpty && ($s eq "")}]
+            }
+            append result \n
+            if {$allEmpty} {
+                break
+            }
+        }
+        return $result
+    }
 }
