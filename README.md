@@ -1,6 +1,8 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small* personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+
+* Under 2000 pages.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
