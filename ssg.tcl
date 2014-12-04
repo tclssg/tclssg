@@ -24,7 +24,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.15.2
+    variable version 0.15.3
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -514,10 +514,10 @@ namespace eval tclssg {
             }
         }
         proc get-link {sourceId targetId} {
-            set result [tclssg-db eval {
+            set result [lindex [tclssg-db eval {
                 SELECT link FROM links
                 WHERE id = $sourceId AND targetId = $targetId;
-            }]
+            }] 0]
             return $result
         }
         proc copy-links {oldId newId} {
@@ -759,6 +759,8 @@ namespace eval tclssg {
                             nextPage $newId
                 }
 
+                tclssg pages set-variable $newId pageNumber $pageNumber
+
                 puts " with posts [list [::struct::list mapfor x \
                         $currentPageArticles {tclssg pages get-data \
                                 $x inputFile}]]"
@@ -797,7 +799,9 @@ namespace eval tclssg {
                 }
                 set resultIds [add-article-collection $taggedPages $newPageId]
                 for {set i 0} {$i < [llength $resultIds]} {incr i} {
-                    tclssg pages add-tag-page [lindex $resultIds $i] $tag $i
+                    set id [lindex $resultIds $i]
+                    tclssg pages add-tag-page $id $tag $i
+                    tclssg pages set-variable $id tagPageTag $tag
                 }
             }
         }
