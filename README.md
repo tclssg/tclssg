@@ -4,7 +4,7 @@ Tclsgg is a static site generator with template support written in Tcl for danyi
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
-**As of December 2014 at least one major change that breaks existing template code should be expected before the codebase stabilizes.**
+**As of v0.15.2 at least one major change that breaks existing template code should be expected before the codebase stabilizes.**
 
 Features
 --------
