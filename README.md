@@ -1,8 +1,6 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small* personal website with an optional blog. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
-
-\* "Small" meaning under about 2000 pages.
+Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
@@ -10,16 +8,16 @@ Features
 --------
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](#templating);
-* Distinguishes between plain old pages and blog posts*;
+* Distinguishes between plain old pages and blog posts [1];
 * Generates only relative links;
 * Output is valid HTML5 and CSS level 3;
-* Deploy over FTP with a single command;
-* Use the [custom command setting](#using-deploycustomcommand) to deploy over SCP or another protocol with a single command as well;
+* Deploy over FTP with a single built-in command;
+* Deploy over SCP or other protocols with a [custom deployment command](#using-deploycustomcommand);
 * Supports external comment engines (currently: Disqus);
 * [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
 * Few dependencies.
 
-\* A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
+1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 
 Page screenshot
 ---------------
@@ -28,9 +26,9 @@ Page screenshot
 Getting started
 ---------------
 
-Tclssg is known to run on Linux, FreeBSD, OpenBSD, OS X and Windows XP/7/8.x.
+Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, OS X and Windows XP/7/8.x.
 
-To use it you will need Tcl 8.5 or newer and Tcllib installed. You will also need a Markdown processor to turn Markdown into HTML. Tclssg comes with [Markdown 1.0.1](http://daringfireball.net/projects/markdown/), which requires Perl 5.6 or newer.
+To use it you will need Tcl 8.5 or newer, Tcllib and SQLite version 3 bindings for Tcl installed.
 
 To install Tcl and Tcllib on **Debian/Ubuntu** run the following command:
 
@@ -41,7 +39,7 @@ On **Fedora/RHEL/CentOS**:
     su -
     yum install tcl tcllib sqlite-tcl
 
-On **Windows** the easiest option is to install ActiveTcl and ActivePerl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) doesn't include Tcllib or an SQLite3 module, so it won't run Tclssg out of the box.
+On **Windows** the easiest option is to install ActiveTcl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) does not include Tcllib or an SQLite version 3 module, so it will not run Tclssg out of the box.
 
 Once you have the requirements installed clone this repository, `cd` into it then run
 
@@ -56,19 +54,19 @@ or on Windows
     ssg.cmd build
     ssg.cmd open
 
-This will create a new website project in the directory `website/input`, build it in `website/output` and open the result in the default web browser.
+This will create a new website project in the directory `website/input`, build the website in `website/output` and open the result in the default web browser.
 
 Glossary
 --------
 
 | Term | Explanation |
 |---------|-------------|
-| Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content based on which a single page of HTML output is produced. When a page from the input directory is processed by Tclssg the HTML file is placed under the same relative path in the output directory with the same file name. For example, placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
+| Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content based on which HTML output is produced. When a page from the input directory is processed by Tclssg an HTML file is placed under the same relative path in the output directory with the same file name. For example, placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
 | Blog post | Blog posts are pages with special features enabled that help navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are presented in a chronological order  (based on their the `date` variables) on the blog index page. The order in which the links to blog posts appear on the sidebar is also determined by the posts' dates. The sidebar, tags and other features can be selectively disabled for an individual blog post. |
-| Index | The home/landing page of your website. Normally `index.md`. |
-| Blog index | The blog index is a page that presents all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerFile` (see section ["Website settings"](#website-settings)). |
+| Index | The home/landing page of your website. Typically `index.md`. |
+| Blog index | The blog index is a page or a set of pages that present all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerFile` (see section ["Website settings"](#website-settings)). |
 | Tag page | A tag page is a page that shows all blog posts that have a certain tag in a chronological order. When you build your static website a tag page is created for each tag. Like the blog index a tag page will be broken into separate HTML files according the website setting `blogPostsPerFile`. The website setting `tagPage` (normally set to `blog/tag.md`) determines what page is used as the basis for tag pages. If you have a tag `space` then the content of `blog/tag.md` will be copied to `blog/tag-space.md`  |
-| Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in that page's file and the website config file. Tclssg's templating works in two stages: first input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template then one or several articles are inserted into the document template (one for normal pages and blog posts and several for the blog index). |
+| Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in the page file and the website config file. Tclssg's templating works in two stages: first, input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template (`article.thtml` by default) then one or several articles are inserted into the document template (`bootstrap.thtml`), one for normal pages and blog posts and several for the blog index. |
 | Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
 | Variable | In Tclssg a variable specifies one setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies the corresponding setting for just that individual page. When a variable is set the configuration ("config") file it specifies a setting for the website as a whole. |
 | Static file | A file that should be copied verbatim into to the output directory. Those are stored in a subdirectory of the input directory (`inputDir/static`). File paths relative to `inputDir/static` are preserved, which means that, e.g., `website/input/static/blah/file.zip` will be copied to `website/output/blah/file.zip`.  |
@@ -187,7 +185,7 @@ Inserts the return value of a single command in the output.
 
 This subsection describes template commands included with Tclssg that are intended for use in page files. They solve the problem of responsive images being awkward to include in Markdown and show how page template commands can be useful.
 
-The problem is as follows: Bootstrap allows you to make images responsive (automatically and proportionally scaled to the width of your page) and centered (if they aren't wide enough to fill the entire page width) by giving them appropriate classes through the `class` attribute, however, Markdown doesn't allow you to specify the `class` attribute of an image. You could do it manually with HTML markup like
+The problem is as follows: Bootstrap allows you to make images responsive (automatically and proportionally scaled to the width of your page) and centered (if they are not wide enough to fill the entire page width) by giving them appropriate classes through the `class` attribute, however, Markdown doesn't allow you to specify the `class` attribute of an image. You could do it manually with HTML markup like
 
     <img src="../images/picture.png" class="img-responsive center-block" alt="Alt text">
 
@@ -396,15 +394,15 @@ Sample use session
     deploying...
     done.
 
-(If you specify an FTP password in the config the password automatically replaced with "***" in Tclssg's log output.)
+(If you specify an FTP password in the config the password is automatically replaced with "***" in Tclssg's log output.)
 
 License
 -------
 
 MIT. See the file `LICENSE` for details.
 
-The Tclssg logo images are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The Tclssg logo images are copyright (c) 2014 Danyil Bohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-Markdown 1.0.1 is copyright (c) 2004 John Gruber and is distributed under a three-clause BSD license. See `external/Markdown_1.0.1/License.text`.
+The [Caius](https://github.com/tobijk/caius) Markdown package 0.9 is copyright (c) 2013 Tobias Koch and is distributed under a two-clause BSD license. See `external/markdown/markdown.tcl`.
 
 Bootstrap 3.2.0 is copyright (c) 2011-2014 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.2.0-dist/LICENSE`.

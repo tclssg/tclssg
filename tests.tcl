@@ -149,7 +149,7 @@ proc main {argv0 argv} {
     exec tclsh ssg.tcl build {*}$tclssgArguments
     exec tclsh ssg.tcl clean {*}$tclssgArguments
 
-    # Tclssg as library.
+    # Tclssg as a library.
     puts "running tclssg library tests..."
     set file [file join $tempProjectDir libtest.tcl]
     fileutil::writeFile $file [

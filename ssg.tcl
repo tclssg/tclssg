@@ -24,7 +24,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.15.1
+    variable version 0.15.2
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -37,12 +37,19 @@ namespace eval tclssg {
 
         set ::tclssg::config(version) $::tclssg::version
 
-        # Replace Markdown.pl with, e.g., sundown for improved performance.
+        # Change the lines below to replace the Markdown package with, e.g.,
+        # sundown.
         #set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
-        set ::tclssg::config(markdownProcessor) \
-                [concat perl \
-                        [file join $::tclssg::config(scriptLocation) \
-                                external Markdown_1.0.1 Markdown.pl]]
+        set ::tclssg::config(markdownProcessor) :internal:
+
+        # Source Markdown if needed.
+        if {$::tclssg::config(markdownProcessor) eq ":internal:"} {
+            set dir [file join $::tclssg::config(scriptLocation) \
+                    external markdown]
+            source [file join $dir pkgIndex.tcl]
+            unset dir
+            package require Markdown
+        }
 
         set ::tclssg::config(contentDirName) pages
         set ::tclssg::config(templateDirName) templates
@@ -66,9 +73,14 @@ namespace eval tclssg {
         namespace export *
         namespace ensemble create
 
-        # Convert raw Markdown to HTML using an external Markdown processor.
+        # Convert raw Markdown to HTML.
         proc markdown-to-html {markdown} {
-            exec -- {*}$::tclssg::config(markdownProcessor) << $markdown
+            set markdownProcessor $::tclssg::config(markdownProcessor)
+            if {$markdownProcessor eq ":internal:"} {
+                ::Markdown::convert $markdown
+            } else {
+                exec -- {*}$markdownProcessor << $markdown
+            }
         }
 
         # Make HTML out of rawContent (remove frontmatter, if any, expand macros
@@ -131,16 +143,16 @@ namespace eval tclssg {
                     ::tclssg::utils::slugify            slugify
                     ::tclssg::utils::choose-dir         choose-dir
                     puts                                puts
-                    ::tclssg::templating::interpreter::with-cache with-cache
-
-                    ::tclssg::pages::get-variable get-page-variable
-                    ::tclssg::pages::get-data get-page-data
+                    ::tclssg::templating::interpreter::with-cache
+                                                        with-cache
+                    ::tclssg::pages::get-variable       get-page-variable
+                    ::tclssg::pages::get-data           get-page-data
                     ::tclssg::pages::get-website-config-variable
-                            website-var-get-default
-                    ::tclssg::pages::get-tag-list get-tag-list
-                    ::tclssg::pages::get-link get-page-link
-                    ::tclssg::pages::get-tags get-page-tags
-                    ::tclssg::pages::get-tag-page get-tag-page
+                                                        website-var-get-default
+                    ::tclssg::pages::get-tag-list       get-tag-list
+                    ::tclssg::pages::get-link           get-page-link
+                    ::tclssg::pages::get-tags           get-page-tags
+                    ::tclssg::pages::get-tag-page       get-tag-page
                 } {
                     interp alias templateInterp $alias {} {*}$command
                 }
@@ -529,7 +541,7 @@ namespace eval tclssg {
         }
         proc get-variable {id name default} {
             set result [lindex [tclssg-db eval {
-                SELECT COALESCE(MAX(value), $default) FROM variables
+                SELECT ifnull(max(value), $default) FROM variables
                 WHERE id = $id AND name = $name;
             }] 0]
             return $result
@@ -547,7 +559,7 @@ namespace eval tclssg {
         }
         proc get-website-config-variable {name default} {
             set result [lindex [tclssg-db eval {
-                SELECT COALESCE(MAX(value), $default) FROM websiteConfig
+                SELECT ifnull(max(value), $default) FROM websiteConfig
                 WHERE name = $name;
             }] 0]
             return $result
@@ -616,7 +628,7 @@ namespace eval tclssg {
         }
     } ;# namespace pages
 
-    # Make one HTML article (HTML content enclosed in <article>...</article>
+    # Make one HTML article (HTML content enclosed in an <article>...</article>
     # tag) out of the content of page $id according to an article template.
     proc format-article {id articleTemplate {abbreviate 0} \
             {extraVariables {}}} {
@@ -699,6 +711,7 @@ namespace eval tclssg {
         set pageNumber 0
         set resultIds {}
 
+        # Filter out pages to that set hideFromCollections to 1.
         set pageIds [::struct::list filterfor x $pageIds {
             $x ne $topPageId &&
             ![tclssg pages get-variable $x hideFromCollections 0]
@@ -917,7 +930,7 @@ namespace eval tclssg {
                     [tclssg pages get-data $id outputFile] \
                     $id \
                     $articleTemplate \
-                    $documentTemplate \
+                    $documentTemplate
         }
 
         # Copy static files verbatim.
@@ -1149,26 +1162,30 @@ namespace eval tclssg {
 
             # Format: {command description {option optionDescription ...} ...}.
             set commandHelp [list {*}{
-                init {create a project skeleton} {
-                    --templates {copy template files to inputDir}
+                init {create a new project by cloning the default project\
+                        skeleton} {
+                    --templates {copy template files from the project skeleton\
+                            to inputDir}
                 }
                 build {build the static website} {}
-                clean {delete the files in outputDir} {}
-                update {replace the static files (e.g., CSS) in inputDir with\
-                        those of the project skeleton asking the user to\
-                        confirm each} {
-                    --templates {update files in the template subdirectory as\
-                            well}
-                    --yes       {assume the answer "yes" to all questions}
+                clean {delete all files in outputDir} {}
+                update {update the inputDir for a new version of Tclssg by\
+                        copying the static files (e.g., CSS) of the project\
+                        skeleton over the static files in inputDir and having\
+                        the user confirm replacement} {
+                    --templates {*also* copy the templates of the project\
+                            skeleton over the templates in inputDir}
+                    --yes       {assume the answer to all questions to be "yes"\
+                            (replace all)}
                 }
-                deploy-copy {copy the output to the file system path set in the\
-                        config} {}
-                deploy-custom {run the custom commands specified in the config\
-                        to deploy the output} {}
-                deploy-ftp  {upload output to the FTP server set in the\
-                        config} {}
-                open {open the index page in the default browser} {}
-                version {print version number and exit} {}
+                deploy-copy {copy the output to the file system path set\
+                        in the config file} {}
+                deploy-custom {run the custom deployment commands specified in\
+                        the config file on the output} {}
+                deploy-ftp  {upload the output to the FTP server set in the\
+                        config file} {}
+                open {open the index page in the default web browser} {}
+                version {print the version number and exit} {}
                 help {show this message}
             }]
 
@@ -1288,8 +1305,8 @@ proc main-script? {} {
     global argv0
 
     if {[info exists argv0] &&
-                [file exists [info script]] &&
-                [file exists $argv0]} {
+            [file exists [info script]] &&
+            [file exists $argv0]} {
         file stat $argv0 argv0Info
         file stat [info script] scriptInfo
         expr {$argv0Info(dev) == $scriptInfo(dev)
