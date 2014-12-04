@@ -75,16 +75,33 @@ proc format-link {id {li 1} {customTitle ""}} {
 }
 
 
-proc format-html-title {} {
+proc format-document-title {} {
     global websiteTitle
+
+    set sep { | }
+
     set pageTitle [page-var-get-default title \
             [page-var-get-default pageTitle {}]]
     set hideTitle [page-var-get-default hideTitle 0]
-    if {$hideTitle || ($pageTitle == "")} {
-        return $websiteTitle
-    } else {
-        return "$pageTitle | $websiteTitle"
+    set pageNumber [page-var-get-default pageNumber {}]
+    set tagPageTag [page-var-get-default tagPageTag {}]
+
+    set result {}
+    if {(!$hideTitle) && ($pageTitle ne "")} {
+        lappend result $pageTitle
     }
+
+    if {$tagPageTag ne ""} {
+        lappend result "Posts tagged \"$tagPageTag\"" ;# TODO: localization.
+    }
+
+    if {[string is integer $pageNumber] && ($pageNumber > 0)} {
+        lappend result "page [expr [list $pageNumber + 1]]"; # TODO: localization.
+    }
+    lappend result $websiteTitle
+
+
+    return [join $result $sep]
 }
 
 proc format-article-author {} {

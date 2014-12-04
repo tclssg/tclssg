@@ -12,7 +12,7 @@ interp-source default-procs.tcl
     <meta name="author" content="">
     <!-- <link rel="icon" href="<%= $rootDirPath %>/favicon.ico"> -->
 
-    <title><%! format-html-title %></title>
+    <title><%! format-document-title %></title>
 
     <!-- Bootstrap core CSS -->
     <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap.min.css" rel="stylesheet">
