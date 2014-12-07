@@ -7,5 +7,5 @@ interp-source default-procs.tcl
 <header>
 <%! format-article-title %><%! format-article-author %><%! format-article-date %>
 </header>
-<%! textutil::indent [abbreviate-article $content $abbreviate] {        } %>
+<%! abbreviate-article $content $abbreviate %>
 <%! format-article-tag-list %></article>
