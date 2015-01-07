@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (C) 2013, 2014 Danyil Bohdan.
+# Copyright (C) 2013, 2014, 2015 Danyil Bohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
@@ -133,19 +133,34 @@ proc format-article-title {} {
     }
 }
 
-proc format-article-date {} {
-    # Page date.
-    set date [page-var-get-default date {}]
-    set dateScanned [page-var-get-default dateScanned {}]
+proc format-date {dateClass dateVarName scannedDateVarName} {
+    set date [page-var-get-default $dateVarName {}]
+    set dateScanned [page-var-get-default $scannedDateVarName {}]
 
-    if {$date ne "" && ![page-var-get-default hideDate 0]} {
+    if {$date ne ""} {
         set datetime [clock format \
                 [lindex $dateScanned 0] \
                 -format [lindex $dateScanned 1]]
-        return "<time datetime=\"$datetime\" class=\"date\">$date</time>"
-    } else {
-        return ""
+        return \
+            "<time datetime=\"$datetime\" class=\"$dateClass\">$date</time>"
     }
+    return ""
+}
+
+proc format-article-date {} {
+    # Page date.
+    set result ""
+    if {![page-var-get-default hideDate 0]} {
+        append result [format-date date date dateScanned]
+        if {$result ne ""} {
+            append result "<br>"
+        }
+        if {![page-var-get-default hideModifiedDate 0]} {
+            append result \
+                    [format-date modified modifiedDate modifiedDateScanned]
+        }
+    }
+    return $result
 }
 
 proc abbreviate-article {content {abbreviate 0}} {

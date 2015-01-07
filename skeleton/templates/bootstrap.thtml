@@ -89,4 +89,5 @@ interp-source default-procs.tcl
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/js/bootstrap.min.js"></script>
+    <%! page-var-get-default bodyExtra "" %>
 </html>

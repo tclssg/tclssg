@@ -232,10 +232,13 @@ The following variables have an effect for any page they are set on:
 | hideTitle | 0/1 | Do not put `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
 | blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| hideDate | 0/1 | Do not put show the page date. |
+| modifiedDate | same as "date" | Used to indicate the content has changed since the date in the date field. Not used for sorting. |
+| hideDate | 0/1 | Do not put show the page date or the last modification date. |
+| hideModifiedDate | 0/1 | Do not put show the last modification date only. |
 | author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
 | hideAuthor | 0/1 | Do not put show the page author. |
-| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Line to append to `<head>`. |
+| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Lines to append to `<head>`. |
+| bodyExtra | `{<script>[...]</script>">}` | Lines to append to `<body>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |
 | navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
@@ -244,7 +247,7 @@ These variables only affect blog posts:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. |
+| hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. Useful for post drafts you may want to share with others through a direct link but don't want any reader of your blog to see otherwise. |
 | hideSidebarLinks | 0/1 | Don't show links to other blog posts in the sidebar on the present page. |
 | hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
@@ -269,6 +272,8 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `title` is `{Hello!}` .  |
+| url | `{http://example.com/}` | The base URL for your website. Only used for sitemap generation. |
+| generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable hideFromCollections).  |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
@@ -287,7 +292,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
 | pageVariables | `{ hideSidebar 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
-| copyright | `{Copyright (C) 2014 You}` | A copyright line to display in the footer. |
+| copyright | `{Copyright © 2015 You}` | A copyright line to display in the footer. |
 | commentsEngine | `none`/`disqus` | Selects what comment engine (external software or service for blog comments) to use on pages that set `showUserComments` to `1`. |
 | commentsDisqusShortname | `example` | Configuration for when `commentsEngine` is set to `disqus`. Specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 

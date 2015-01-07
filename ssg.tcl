@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (C) 2013, 2014 Danyil Bohdan.
+# Copyright (C) 2013, 2014, 2015 Danyil Bohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 package require Tcl 8.5
@@ -24,7 +24,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.16.1
+    variable version 0.17.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -359,7 +359,7 @@ namespace eval tclssg {
                     pageLinks TEXT,
                     rootDirPath TEXT,
                     articlesToAppend TEXT,
-                    dateScanned INTEGER
+                    sortingDate INTEGER
                 );
                 CREATE TABLE links(
                     id INTEGER,
@@ -394,9 +394,9 @@ namespace eval tclssg {
         # Procs for working with the table "pages".
 
 
-        proc add {inputFile outputFile rawContent cookedContent dateScanned} {
-            if {![string is integer -strict $dateScanned]} {
-                set dateScanned 0
+        proc add {inputFile outputFile rawContent cookedContent sortingDate} {
+            if {![string is integer -strict $sortingDate]} {
+                set sortingDate 0
             }
             tclssg-db eval {
                 INSERT INTO pages(
@@ -404,13 +404,13 @@ namespace eval tclssg {
                     outputFile,
                     rawContent,
                     cookedContent,
-                    dateScanned)
+                    sortingDate)
                 VALUES (
                     $inputFile,
                     $outputFile,
                     $rawContent,
                     $cookedContent,
-                    $dateScanned);
+                    $sortingDate);
             }
             return [tclssg-db last_insert_rowid]
         }
@@ -424,7 +424,7 @@ namespace eval tclssg {
                     cookedContent,
                     rootDirPath,
                     articlesToAppend,
-                    dateScanned)
+                    sortingDate)
                 SELECT
                     inputFile,
                     outputFile,
@@ -432,7 +432,7 @@ namespace eval tclssg {
                     cookedContent,
                     rootDirPath,
                     articlesToAppend,
-                    dateScanned
+                    sortingDate
                 FROM pages WHERE id = $id;
             }
             set newPageId [tclssg-db last_insert_rowid]
@@ -482,11 +482,11 @@ namespace eval tclssg {
                 return $default
             }
         }
-        # Returns the list of ids of all pages sorted by their dateScanned, if
+        # Returns the list of ids of all pages sorted by their sortingDate, if
         # any.
         proc sorted-by-date {} {
             set result [tclssg-db eval {
-                SELECT id FROM pages ORDER BY dateScanned DESC;
+                SELECT id FROM pages ORDER BY sortingDate DESC;
             }]
             return $result
         }
@@ -602,7 +602,7 @@ namespace eval tclssg {
                 SELECT pages.id FROM pages
                 JOIN tags ON tags.id = pages.id
                 WHERE tag = $tag
-                ORDER BY dateScanned DESC;
+                ORDER BY sortingDate DESC;
             }]
             return $result
         }
@@ -807,6 +807,53 @@ namespace eval tclssg {
         }
     }
 
+    # Generate a sitemap for the static website. This requires the variable
+    # "url" to be set in the website config.
+    proc make-sitemap {outputDir} {
+        set header [tclssg utils trim-indentation {
+        <?xml version="1.0" encoding="UTF-8"?>
+        <urlset
+              xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                    http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+        %s</urlset>
+        }]
+
+        set entry [tclssg utils trim-indentation {
+            <url>
+              <loc>%s</loc>%s
+            </url>
+        }]
+
+        set result ""
+        set url [tclssg page get-website-config-variable url ""]
+        if {$url eq ""} {
+            error "can not generate the sitemap without a base URL specified"
+        }
+        foreach id [tclssg pages sorted-by-date] {
+            if {![tclssg pages get-variable $id hideFromCollections 0]} {
+                set date [tclssg pages get-variable $id modifiedDateScanned ""]
+                if {![string is integer -strict [lindex $date 0]]} {
+                    # No valid modifiedDate, so will just use the sorting date
+                    # for when the page was last modified.
+                    set date [tclssg pages get-variable $id dateScanned ""]
+                }
+                if {[string is integer -strict [lindex $date 0]]} {
+                    set lastmod "\n  <lastmod>[clock format [lindex $date 0] \
+                            -format [lindex $date 1]]</lastmod>"
+                } else {
+                    set lastmod ""
+                }
+                append result [format $entry \
+                        $url[::fileutil::relative $outputDir \
+                                [tclssg pages get-data $id outputFile]] \
+                        $lastmod]\n
+            }
+        }
+        set result [format $header $result]
+        return $result
+    }
 
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
@@ -825,9 +872,15 @@ namespace eval tclssg {
             set rawContent [read-file $file]
             set variables [lindex \
                     [::tclssg::utils::get-page-variables $rawContent] 0]
+
             set dateScanned [::tclssg::utils::incremental-clock-scan \
                     [::tclssg::utils::dict-default-get {} $variables date]]
             dict set variables dateScanned $dateScanned
+            set modifiedDateScanned [::tclssg::utils::incremental-clock-scan \
+                    [::tclssg::utils::dict-default-get {} \
+                            $variables modifiedDate]]
+            dict set variables modifiedDateScanned $modifiedDateScanned
+
             set id_ [tclssg pages add \
                             $file \
                             [file rootname \
@@ -938,10 +991,15 @@ namespace eval tclssg {
         }
 
         # Copy static files verbatim.
-        tclssg::utils::copy-files \
+        ::tclssg::utils::copy-files \
                 [file join $inputDir $::tclssg::config(staticDirName)] \
                 $outputDir \
                 1
+
+        if {[tclssg page get-website-config-variable generateSitemap 0]} {
+            ::fileutil::writeFile [file join $outputDir sitemap.xml] \
+                    [tclssg make-sitemap $outputDir]
+        }
     }
 
     # Load the website configuration file from the directory inputDir. Return
