@@ -15,9 +15,9 @@ interp-source default-procs.tcl
     <title><%! format-document-title %></title>
 
     <!-- Bootstrap core CSS -->
-    <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
-    <link href="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
     <%! page-var-get-default headExtra "" %>

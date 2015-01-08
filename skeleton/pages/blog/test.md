@@ -4,6 +4,7 @@
     blogPost 1
     tags {test {a long tag with spaces}}
     date 2014-01-02
+    modifiedDate 2015-01-07
     hideDate 1
     moreText {(<a href="%s">read more still</a>)}
 }

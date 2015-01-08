@@ -24,7 +24,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.17.0
+    variable version 0.17.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -676,7 +676,7 @@ namespace eval tclssg {
         set output [
             format-document $gen $topPageId $documentTemplate
         ]
-        fileutil::writeFile $outputFile $output
+        ::fileutil::writeFile $outputFile $output
     }
 
     # Read the template named in $varName from $inputDir or (if it is not found
@@ -726,11 +726,11 @@ namespace eval tclssg {
                     ($id eq [lindex $pageIds end])} {
 
                 set newInputFile \
-                        [tclssg::utils::add-number-before-extension \
+                        [::tclssg::utils::add-number-before-extension \
                                 [tclssg pages get-data $topPageId inputFile] \
                                 [expr {$pageNumber + 1}] {-%d} 1]
                 set newOutputFile \
-                        [tclssg::utils::add-number-before-extension \
+                        [::tclssg::utils::add-number-before-extension \
                                 [tclssg pages get-data $topPageId outputFile] \
                                 [expr {$pageNumber + 1}] {-%d} 1]
                 if {$id eq $topPageId} {
@@ -787,7 +787,7 @@ namespace eval tclssg {
                 set toReplace [file rootname \
                         [lindex [file split [tclssg pages get-data \
                                 $newPageId inputFile ""]] end]]
-                set replaceWith "tag-[utils::slugify $tag]"
+                set replaceWith "tag-[::tclssg::utils::slugify $tag]"
                 foreach varName {inputFile outputFile} {
                     tclssg pages set-data \
                             $newPageId \
@@ -810,7 +810,7 @@ namespace eval tclssg {
     # Generate a sitemap for the static website. This requires the variable
     # "url" to be set in the website config.
     proc make-sitemap {outputDir} {
-        set header [tclssg utils trim-indentation {
+        set header [::tclssg::utils::trim-indentation {
         <?xml version="1.0" encoding="UTF-8"?>
         <urlset
               xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -820,7 +820,7 @@ namespace eval tclssg {
         %s</urlset>
         }]
 
-        set entry [tclssg utils trim-indentation {
+        set entry [::tclssg::utils::trim-indentation {
             <url>
               <loc>%s</loc>%s
             </url>
@@ -866,7 +866,7 @@ namespace eval tclssg {
         tclssg pages set-website-config-variable inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
 
-        foreach file [fileutil::findByPattern $contentDir -glob *.md] {
+        foreach file [::fileutil::findByPattern $contentDir -glob *.md] {
             # May want to change the rawContent preloading behavior for very
             # large (larger than memory) websites.
             set rawContent [read-file $file]
@@ -910,10 +910,10 @@ namespace eval tclssg {
 
         # Create list of pages that are blog posts and blog posts that should be
         # linked to from the sidebar. This can be replaced with SQL queries.
-        set blogPostIds [struct::list filterfor id \
+        set blogPostIds [::struct::list filterfor id \
                 [tclssg pages sorted-by-date] \
                 {[tclssg pages get-variable $id blogPost 0]}]
-        set sidebarPostIds [struct::list filterfor id \
+        set sidebarPostIds [::struct::list filterfor id \
                 $blogPostIds \
                 {![tclssg pages get-variable $id hideFromSidebar 0]}]
 
@@ -997,8 +997,9 @@ namespace eval tclssg {
                 1
 
         if {[tclssg page get-website-config-variable generateSitemap 0]} {
-            ::fileutil::writeFile [file join $outputDir sitemap.xml] \
-                    [tclssg make-sitemap $outputDir]
+            set sitemapFile [file join $outputDir sitemap.xml]
+            puts "writing sitemap to $sitemapFile"
+            ::fileutil::writeFile $sitemapFile [tclssg make-sitemap $outputDir]
         }
     }
 
@@ -1014,7 +1015,7 @@ namespace eval tclssg {
         # Show loaded config to user (without the password values).
         if {$verbose} {
             puts "Loaded config file:"
-            puts [textutil::indent \
+            puts [::textutil::indent \
                     [::tclssg::utils::dict-format \
                             [::tclssg::utils::obscure-password-values \
                                     $websiteConfig]] \
@@ -1065,7 +1066,7 @@ namespace eval tclssg {
         }
 
         proc clean {inputDir outputDir {options {}}} {
-            foreach file [fileutil::find $outputDir {file isfile}] {
+            foreach file [::fileutil::find $outputDir {file isfile}] {
                 puts "deleting $file"
                 file delete $file
             }
@@ -1143,7 +1144,7 @@ namespace eval tclssg {
 
             puts "deploying..."
             exec-deploy-command start
-            foreach file [fileutil::find $outputDir {file isfile}] {
+            foreach file [::fileutil::find $outputDir {file isfile}] {
                 set fileRel [::fileutil::relative $outputDir $file]
                 exec-deploy-command file
             }
@@ -1169,7 +1170,7 @@ namespace eval tclssg {
 
             ::ftp::Type $conn binary
 
-            foreach file [fileutil::find $outputDir {file isfile}] {
+            foreach file [::fileutil::find $outputDir {file isfile}] {
                 set destFile [::tclssg::utils::replace-path-root \
                         $file $outputDir $deployFtpPath]
                 set path [file split [file dirname $destFile]]
@@ -1177,8 +1178,8 @@ namespace eval tclssg {
 
                 foreach dir $path {
                     set partialPath [file join $partialPath $dir]
-                    if {[ftp::Cd $conn $partialPath]} {
-                        ftp::Cd $conn /
+                    if {[::ftp::Cd $conn $partialPath]} {
+                        ::ftp::Cd $conn /
                     } else {
                         puts "creating directory $partialPath"
                         ::ftp::MkDir $conn $partialPath
@@ -1196,7 +1197,7 @@ namespace eval tclssg {
             set websiteConfig [::tclssg::load-config $inputDir]
 
             package require platform
-            set platform [platform::generic]
+            set platform [::platform::generic]
 
             set openCommand [
                 switch -glob -- $platform {
@@ -1303,7 +1304,7 @@ namespace eval tclssg {
         }
 
         # Get command line options, including directories to operate on.
-        set command [utils::unqueue! argv]
+        set command [::tclssg::utils::unqueue! argv]
 
         set options {}
         while {[lindex $argv 0] ne "--" &&

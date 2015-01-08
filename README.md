@@ -11,11 +11,12 @@ Features
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](#templating);
 * Distinguishes between plain old pages and blog posts [1];
-* Generates only relative links;
+* Generates sitemaps.
 * Output is valid HTML5 and CSS level 3;
-* Deploy over FTP with a single built-in command;
-* Deploy over SCP or other protocols with a [custom deployment command](#using-deploycustomcommand);
+* Can deploy over FTP with a single built-in command;
+* Can deploy over SCP or other protocols with a [custom deployment command](#using-deploycustomcommand);
 * Supports external comment engines (currently: Disqus);
+* All links generated are relative links making the generated HTML suitable to be viewed locally;
 * [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
 * Few dependencies.
 
@@ -229,12 +230,12 @@ The following variables have an effect for any page they are set on:
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | title | `{Some title}` | The title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar links to the page. |
-| hideTitle | 0/1 | Do not put `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
+| hideTitle | 0/1 | Do not put the value of `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
 | blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| modifiedDate | same as "date" | Used to indicate the content has changed since the date in the date field. Not used for sorting. |
-| hideDate | 0/1 | Do not put show the page date or the last modification date. |
-| hideModifiedDate | 0/1 | Do not put show the last modification date only. |
+| modifiedDate | same as `date` | Used to indicate when the content was last changed since the date in the `date` variable. Not used for sorting. |
+| hideDate | 0/1 | Do not show the page date or the last modification date. |
+| hideModifiedDate | 0/1 | Do not show the last modification date. |
 | author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
 | hideAuthor | 0/1 | Do not put show the page author. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Lines to append to `<head>`. |
@@ -252,7 +253,7 @@ These variables only affect blog posts:
 | hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | hideTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
-| hideFromCollections | 0/1 | Do no include the content of this post in article collections like the tag pages and the blog index. |
+| hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
 | moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
 | sidebarNote | `{<h3>About</h3> This is my blog.}` | The text of the sidebar note in HTML. The note is displayed about the sidebar links and the tag cloud. |
@@ -272,8 +273,8 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `title` is `{Hello!}` .  |
-| url | `{http://example.com/}` | The base URL for your website. Only used for sitemap generation. |
-| generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable hideFromCollections).  |
+| url | `{http://example.com/}` | The base URL for your website. It is currently only used for sitemap generation. The trailing slash is mandatory. |
+| generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable `hideFromCollections`). |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
@@ -412,4 +413,4 @@ The Tclssg logo images are copyright (c) 2014 Danyil Bohdan and are licensed und
 
 The [Caius](https://github.com/tobijk/caius) Markdown package 0.9 is copyright (c) 2013 Tobias Koch and is distributed under a two-clause BSD license. See `external/markdown/markdown.tcl`.
 
-Bootstrap 3.2.0 is copyright (c) 2011-2014 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.2.0-dist/LICENSE`.
+Bootstrap 3.3.1 is copyright (c) 2011-2014 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.3.1-dist/LICENSE`.
