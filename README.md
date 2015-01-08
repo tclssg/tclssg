@@ -280,11 +280,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
 | deployCopyPath | `{/var/www/}` | The location to copy the output to when the command `deploy-copy` is run. |
 | deployCustomCommand | | See [the corresponding section](#using-deploycustomcommand) below. |
-| deployFtpServer | `{ftp.hosting.example.net}` | The server to deploy the static website to when the command `deploy-ftp` is run. |
-| deployFtpPort | `21` | FTP server port. |
-| deployFtpPath | `{htdocs}` | The directory on the FTP server where to deploy the static website. |
-| deployFtpUser | `{user}` | FTP user name. |
-| deployFtpPassword | `{password}` | FTP password. Not shown in Tclssg's logs. |
+| deployFtp | `{ server {ftp.hosting.example.net} port 21 user deployment password {long password} path htdocs }` | FTP deployment settings: the hostname and port of the server to upload the static website to, the FTP user name and password and the destination path on the server. The port is optional and defaults to 21 but all the other settings are mandatory. The password is not shown in Tclssg's logs. |
 | expandMacrosInPages | 0/1 | Whether template macros are allowed in pages. If set to `0` macro code in a page will be treated as Markdown text just like the rest of the page. |
 | charset | `utf-8` | The pages' character set. |
 | indexPage | `{index.md}` | The index page. |
@@ -323,33 +319,36 @@ Sample use session
 
     $ ./ssg.tcl build
     Loaded config file:
-        websiteTitle SSG Test
+        websiteTitle {SSG Test}
+        url http://example.com/
+        generateSitemap 0
         indexPage index.md
         blogIndexPage blog/index.md
         tagPage blog/tag.md
         outputDir ../output
         blogPostsPerFile 10
-        pageVariables
+        pageVariables {
             moreText {(<a href="%s">read more</a>)}
             showUserComments 0
             sidebarNote {
-                <h3>About</h3>
-                This is the blog of the sample Tclssg project.
+                <h3>About</h3> This is the blog of the sample Tclssg project.
             }
             navbarItems {
                 Home $indexLink
                 Blog $blogIndexLink
                 Contact {$rootDirPath/contact.html}
             }
-
-        deployCustomCommand
-            start {scp -rp "$outputDir" testvm:/var/www/}
+        }
+        deployCustomCommand {
+            start {
+                scp -rp $outputDir localhost:/tmp/deployment-test/
+            }
             file {}
             end {}
-
+        }
         expandMacrosInPages 0
         commentsEngine none
-        commentsDisqusShortname
+        commentsDisqusShortname {}
     adding article collection website/input/pages/blog/index.md with posts {website/input/pages/blog/test-3.md website/input/pages/blog/test-2.md website/input/pages/blog/test.md}
     adding article collection website/input/pages/blog/tag-a-long-tag-with-spaces.md with posts website/input/pages/blog/test.md
     adding article collection website/input/pages/blog/tag-another-thing.md with posts website/input/pages/blog/test-3.md
@@ -372,33 +371,36 @@ Sample use session
     overwriting website/output/external/bootstrap-3.2.0-dist/js/bootstrap.min.js with website/input/static/external/bootstrap-3.2.0-dist/js/bootstrap.min.js
     $ ./ssg.tcl deploy-custom
     Loaded config file:
-        websiteTitle SSG Test
+        websiteTitle {SSG Test}
+        url http://example.com/
+        generateSitemap 0
         indexPage index.md
         blogIndexPage blog/index.md
         tagPage blog/tag.md
         outputDir ../output
         blogPostsPerFile 10
-        pageVariables
+        pageVariables {
             moreText {(<a href="%s">read more</a>)}
             showUserComments 0
             sidebarNote {
-                <h3>About</h3>
-                This is the blog of the sample Tclssg project.
+                <h3>About</h3> This is the blog of the sample Tclssg project.
             }
             navbarItems {
                 Home $indexLink
                 Blog $blogIndexLink
                 Contact {$rootDirPath/contact.html}
             }
-
-        deployCustomCommand
-            start {scp -rp "$outputDir" testvm:/var/www/}
+        }
+        deployCustomCommand {
+            start {
+                scp -rp $outputDir localhost:/tmp/deployment-test/
+            }
             file {}
             end {}
-
+        }
         expandMacrosInPages 0
         commentsEngine none
-        commentsDisqusShortname
+        commentsDisqusShortname {}
     deploying...
     done.
 

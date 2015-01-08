@@ -24,7 +24,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.17.1
+    variable version 0.18.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -1018,7 +1018,16 @@ namespace eval tclssg {
             puts [::textutil::indent \
                     [::tclssg::utils::dict-format \
                             [::tclssg::utils::obscure-password-values \
-                                    $websiteConfig]] \
+                                    $websiteConfig] \
+                            "%s %s\n" \
+                            {
+                                websiteTitle
+                                headExtra
+                                bodyExtra
+                                start
+                                moreText
+                                sidebarNote
+                            }] \
                     {    }]
         }
 
@@ -1159,14 +1168,14 @@ namespace eval tclssg {
             global errorInfo
             set conn [
                 ::ftp::Open \
-                        [dict get $websiteConfig deployFtpServer] \
-                        [dict get $websiteConfig deployFtpUser] \
-                        [dict get $websiteConfig deployFtpPassword] \
+                        [dict get $websiteConfig deployFtp server] \
+                        [dict get $websiteConfig deployFtp user] \
+                        [dict get $websiteConfig deployFtp password] \
                         -port [::tclssg::utils::dict-default-get 21 \
-                                $websiteConfig deployFtpPort] \
+                                $websiteConfig deployFtp port] \
                         -mode passive
             ]
-            set deployFtpPath [dict get $websiteConfig deployFtpPath]
+            set deployFtpPath [dict get $websiteConfig deployFtp path]
 
             ::ftp::Type $conn binary
 

@@ -81,14 +81,17 @@ namespace eval utils {
         string trim [regsub -all {[^[:alnum:]]+} [string tolower $text] "-"] "-"
     }
 
-    # Return dictionary with values replaced with stars for every key with
-    # "password" in its name.
+    # Return dictionary with values or every key with "password" in its name
+    # recursively replaced with stars.
     proc obscure-password-values {dictionary} {
         set result {}
         dict for {key value} $dictionary {
             dict set result $key [
                 if {[string match -nocase *password* $key]} {
                     lindex {***}
+                } elseif {([llength $value] > 1) &&
+                        ([llength $value] % 2 == 0)} {
+                    obscure-password-values $value
                 } else {
                     lindex $value
                 }
@@ -98,11 +101,32 @@ namespace eval utils {
     }
 
     # Format dictionary for printing.
-    proc dict-format {dictionary {formatString "%s %s\n"}} {
+    proc dict-format {dictionary {formatString "%s %s\n"} {doNotRecurKeys {}}} {
+        set lengthLimit 50
         set result {}
+
         dict for {key value} $dictionary {
+            set wrappedValue 0
+            if {([llength $value] > 1) &&
+                    ($key ni $doNotRecurKeys) &&
+                    ([llength $value] % 2 == 0)} {
+                # Assume the value is a nested dictionary.
+                set value [dict-format $value $formatString $doNotRecurKeys]
+                set value "{\n[::textutil::indent $value {    }]\n}"
+                set wrappedValue 1
+            } elseif {$value eq ""} {
+                set value "{}"
+            }
+            if {!$wrappedValue} {
+                if {[string length $value] > $lengthLimit} {
+                    set value "{\n[::textutil::indent $value {    }]\n}"
+                } elseif {[llength $value] > 1} {
+                    set value "{$value}"
+                }
+            }
             append result [format $formatString $key $value]
         }
+
         return $result
     }
 
