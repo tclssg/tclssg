@@ -76,7 +76,6 @@ proc format-article-date {} {
 }
 
 proc abbreviate-article {content {abbreviate 0}} {
-    global moreText
     global currentPageId
     if {$abbreviate} {
         if {[regexp {(.*?)<!-- *more *-->} $content match content]} {

@@ -1,5 +1,5 @@
 body {
-	font-size: 18px;
+    font-size: 18px;
 }
 
 :target {
@@ -20,5 +20,5 @@ nav.tags > ul {
 }
 
 li.tag {
-	display: inline-block;
+    display: inline-block;
 }

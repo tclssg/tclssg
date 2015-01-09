@@ -25,7 +25,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.19.0
+    variable version 0.19.1
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -466,6 +466,19 @@ namespace eval tclssg {
             }
             return $newPageId
         }
+        proc delete {id} {
+            tclssg-db transaction {
+                tclssg-db eval {
+                     DELETE FROM pages WHERE id = $id;
+                }
+                tclssg-db eval {
+                    DELETE FROM links WHERE id = $id;
+                }
+                tclssg-db eval {
+                    DELETE FROM variables WHERE id = $id;
+                }
+            }
+        }
         proc set-data {id field value} {
             # TODO: get rid of format?
             if {![regexp {^[a-zA-Z0-9]+$} $field]} {
@@ -760,8 +773,10 @@ namespace eval tclssg {
                         $newId \
                         outputFile \
                         $newOutputFile
-                tclssg pages set-data $newId \
-                        articlesToAppend $currentPageArticles
+                tclssg pages set-data \
+                        $newId \
+                        articlesToAppend \
+                        $currentPageArticles
 
                 if {$pageNumber > 0} {
                     tclssg pages set-variable $newId \
@@ -794,21 +809,22 @@ namespace eval tclssg {
         if {[string is integer -strict $tagPageId]} {
             foreach tag [tclssg pages get-tag-list] {
                 set taggedPages [tclssg pages with-tag $tag]
-                set newPageId [tclssg pages copy $tagPageId 1]
+                set tempPageId [tclssg pages copy $tagPageId 1]
                 set toReplace [file rootname \
                         [lindex [file split [tclssg pages get-data \
-                                $newPageId inputFile ""]] end]]
+                                $tempPageId inputFile ""]] end]]
                 set replaceWith "tag-[::tclssg::utils::slugify $tag]"
                 foreach varName {inputFile outputFile} {
                     tclssg pages set-data \
-                            $newPageId \
+                            $tempPageId \
                             $varName \
                             [string map \
                                     [list $toReplace $replaceWith] \
                                     [tclssg pages get-data \
-                                            $newPageId $varName ""]]
+                                            $tempPageId $varName ""]]
                 }
-                set resultIds [add-article-collection $taggedPages $newPageId]
+                set resultIds [add-article-collection $taggedPages $tempPageId]
+                tclssg pages delete $tempPageId
                 for {set i 0} {$i < [llength $resultIds]} {incr i} {
                     set id [lindex $resultIds $i]
                     tclssg pages add-tag-page $id $tag $i
@@ -941,11 +957,12 @@ namespace eval tclssg {
                 {[tclssg pages get-variable $id blogPost 0]}]
         set sidebarPostIds [::struct::list filterfor id \
                 $blogPostIds \
-                {![tclssg pages get-variable $id hideFromSidebar 0]}]
+                {![tclssg pages get-variable $id hideFromSidebarLinks 0]}]
 
-        tclssg pages set-website-config-variable  sidebarPostIds $sidebarPostIds
+        tclssg pages set-website-config-variable sidebarPostIds $sidebarPostIds
 
-        # Find the numerical ids that correspond to page names in the config.
+        # Replace the page names with the numerical ids that they correspond in
+        # the config.
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [file join $contentDir \
                     [tclssg pages get-website-config-variable $varName ""]]
@@ -962,6 +979,8 @@ namespace eval tclssg {
 
         # Add pages with blog posts for each tag.
         add-tag-pages
+        # Do not process the tag page itself.
+        tclssg page delete [tclssg pages get-website-config-variable tagPage ""]
 
         # Process page files into HTML output.
         foreach id [tclssg pages sorted-by-date] {
@@ -1134,7 +1153,7 @@ namespace eval tclssg {
         proc deploy-copy {inputDir outputDir {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
-            set deployDest [dict get $websiteConfig deployCopyPath]
+            set deployDest [dict get $websiteConfig deployCopy path]
 
             ::tclssg::utils::copy-files $outputDir $deployDest 1
         }

@@ -1,7 +1,7 @@
 {
     title Blog
     blogPost 1
-    hideFromSidebar 1
+    hideFromSidebarLinks 1
     hideTitle 1
     hidePostTags 1
 }

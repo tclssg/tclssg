@@ -4,9 +4,14 @@ interp-source common.tcl
 interp-source article.tcl
 
 %>
-<article>
-<header>
-<%! format-article-title %><%! format-article-author %><%! format-article-date %>
-</header>
-<%! abbreviate-article $content $abbreviate %>
-<%! format-article-tag-list %></article>
+<%  set headerContent "[format-article-title][format-article-author][format-article-date]"
+    if {!(($content eq "") && ($headerContent eq ""))} { %>
+    <article>
+        <header>
+            <%= $headerContent %>
+        </header>
+        <%! abbreviate-article $content $abbreviate %>
+        <%! format-article-tag-list %>
+        <%! get-current-page-variable articleExtra "" %>
+    </article>
+<% } %>

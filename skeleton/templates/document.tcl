@@ -18,8 +18,16 @@ proc sidebar-note? {} {
 
 proc tag-cloud? {} {
     return [expr {
-        [blog-post?] && ![get-current-page-variable hideTagCloud 0]
+        [blog-post?] && ![get-current-page-variable hideSidebarTagCloud 0]
     }]
+}
+
+proc pick-at-most {list limit} {
+    if {[string is integer -strict $limit] && ($limit >= 0)} {
+        return [lrange $list 0 [expr {$limit - 1}]]
+    } else {
+        return $list
+    }
 }
 
 proc format-document-title {} {
@@ -56,7 +64,12 @@ proc format-sidebar-links {} {
     set sidebar {}
     if {[sidebar-links?]} {
         append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
-        foreach id [get-website-config-variable sidebarPostIds {}] {
+
+        # Limit the number of posts linked to according to maxSidebarLinks.
+        set sidebarPostIds [get-website-config-variable sidebarPostIds {}]
+        set maxSidebarLinks [get-website-config-variable maxSidebarLinks inf]
+
+        foreach id [pick-at-most $sidebarPostIds $maxSidebarLinks] {
             append sidebar [format-link $id]
         }
         append sidebar {</ul></nav><!-- sidebar-links -->}
@@ -66,7 +79,6 @@ proc format-sidebar-links {} {
 
 
 proc format-sidebar-note {} {
-    global sidebarNote
     return [format \
             {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
             [get-current-page-variable sidebarNote ""]]
@@ -74,7 +86,6 @@ proc format-sidebar-note {} {
 
 proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
     # Blog "next" and "previous" blog index page links.
-    global currentPageId
     set prevPageReal [get-current-page-variable prevPage {}]
     set nextPageReal [get-current-page-variable nextPage {}]
     set links {}
@@ -95,12 +106,15 @@ proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
 
 proc format-tag-cloud {} {
     # Blog tag cloud. For each tag it links to pages that are tagged with it.
-    global tags
-    global pages
     set tagCloud {}
 
+    # Limit the number of tags listed to according to maxTags.
+    set tags [get-tag-list [get-website-config-variable sortTagsBy "name"]]
+    set maxTags [get-website-config-variable maxTags inf]
+
     append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
-    foreach tag [get-tag-list [get-website-config-variable sortTagsBy "name"]] {
+
+    foreach tag [pick-at-most $tags $maxTags] {
         append tagCloud [format-link [get-tag-page $tag 0] 1 $tag]
     }
     append tagCloud {</ul></nav><!-- tag-cloud -->}
@@ -110,7 +124,6 @@ proc format-tag-cloud {} {
 
 proc format-footer {} {
     # Footer.
-    global copyright
     set footer {}
     if {[get-website-config-variable copyright {}] ne ""} {
         append footer "<div class=\"copyright\">$copyright</div>"

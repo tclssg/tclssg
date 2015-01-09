@@ -14,7 +14,7 @@ Features
 * Generates sitemaps.
 * Output is valid HTML5 and CSS level 3;
 * Can deploy over FTP with a single built-in command;
-* Can deploy over SCP or other protocols with a [custom deployment command](#using-deploycustomcommand);
+* Can deploy over SCP or other protocols with a [custom deployment command](#using-deploycustom);
 * Supports external comment engines (currently: Disqus);
 * All links generated are relative links making the generated HTML suitable to be viewed locally;
 * [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
@@ -244,7 +244,7 @@ The following variables have an effect for any page they are set on:
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `comments { engine ... }` in website config. |
 | navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
-| draft | 0/1 | Do not process the page at all. |
+| draft | 0/1 | Do not process the page at all. Useful for keeping drafts in the same directory as published pages. |
 | hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index. |
 | locale | `en_US` | The page's language. The value of `locale` is used to internationalize small bits of text like "page #5" used in templates. Translations of each message to a given locale can be defined by copying the file `skeleton/templates/messages.tcl` to `templates/messages.tcl` in your `inputDir` and adding the translations there. |
 
@@ -252,13 +252,13 @@ These variables only affect blog posts:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
-| hideFromSidebar | 0/1 | Unlists the post from other posts' sidebar. Useful for post drafts you may want to share with others through a direct link but don't want any reader of your blog to see otherwise. |
-| hideSidebarLinks | 0/1 | Don't show links to other blog posts in the sidebar on the present page. |
+| hideFromSidebarLinks | 0/1 | Unlists the post from other posts' sidebar links. Useful for post drafts you may want to share with others through a direct link but don't want any reader of your blog to see otherwise. |
+| hideSidebarLinks | 0/1 | Don't show the list of other blog posts with links to them in the sidebar on the present page. |
 | hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
-| hideTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
+| hideSidebarTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
-| moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
+| moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. moreText is set to `(...)` (without a link to the page) by default. |
 | sidebarNote | `{<h3>About</h3> This is my blog.}` | The text of the sidebar note in HTML. The note is displayed above the sidebar links and the tag cloud. |
 
 All 0/1 settings default to `0`.
@@ -281,8 +281,8 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFilename | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
-| deployCopyPath | `{/var/www/}` | The location to copy the output to when the command `deploy-copy` is run. |
-| deployCustomCommand | | See [the corresponding section](#using-deploycustomcommand) below. |
+| deployCopy | `{ path /var/www/ }` | The location to copy the output to when the command `deploy-copy` is run. |
+| deployCustom | | See [the corresponding section](#using-deploycustom) below. |
 | deployFtp | `{ server {ftp.hosting.example.net} port 21 user deployment password {long password} path htdocs }` | FTP deployment settings: the hostname and port of the server to upload the static website to, the FTP user name and password and the destination path on the server. The port is optional and defaults to 21 but all the other settings are mandatory. The password is not shown in Tclssg's logs. |
 | expandMacrosInPages | 0/1 | Whether template macros are allowed in pages. If set to `0` macro code in a page will be treated as Markdown text just like the rest of the page. |
 | charset | `utf-8` | The pages' character set. |
@@ -291,25 +291,27 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
-| pageVariables | `{ hideSidebar 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
+| maxTags | `10` or `inf` | How many tags to list in the sidebar. This is intended to be used with `sortTagsBy` set to `frequency` to only display the most common tags when you have a lot of them. |
+| maxSidebarLinks | `10` or `inf` | How many of the most recent posts to link to in the sidebar. |
+| pageVariables | `{ hideSidebarNote 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright © 2015 You}` | A copyright line to display in the footer. |
 | comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on pages that have `showUserComments` set to `1`. Engine can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 
 Like page settings all 0/1 website settings default to `0`.
 
-### Using `deployCustomCommand`
+### Using `deployCustom`
 
-The setting `deployCustomCommand` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustomCommand` consists of three keys, `start`, `file` and `end`, followed by their respective values. The command under the key `file` is run for every file in `outputDir` while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example of a `website.conf` that does SCP deployment on `./ssg.tcl deploy-custom`:
+The setting `deployCustom` allows you to define complex deployment scenarios using shell commands (on *nix) or `cmd.exe` commands (on Windows). The value of `deployCustom` consists of three keys, `start`, `file` and `end`, followed by their respective values. The command under the key `file` is run for every file in `outputDir` while `start` and `end` are run once at the beginning and the end of the deployment operation respectively. Here's an example of a `website.conf` that does SCP deployment on `./ssg.tcl deploy-custom`:
 
     [...]
-    deployCustomCommand {
+    deployCustom {
         start {scp -rp "$outputDir" host.example.net:/var/www/}
         file {}
         end {}
     }
     [...]
 
-In the above example `$outputDir` is replaced with the actual output directory path when the command is run. In the commands for `start`, `file` and `end` the following variables are recognized and substituted: `$outputDir` (the output directory), `$file` (file path), `$fileRel` (file path relative to `outputDir`). This means that if you put `file {echo "$fileRel"}` in `deployCustomCommand` and run Tclssg with the command `./ssg.tcl deploy-custom ./website/input ./website/output` it will print the relative paths of all files in `./website/output`.
+In the above example `$outputDir` is replaced with the actual output directory path when the command is run. In the commands for `start`, `file` and `end` the following variables are recognized and substituted: `$outputDir` (the output directory), `$file` (file path), `$fileRel` (file path relative to `outputDir`). This means that if you put `file {echo "$fileRel"}` in `deployCustom` and run Tclssg with the command `./ssg.tcl deploy-custom ./website/input ./website/output` it will print the relative paths of all files in `./website/output`.
 
 FAQ
 ---
@@ -341,7 +343,7 @@ Sample use session
                 Contact {$rootDirPath/contact.html}
             }
         }
-        deployCustomCommand {
+        deployCustom {
             start {
                 scp -rp $outputDir localhost:/tmp/deployment-test/
             }
@@ -395,7 +397,7 @@ Sample use session
                 Contact {$rootDirPath/contact.html}
             }
         }
-        deployCustomCommand {
+        deployCustom {
             start {
                 scp -rp $outputDir localhost:/tmp/deployment-test/
             }
