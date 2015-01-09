@@ -1,6 +1,7 @@
 <%
 
-interp-source default-procs.tcl
+interp-source common.tcl
+interp-source article.tcl
 
 %>
 <article>

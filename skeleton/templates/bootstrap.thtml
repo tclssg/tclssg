@@ -1,11 +1,13 @@
 <%
 
-interp-source default-procs.tcl
+interp-source common.tcl
+interp-source document.tcl
+interp-source messages.tcl
 
 %><!DOCTYPE html>
 <html>
   <head>
-    <meta charset="<%! website-var-get-default charset UTF-8 %>">
+    <meta charset="<%! get-website-config-variable charset UTF-8 %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
@@ -20,7 +22,7 @@ interp-source default-procs.tcl
     <link href="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
-    <%! page-var-get-default headExtra "" %>
+    <%! get-current-page-variable headExtra "" %>
   </head>
 
   <body>
@@ -33,11 +35,11 @@ interp-source default-procs.tcl
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="<%= $indexLink %>"><%= $websiteTitle %></a>
+          <a class="navbar-brand" href="<%= $indexLink %>"><%! get-website-config-variable websiteTitle {} %></a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-          <% foreach {item link} [page-var-get-default navbarItems {}] { %>
+          <% foreach {item link} [get-current-page-variable navbarItems {}] { %>
             <li><a href="<%! subst $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
@@ -53,7 +55,7 @@ interp-source default-procs.tcl
                       ([sidebar-links?] || [tag-cloud?]))} { %>
           <div class="col-md-8">
             <%= $content %>
-            <%! format-prev-next-links {Previous page} {Next page} %>
+            <%! format-prev-next-links {« Newer posts} {Older posts »} %>
           </div>
           <div class="col-md-4 well">
             <%! if {[sidebar-note?]} format-sidebar-note %>
@@ -63,7 +65,7 @@ interp-source default-procs.tcl
          <% } else { %>
           <div class="col-md-12">
             <%= $content %>
-            <%! format-prev-next-links {Previous page} {Next page} %>
+            <%! format-prev-next-links {« Newer posts} {Older posts »} %>
           </div>
         <%  }
         %>
@@ -89,5 +91,5 @@ interp-source default-procs.tcl
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="<%= $rootDirPath %>/external/bootstrap-3.2.0-dist/js/bootstrap.min.js"></script>
-    <%! page-var-get-default bodyExtra "" %>
+    <%! get-current-page-variable bodyExtra "" %>
 </html>

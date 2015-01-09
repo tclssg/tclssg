@@ -13,14 +13,12 @@ body {
   text-align: center;
 }
 
-.prev-page-link {
-	float: left;
+nav.tags > ul {
+    padding-left: 0;
+    display: inline;
+    list-style-type: none;
 }
 
-.next-page-link {
-	float: right;
-}
-
-.author {
-	margin-bottom: 0;
+li.tag {
+	display: inline-block;
 }

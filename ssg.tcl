@@ -4,6 +4,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 package require Tcl 8.5
+package require msgcat
 package require struct
 package require fileutil
 package require textutil
@@ -24,7 +25,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.18.0
+    variable version 0.19.0
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -54,9 +55,9 @@ namespace eval tclssg {
         set ::tclssg::config(contentDirName) pages
         set ::tclssg::config(templateDirName) templates
         set ::tclssg::config(staticDirName) static
-        set ::tclssg::config(articleTemplateFileName) article.thtml
-        set ::tclssg::config(documentTemplateFileName) bootstrap.thtml
-        set ::tclssg::config(websiteConfigFileName) website.conf
+        set ::tclssg::config(articleTemplateFilename) article.thtml
+        set ::tclssg::config(documentTemplateFilename) bootstrap.thtml
+        set ::tclssg::config(websiteConfigFilename) website.conf
         set ::tclssg::config(skeletonDir) \
                 [file join $::tclssg::config(scriptLocation) skeleton]
         set ::tclssg::config(defaultInputDir) [file join "website" "input"]
@@ -144,15 +145,18 @@ namespace eval tclssg {
                     ::tclssg::utils::choose-dir         choose-dir
                     puts                                puts
                     ::tclssg::templating::interpreter::with-cache
-                                                        with-cache
+                                                        with-cache-for-filename
                     ::tclssg::pages::get-variable       get-page-variable
                     ::tclssg::pages::get-data           get-page-data
                     ::tclssg::pages::get-website-config-variable
-                                                        website-var-get-default
+                                                    get-website-config-variable
                     ::tclssg::pages::get-tag-list       get-tag-list
                     ::tclssg::pages::get-link           get-page-link
                     ::tclssg::pages::get-tags           get-page-tags
                     ::tclssg::pages::get-tag-page       get-tag-page
+                    ::msgcat::mc                        mc
+                    ::msgcat::mcset                     mcset
+                    ::msgcat::mclocale                  mclocale
                 } {
                     interp alias templateInterp $alias {} {*}$command
                 }
@@ -181,13 +185,13 @@ namespace eval tclssg {
                 interp delete templateInterp
             }
 
-            # Source fileName into templateInterp from the first directory where
-            # it exists out of those in dirs.
-            proc source-dirs {dirs fileName} {
+            # Source file $filename into templateInterp from the first directory
+            # where it exists out of those in dirs.
+            proc source-dirs {dirs filename} {
                 set command [
                     subst -nocommands {
                         source [
-                            choose-dir $fileName {$dirs}
+                            choose-dir $filename {$dirs}
                         ]
                     }
                 ]
@@ -275,7 +279,7 @@ namespace eval tclssg {
                 return $result
             }
 
-            proc fileName {} {
+            proc filename {} {
                 variable cachedFile
                 return $cachedFile
             }
@@ -539,7 +543,14 @@ namespace eval tclssg {
                 VALUES ($id, $name, $value);
             }
         }
-        proc get-variable {id name default} {
+        proc get-variable {id name default {pageVariablesFailover 1}} {
+            if {$pageVariablesFailover} {
+                set default [::tclssg::utils::dict-default-get \
+                        $default \
+                        [get-website-config-variable pageVariables {}] \
+                        $name]
+            }
+
             set result [lindex [tclssg-db eval {
                 SELECT ifnull(max(value), $default) FROM variables
                 WHERE id = $id AND name = $name;
@@ -855,6 +866,10 @@ namespace eval tclssg {
         return $result
     }
 
+    variable variableSynonyms [dict create {*}{
+        blogPost blog modifiedDate modified
+    }]
+
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
     proc compile-website {inputDir outputDir websiteConfig} {
@@ -866,13 +881,24 @@ namespace eval tclssg {
         tclssg pages set-website-config-variable inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
 
+        variable variableSynonyms
+
         foreach file [::fileutil::findByPattern $contentDir -glob *.md] {
             # May want to change the rawContent preloading behavior for very
             # large (larger than memory) websites.
             set rawContent [read-file $file]
             set variables [lindex \
                     [::tclssg::utils::get-page-variables $rawContent] 0]
-
+            if {[::tclssg::utils::dict-default-get 0 $variables draft]} {
+                # Skip drafts.
+                continue
+            }
+            foreach {varName synonym} $variableSynonyms {
+                if {![dict exists $variables $varName] &&
+                        [dict exists $variables $synonym]} {
+                    dict set variables $varName [dict get $variables $synonym]
+                }
+            }
             set dateScanned [::tclssg::utils::incremental-clock-scan \
                     [::tclssg::utils::dict-default-get {} $variables date]]
             dict set variables dateScanned $dateScanned
@@ -901,10 +927,10 @@ namespace eval tclssg {
 
         # Read template files.
         set articleTemplate [
-            read-template-file $inputDir articleTemplateFileName
+            read-template-file $inputDir articleTemplateFilename
         ]
         set documentTemplate [
-            read-template-file $inputDir documentTemplateFileName
+            read-template-file $inputDir documentTemplateFilename
         ]
 
 
@@ -947,7 +973,7 @@ namespace eval tclssg {
             if {[templating cache retrieve! $outputFile pageLinks]} {
                 tclssg pages copy-links \
                         [tclssg pages output-file-to-id \
-                                [templating cache fileName]] $id
+                                [templating cache filename]] $id
             } else {
                 # Compute new pageLinks for the current page. Beware: in the
                 # worst case scenario (each page is in its own directory) this
@@ -1009,7 +1035,7 @@ namespace eval tclssg {
     proc load-config {inputDir {verbose 1}} {
         set websiteConfig [
             read-file [file join $inputDir \
-                    $::tclssg::config(websiteConfigFileName)]
+                    $::tclssg::config(websiteConfigFilename)]
         ]
 
         # Show loaded config to user (without the password values).

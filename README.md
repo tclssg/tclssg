@@ -1,6 +1,6 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
@@ -231,18 +231,22 @@ The following variables have an effect for any page they are set on:
 |---------------|------------------|-------------|
 | title | `{Some title}` | The title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar links to the page. |
 | hideTitle | 0/1 | Do not put the value of `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
-| blogPost | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
+| `blog` or `blogPost` | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| modifiedDate | same as `date` | Used to indicate when the content was last changed since the date in the `date` variable. Not used for sorting. |
+| `modified` or `modifiedDate` | same as `date` | Used to indicate when the content was last changed since the date in the `date` variable. Not used for sorting. |
 | hideDate | 0/1 | Do not show the page date or the last modification date. |
 | hideModifiedDate | 0/1 | Do not show the last modification date. |
 | author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
 | hideAuthor | 0/1 | Do not put show the page author. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Lines to append to `<head>`. |
 | bodyExtra | `{<script>[...]</script>">}` | Lines to append to `<body>`. |
+| articleExtra | `{}` | Lines to append to `<article>`. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
-| showUserComments | 0/1 | Enable comments using the comment engine specified in `commentsEngine`. |
+| showUserComments | 0/1 | Enable comments using the comment engine specified in `comments { engine ... }` in website config. |
 | navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
+| draft | 0/1 | Do not process the page at all. |
+| hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index. |
+| locale | `en_US` | The page's language. The value of `locale` is used to internationalize small bits of text like "page #5" used in templates. Translations of each message to a given locale can be defined by copying the file `skeleton/templates/messages.tcl` to `templates/messages.tcl` in your `inputDir` and adding the translations there. |
 
 These variables only affect blog posts:
 
@@ -253,10 +257,9 @@ These variables only affect blog posts:
 | hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | hideTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
-| hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index. |
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
 | moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. It is set to `(...)` (without a link to the page) by default. |
-| sidebarNote | `{<h3>About</h3> This is my blog.}` | The text of the sidebar note in HTML. The note is displayed about the sidebar links and the tag cloud. |
+| sidebarNote | `{<h3>About</h3> This is my blog.}` | The text of the sidebar note in HTML. The note is displayed above the sidebar links and the tag cloud. |
 
 All 0/1 settings default to `0`.
 
@@ -276,8 +279,8 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | url | `{http://example.com/}` | The base URL for your website. It is currently only used for sitemap generation. The trailing slash is mandatory. |
 | generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable `hideFromCollections`). |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
-| articleTemplateFileName | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
-| documentTemplateFileName | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
+| articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
+| documentTemplateFilename | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
 | deployCopyPath | `{/var/www/}` | The location to copy the output to when the command `deploy-copy` is run. |
 | deployCustomCommand | | See [the corresponding section](#using-deploycustomcommand) below. |
 | deployFtp | `{ server {ftp.hosting.example.net} port 21 user deployment password {long password} path htdocs }` | FTP deployment settings: the hostname and port of the server to upload the static website to, the FTP user name and password and the destination path on the server. The port is optional and defaults to 21 but all the other settings are mandatory. The password is not shown in Tclssg's logs. |
@@ -290,8 +293,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
 | pageVariables | `{ hideSidebar 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright © 2015 You}` | A copyright line to display in the footer. |
-| commentsEngine | `none`/`disqus` | Selects what comment engine (external software or service for blog comments) to use on pages that set `showUserComments` to `1`. |
-| commentsDisqusShortname | `example` | Configuration for when `commentsEngine` is set to `disqus`. Specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
+| comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on pages that have `showUserComments` set to `1`. Engine can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 
 Like page settings all 0/1 website settings default to `0`.
 
@@ -347,8 +349,10 @@ Sample use session
             end {}
         }
         expandMacrosInPages 0
-        commentsEngine none
-        commentsDisqusShortname {}
+        comments {
+            engine none
+            disqusShortname {}
+        }
     adding article collection website/input/pages/blog/index.md with posts {website/input/pages/blog/test-3.md website/input/pages/blog/test-2.md website/input/pages/blog/test.md}
     adding article collection website/input/pages/blog/tag-a-long-tag-with-spaces.md with posts website/input/pages/blog/test.md
     adding article collection website/input/pages/blog/tag-another-thing.md with posts website/input/pages/blog/test-3.md
@@ -399,8 +403,10 @@ Sample use session
             end {}
         }
         expandMacrosInPages 0
-        commentsEngine none
-        commentsDisqusShortname {}
+        comments {
+            engine none
+            disqusShortname {}
+        }
     deploying...
     done.
 
