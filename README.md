@@ -4,7 +4,7 @@ Tclsgg is a static site generator with template support written in Tcl for danyi
 
 **Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
 
-**As of v0.15.2 at least one major change that breaks existing template code should be expected before the codebase stabilizes.**
+**As of version 0.19.2 minor changes that break existing template code and configuration files should still be expected before the codebase stabilizes.**
 
 Features
 --------
@@ -111,6 +111,8 @@ The default layout of the input directory is as follows:
     ├── static <-- Files copied verbatim to the output directory.
     │   └── images <-- The default location for image files.
     ├── templates <-- The website's layout templates (HTML + Tcl).
+    │   ├── common.tcl
+    │   ├── ...
     │   ├── article.thtml
     │   └── bootstrap.thtml
     └── website.conf <-- The configuration file.
@@ -231,19 +233,20 @@ The following variables have an effect for any page they are set on:
 |---------------|------------------|-------------|
 | title | `{Some title}` | The title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar links to the page. |
 | hideTitle | 0/1 | Do not put the value of `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
+| hideArticleTitle | 0/1 | Do not display the value of `title` at the top of the page. |
 | `blog` or `blogPost` | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
 | `modified` or `modifiedDate` | same as `date` | Used to indicate when the content was last changed since the date in the `date` variable. Not used for sorting. |
 | hideDate | 0/1 | Do not show the page date or the last modification date. |
 | hideModifiedDate | 0/1 | Do not show the last modification date. |
 | author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
-| hideAuthor | 0/1 | Do not put show the page author. |
+| hideAuthor | 0/1 | Do not show the page author. |
 | headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Lines to append to `<head>`. |
 | bodyExtra | `{<script>[...]</script>">}` | Lines to append to `<body>`. |
 | articleExtra | `{}` | Lines to append to `<article>`. |
-| hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | showUserComments | 0/1 | Enable comments using the comment engine specified in `comments { engine ... }` in website config. |
-| navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated links an expression inside the template. |
+| navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated like an expression inside the template. |
+| hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 | draft | 0/1 | Do not process the page at all. Useful for keeping drafts in the same directory as published pages. |
 | hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index. |
 | locale | `en_US` | The page's language. The value of `locale` is used to internationalize small bits of text like "page #5" used in templates. Translations of each message to a given locale can be defined by copying the file `skeleton/templates/messages.tcl` to `templates/messages.tcl` in your `inputDir` and adding the translations there. |
@@ -281,7 +284,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFilename | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
-| deployCopy | `{ path /var/www/ }` | The location to copy the output to when the command `deploy-copy` is run. |
+| deployCopy | `{ path /var/www/ }` | The `path` sets the location to copy the output to when the command `deploy-copy` is run. |
 | deployCustom | | See [the corresponding section](#using-deploycustom) below. |
 | deployFtp | `{ server {ftp.hosting.example.net} port 21 user deployment password {long password} path htdocs }` | FTP deployment settings: the hostname and port of the server to upload the static website to, the FTP user name and password and the destination path on the server. The port is optional and defaults to 21 but all the other settings are mandatory. The password is not shown in Tclssg's logs. |
 | expandMacrosInPages | 0/1 | Whether template macros are allowed in pages. If set to `0` macro code in a page will be treated as Markdown text just like the rest of the page. |
@@ -291,8 +294,8 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
 | tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
-| maxTags | `10` or `inf` | How many tags to list in the sidebar. This is intended to be used with `sortTagsBy` set to `frequency` to only display the most common tags when you have a lot of them. |
-| maxSidebarLinks | `10` or `inf` | How many of the most recent posts to link to in the sidebar. |
+| maxTagCloudTags | `10`, `-1`, `inf` | How many tags to list in the sidebar. This is intended to be used with `sortTagsBy` set to `frequency` to only display the most common tags when you have a lot of them. Negative numbers or a non-number indicate no limit. |
+| maxSidebarLinks | `10`, `-1`, `inf` | How many of the most recent posts to link to in the sidebar. Negative numbers or a non-number indicate no limit. |
 | pageVariables | `{ hideSidebarNote 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright © 2015 You}` | A copyright line to display in the footer. |
 | comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on pages that have `showUserComments` set to `1`. Engine can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
@@ -421,6 +424,6 @@ MIT. See the file `LICENSE` for details.
 
 The Tclssg logo images are copyright (c) 2014 Danyil Bohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-The [Caius](https://github.com/tobijk/caius) Markdown package 0.9 is copyright (c) 2013 Tobias Koch and is distributed under a two-clause BSD license. See `external/markdown/markdown.tcl`.
+The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project and is distributed under the MIT license. See `external/markdown/markdown.tcl`.
 
 Bootstrap 3.3.1 is copyright (c) 2011-2014 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.3.1-dist/LICENSE`.

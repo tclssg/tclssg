@@ -25,7 +25,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.19.1
+    variable version 0.19.2
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -84,8 +84,8 @@ namespace eval tclssg {
             }
         }
 
-        # Make HTML out of rawContent (remove frontmatter, if any, expand macros
-        # if expandMacrosInPages is enabled in websiteConfig, convert Markdown
+        # Make HTML out of rawContent (remove frontmatter, if any; expand macros
+        # if expandMacrosInPages is enabled in websiteConfig; convert Markdown
         # to HTML).
         proc prepare-content {rawContent id {extraVariables {}}} {
             set choppedContent \
@@ -545,7 +545,12 @@ namespace eval tclssg {
             }]
             return $result
         }
-
+        proc delete-links-to {targetId} {
+            tclssg-db eval {
+                DELETE FROM links
+                WHERE targetId = $targetId;
+            }
+        }
 
         # Procs for working with the table "variables".
 
@@ -631,17 +636,18 @@ namespace eval tclssg {
             return $result
         }
         # Return a list of all tags sorted by name or frequency.
-        proc get-tag-list {{sortBy "name"}} {
+        proc get-tag-list {{sortBy "name"} {limit -1}} {
             switch -exact -- $sortBy {
                 frequency {
                     set result [tclssg-db eval {
                         SELECT DISTINCT tag FROM tags
-                        GROUP BY tag ORDER BY count(id) DESC;
+                        GROUP BY tag ORDER BY count(id) DESC
+                        LIMIT $limit;
                     }]
                 }
                 name {
                     set result [tclssg-db eval {
-                        SELECT DISTINCT tag FROM tags ORDER BY tag;
+                        SELECT DISTINCT tag FROM tags ORDER BY tag LIMIT $limit;
                     }]
                 }
                 default {
@@ -724,7 +730,7 @@ namespace eval tclssg {
 
     # Add one page or a series of pages that collect the articles of those pages
     # that are listed in pageIds. The number of pages added equals ([llength
-    # pageIds] / $blogPostsPerFile) rounded to the nearest whole number. Page
+    # pageIds] / $blogPostsPerFile) rounded up to the nearest whole number. Page
     # settings are taken from the page $topPageId and its content is prepended
     # to every output page. Used for making the blog index page.
     proc add-article-collection {pageIds topPageId} {
@@ -737,11 +743,12 @@ namespace eval tclssg {
 
         # Filter out pages to that set hideFromCollections to 1.
         set pageIds [::struct::list filterfor x $pageIds {
-            $x ne $topPageId &&
+            ($x ne $topPageId) &&
             ![tclssg pages get-variable $x hideFromCollections 0]
         }]
 
         set prevIndexPageId {}
+        set topPageOutputFile [tclssg pages get-data $topPageId outputFile]
 
         foreach id $pageIds {
             lappend currentPageArticles $id
@@ -757,12 +764,7 @@ namespace eval tclssg {
                         [::tclssg::utils::add-number-before-extension \
                                 [tclssg pages get-data $topPageId outputFile] \
                                 [expr {$pageNumber + 1}] {-%d} 1]
-                if {$id eq $topPageId} {
-                    # Overwrite page $topPageId.
-                    set newId $id
-                } else {
-                    set newId [tclssg pages copy $topPageId 1]
-                }
+                set newId [tclssg pages copy $topPageId 1]
 
                 puts -nonewline "adding article collection $newInputFile"
                 tclssg pages set-data \
@@ -882,6 +884,7 @@ namespace eval tclssg {
         return $result
     }
 
+    # Synonymous variable names in the page frontmatter.
     variable variableSynonyms [dict create {*}{
         blogPost blog modifiedDate modified
     }]
@@ -899,22 +902,30 @@ namespace eval tclssg {
 
         variable variableSynonyms
 
+        # Load the page files into the page database.
         foreach file [::fileutil::findByPattern $contentDir -glob *.md] {
             # May want to change the rawContent preloading behavior for very
             # large (larger than memory) websites.
             set rawContent [read-file $file]
             set variables [lindex \
                     [::tclssg::utils::get-page-variables $rawContent] 0]
+
+            # Skip pages marked as drafts.
             if {[::tclssg::utils::dict-default-get 0 $variables draft]} {
-                # Skip drafts.
                 continue
             }
+
+            # Set the values for empty keys to those of their synonym keys, if
+            # present.
             foreach {varName synonym} $variableSynonyms {
                 if {![dict exists $variables $varName] &&
                         [dict exists $variables $synonym]} {
                     dict set variables $varName [dict get $variables $synonym]
                 }
             }
+
+            # Parse date and modifiedDate into a Unix timestamp plus a format
+            # string.
             set dateScanned [::tclssg::utils::incremental-clock-scan \
                     [::tclssg::utils::dict-default-get {} $variables date]]
             dict set variables dateScanned $dateScanned
@@ -923,6 +934,8 @@ namespace eval tclssg {
                             $variables modifiedDate]]
             dict set variables modifiedDateScanned $modifiedDateScanned
 
+            # Add the current page to the page database with an appropriate
+            # output filename.
             set id_ [tclssg pages add \
                             $file \
                             [file rootname \
@@ -949,20 +962,18 @@ namespace eval tclssg {
             read-template-file $inputDir documentTemplateFilename
         ]
 
-
-        # Create list of pages that are blog posts and blog posts that should be
-        # linked to from the sidebar. This can be replaced with SQL queries.
+        # Create a list of pages that are blog posts and a list of blog posts
+        # that should be linked to in the blog sidebar.
         set blogPostIds [::struct::list filterfor id \
                 [tclssg pages sorted-by-date] \
                 {[tclssg pages get-variable $id blogPost 0]}]
         set sidebarPostIds [::struct::list filterfor id \
                 $blogPostIds \
                 {![tclssg pages get-variable $id hideFromSidebarLinks 0]}]
-
         tclssg pages set-website-config-variable sidebarPostIds $sidebarPostIds
 
-        # Replace the page names with the numerical ids that they correspond in
-        # the config.
+        # Replace the special pages' input filenames in the config with the
+        # numerical ids that they correspond in the database.
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [file join $contentDir \
                     [tclssg pages get-website-config-variable $varName ""]]
@@ -970,24 +981,33 @@ namespace eval tclssg {
                     [tclssg pages input-file-to-id $value]
         }
 
-        # Add a chronological blog index.
+        # Add a chronologically ordered blog index.
         set blogIndexPage \
                 [tclssg pages get-website-config-variable blogIndexPage ""]
         if {$blogIndexPage ne ""} {
             add-article-collection $blogPostIds $blogIndexPage
         }
 
-        # Add pages with blog posts for each tag.
+        # Add pages with blog posts collected for each tag that have it.
         add-tag-pages
-        # Do not process the tag page itself.
-        tclssg page delete [tclssg pages get-website-config-variable tagPage ""]
 
-        # Process page files into HTML output.
+        # Do not process the pages only meant to be used as the "top" pages for
+        # collections: the tag page and the original blog index page. The latter
+        # will feature in the database twice if you don't. Do not forget to
+        # delete the links to them. The original blog index loaded from the disk
+        # will share the outputFile with the first page of the one generated by
+        # add-tag-pages meaning the links meant for one may end up pointing at
+        # the other. This is really less obscure than it may seem.
+        foreach id {blogIndexPage tagPage} {
+            tclssg pages delete $id
+            tclssg pages delete-links-to $id
+        }
+
+        # Process page data into HTML output.
         foreach id [tclssg pages sorted-by-date] {
-            # Links to other pages relative to the current one.
             set outputFile [tclssg pages get-data $id outputFile]
 
-            # Use the previous list of relative links in the current file is
+            # Use the previous list of relative links if the current file is
             # in the same directory as the previous one.
             if {[templating cache retrieve! $outputFile pageLinks]} {
                 tclssg pages copy-links \
@@ -1011,17 +1031,17 @@ namespace eval tclssg {
                 # Store links to other pages and website root path relative to
                 # the current page.
                 foreach {targetId link} $pageLinks {
-                    #puts "$id -> $targetId $link"
                     tclssg pages add-link $id $targetId $link
                 }
             }
+            # Relative path to the root directory of the output.
             tclssg pages set-data $id rootDirPath \
                     [::fileutil::relative \
                             [file dirname $outputFile] \
                             $outputDir]
 
             # Expand templates, first for the article then for the HTML
-            # document. This modifies pages.
+            # document.
             tclssg pages set-data $id cookedContent [
                 templating prepare-content \
                         [tclssg pages get-data $id rawContent] \
@@ -1041,6 +1061,7 @@ namespace eval tclssg {
                 $outputDir \
                 1
 
+        # Generate a sitemap.
         if {[tclssg page get-website-config-variable generateSitemap 0]} {
             set sitemapFile [file join $outputDir sitemap.xml]
             puts "writing sitemap to $sitemapFile"

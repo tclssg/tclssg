@@ -22,3 +22,11 @@ nav.tags > ul {
 li.tag {
     display: inline-block;
 }
+
+li.tag:after {
+    content: ', ';
+}
+
+li.tag:last-child:after {
+    content: '.';
+}

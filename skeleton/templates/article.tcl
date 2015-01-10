@@ -17,7 +17,8 @@ proc format-article-title {} {
     global currentPageId
     global collection
     set title [get-current-page-variable title {}]
-    if {$title ne "" && ![get-current-page-variable hideTitle 0]} {
+    if {$title ne "" && !([get-current-page-variable hideTitle 0] ||
+            [get-current-page-variable hideArticleTitle 0])} {
         set result {<h2 class="page-title">}
         if {[blog-post?] && $collection} {
             append result [format-link $currentPageId 0 $title]

@@ -1,30 +1,28 @@
 #
-# Caius Functional Testing Framework
+# The MIT License (MIT)
 #
-# Copyright (c) 2013, Tobias Koch <tobias.koch@gmail.com>
-# All rights reserved.
+# Copyright (c) 2014 Caius Project
 #
-# Redistribution and use in source and binary forms, with or without modifi-
-# cation, are permitted provided that the following conditions are met:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-# 1. Redistributions of source code must retain the above copyright notice,
-#    this list of conditions and the following disclaimer.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER ``AS IS'' AND ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
-# NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUD-
-# ING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
-# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUD-
-# ING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFT-
-# WARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+
+package require textutil
 
 ## \file
 # \brief Functions for converting markdown to HTML.
@@ -46,14 +44,12 @@ namespace eval Markdown {
     # document. The format of the output is generic XHTML.
     #
     proc convert {markdown} {
-        append markdown \n
-
-        regsub -all {\r\n}  $markdown \n     markdown
-        regsub -all {\r}    $markdown \n     markdown
-        regsub -all {\t}    $markdown {    } markdown
-        set markdown [string trim $markdown]
+        set markdown [regsub {\r\n?} $markdown {\n}]
+        set markdown [::textutil::untabify2 $markdown 4]
+        set markdown [string trimright $markdown]
 
         # COLLECT REFERENCES
+        array unset ::Markdown::_references
         array set ::Markdown::_references [collect_references markdown]
 
         # PROCESS
@@ -74,7 +70,7 @@ namespace eval Markdown {
             set line [lindex $lines $index]
 
             if {[regexp \
-                {^[ ]{0,3}\[(.*?[^\\])\]:\s+(\S+)(?:\s+(([\"\']).*[^\\]\4|\(.*[^\\]\))\s*$)?} \
+                {^[ ]{0,3}\[((?:[^\]]|\[[^\]]*?\])+)\]:\s*(\S+)(?:\s+(([\"\']).*\4|\(.*\))\s*$)?} \
                 $line match ref link title]} \
             {
                 set title [string trim [string range $title 1 end-1]]
@@ -82,7 +78,7 @@ namespace eval Markdown {
                     set next_line [lindex $lines [expr $index + 1]]
 
                     if {[regexp \
-                        {^(?:\s+(?:([\"\']).*[^\\]\1|\(?:.*[^\\]\))\s*$)} \
+                        {^(?:\s+(?:([\"\']).*\1|\(.*\))\s*$)} \
                         $next_line]} \
                     {
                         set title [string range [string trim $next_line] 1 end-1]
@@ -109,7 +105,7 @@ namespace eval Markdown {
         set index    0
         set result   {}
 
-        set ul_match {^[ ]{0,3}(?:\*|-|\+) }
+        set ul_match {^[ ]{0,3}(?:\*(?!\s*\*\s*\*\s*$)|-(?!\s*-\s*-\s*$)|\+) }
         set ol_match {^[ ]{0,3}\d+\. }
 
         # PROCESS MARKDOWN
@@ -124,11 +120,12 @@ namespace eval Markdown {
                     }
                     incr index
                 }
-                {^[ ]{0,3}\[(.*?[^\\])\]:\s+(\S+)(?:\s+(([\"\']).*[^\\]\4|\(.*[^\\]\))\s*$)?} {
+                {^[ ]{0,3}\[(?:[^\]]|\[[^\]]*?\])+\]:\s*\S+(?:\s+(?:([\"\']).*\1|\(.*\))\s*$)?} {
+                    # SKIP REFERENCES
                     set next_line [lindex $lines [expr $index + 1]]
 
                     if {[regexp \
-                        {^(?:\s+(?:([\"\']).*[^\\]\1|\(?:.*[^\\]\))\s*$)} \
+                        {^(?:\s+(?:([\"\']).*\1|\(.*\))\s*$)} \
                         $next_line]} \
                     {
                         incr index
@@ -230,42 +227,50 @@ namespace eval Markdown {
 
                         set line [lindex $lines $index]
                     }
-                    set code_result [string trim [join $code_result \n]]
+                    set code_result [join $code_result \n]
 
-                    append result <pre><code> $code_result </code></pre>
+                    append result <pre><code> $code_result \n </code></pre>
                 }
                 {^[ ]{0,3}(?:\*|-|\+) |^[ ]{0,3}\d+\. } {
                     # LISTS
-                    set list_type ul
-                    set list_match $ul_match
                     set list_result {}
 
+                    # continue matching same list type
                     if {[regexp $ol_match $line]} {
                         set list_type ol
                         set list_match $ol_match
+                    } else {
+                        set list_type ul
+                        set list_match $ul_match
                     }
 
                     set last_line AAA
 
-                    while {$index < $no_lines} {
-                        set item_result {}
-
+                    while {$index < $no_lines} \
+                    {
                         if {![regexp $list_match [lindex $lines $index]]} {
                             break
                         }
 
+                        set item_result {}
                         set in_p 1
                         set p_count 1
 
-                        if {[is_empty_line $last_line]} { incr p_count }
+                        if {[is_empty_line $last_line]} {
+                            incr p_count
+                        }
 
-                        for {set peek $index} {$peek < $no_lines} {incr peek} {
+                        set last_line $line
+                        set line [regsub "$list_match\\s*" $line {}]
+
+                        # prevent recursion on same line
+                        set line [regsub {\A(\d+)\.(\s+)}   $line {\1\\.\2}]
+                        set line [regsub {\A(\*|\+|-)(\s+)} $line {\\\1\2}]
+
+                        lappend item_result $line
+
+                        for {set peek [expr $index + 1]} {$peek < $no_lines} {incr peek} {
                             set line [lindex $lines $peek]
-
-                            if {$peek == $index} {
-                                set line [regsub "$list_match\\s*" $line {}]
-                                set in_p 1
-                            }
 
                             if {[is_empty_line $line]} {
                                 set in_p 0
@@ -421,10 +426,9 @@ namespace eval Markdown {
 
         set re_backticks   {\A`+}
         set re_whitespace  {\s}
-        set re_inlinelink  {\A\!?\[((?:[^\]\\]|\\\])*)\]\s*\(((?:[^\)\\]|\\\))*)\)}
-        set re_reflink     {\A\!?\[((?:[^\]\\]|\\\])*)\]\s*\[((?:[^\]\\]|\\\])*?)\]}
-        set re_urlandtitle {\A(\S+)(?:\s+([\"'])((?:[^\"\'\\]|\\\2)*)\2)?}
-        set re_htmltag     {\A</?\w+\s*>|\A<\w+(?:\s+\w+=\"[^\"]+\")*\s*/?>}
+        set re_inlinelink  {\A\!?\[((?:[^\]]|\[[^\]]*?\])+)\]\s*\(\s*((?:[^\s\)]+|\([^\s\)]+\))+)?(\s+([\"'])(.*)?\4)?\s*\)}
+        set re_reflink     {\A\!?\[((?:[^\]]|\[[^\]]*?\])+)\](?:\s*\[((?:[^\]]|\[[^\]]*?\])*)\])?}
+        set re_htmltag     {\A</?\w+\s*>|\A<\w+(?:\s+\w+=(?:\"[^\"]+\"|\'[^\']+\'))*\s*/?>}
         set re_autolink    {\A<(?:(\S+@\S+)|(\S+://\S+))>}
         set re_comment     {\A<!--.*?-->}
         set re_entity      {\A\&\S+;}
@@ -435,7 +439,7 @@ namespace eval Markdown {
                     # ESCAPES
                     set next_chr [string index $text [expr $index + 1]]
 
-                    if {[string first $next_chr {\`*_\{\}[]()#+-.!}] != -1} {
+                    if {[string first $next_chr {\`*_\{\}[]()#+-.!>}] != -1} {
                         set chr $next_chr
                         incr index
                     }
@@ -449,16 +453,21 @@ namespace eval Markdown {
                         #do nothing
                     } \
                     elseif {[regexp -start $index \
-                        "\\A(\\$chr{1,2})((?:\[^\\$chr\\\\]|\\\\\\$chr)*)\\1" \
+                        "\\A(\\$chr{1,3})((?:\[^\\$chr\\\\]|\\\\\\$chr)*)\\1" \
                         $text m del sub]} \
                     {
-                        if {[string length $del] > 1} {
-                            set tag strong
-                        } else {
-                            set tag em
+                        switch [string length $del] {
+                            1 {
+                                append result "<em>[parse_inline $sub]</em>"
+                            }
+                            2 {
+                                append result "<strong>[parse_inline $sub]</strong>"
+                            }
+                            3 {
+                                append result "<strong><em>[parse_inline $sub]</em></strong>"
+                            }
                         }
 
-                        append result "<$tag>[parse_inline $sub]</$tag>"
                         incr index [string length $m]
                         continue
                     }
@@ -481,46 +490,41 @@ namespace eval Markdown {
                 {!} -
                 {[} {
                     # LINKS AND IMAGES
-                    set ref_type link
-
                     if {$chr eq {!}} {
                         set ref_type img
+                    } else {
+                        set ref_type link
                     }
 
                     set match_found 0
 
-                    if {[regexp -start $index $re_reflink $text m txt lbl]} {
-                        # REFERENCED
-                        incr index [string length $m]
-
-                        if {$lbl eq {}} { set lbl $txt }
-
-                        lassign $::Markdown::_references([string tolower $lbl]) url title
-
-                        set url [html_escape [string trim $url {<> }]]
-                        set txt [parse_inline $txt]
-                        set title [parse_inline $title]
-
-                        set match_found 1
-                    } elseif {[regexp -start $index $re_inlinelink $text m txt url_and_title]} {
+                    if {[regexp -start $index $re_inlinelink $text m txt url ign del title]} {
                         # INLINE
                         incr index [string length $m]
 
-                        set url_and_title [string trim $url_and_title]
-                        set del [string index $url_and_title end]
-
-                        if {[string first $del "\"'"] >= 0} {
-                            regexp $re_urlandtitle $url_and_title m url del title
-                        } else {
-                            set url $url_and_title
-                            set title {}
-                        }
-
                         set url [html_escape [string trim $url {<> }]]
                         set txt [parse_inline $txt]
                         set title [parse_inline $title]
 
                         set match_found 1
+                    } elseif {[regexp -start $index $re_reflink $text m txt lbl]} {
+                        if {$lbl eq {}} {
+                            set lbl [regsub -all {\s+} $txt { }]
+                        }
+
+                        set lbl [string tolower $lbl]
+
+                        if {[info exists ::Markdown::_references($lbl)]} {
+                            lassign $::Markdown::_references($lbl) url title
+
+                            set url [html_escape [string trim $url {<> }]]
+                            set txt [parse_inline $txt]
+                            set title [parse_inline $title]
+
+                            # REFERENCED
+                            incr index [string length $m]
+                            set match_found 1
+                        }
                     }
 
                     # PRINT IMG, A TAG
@@ -550,6 +554,7 @@ namespace eval Markdown {
                         continue
                     } elseif {[regexp -start $index $re_autolink $text m email link]} {
                         if {$link ne {}} {
+                            set link [html_escape $link]
                             append result "<a href=\"$link\">$link</a>"
                         } else {
                             set mailto_prefix "mailto:"
@@ -579,14 +584,6 @@ namespace eval Markdown {
 
                     set chr [html_escape $chr]
                 }
-                {-} {
-                    # EMDASH
-                    if {[string index $text [expr $index + 1]] eq {-}} {
-                        append result {&#8212;}
-                        incr index 2
-                        continue
-                    }
-                }
                 {>} -
                 {'} -
                 "\"" {
@@ -610,7 +607,7 @@ namespace eval Markdown {
 
     ## \private
     proc html_escape {text} {
-        return [string map {<!-- <!-- --> --> & &amp; < &lt; > &gt; ' &apos; \" &quot;} $text]
+        return [string map {& &amp; < &lt; > &gt; \" &quot;} $text]
     }
 }
 

@@ -108,13 +108,17 @@ proc format-tag-cloud {} {
     # Blog tag cloud. For each tag it links to pages that are tagged with it.
     set tagCloud {}
 
-    # Limit the number of tags listed to according to maxTags.
-    set tags [get-tag-list [get-website-config-variable sortTagsBy "name"]]
-    set maxTags [get-website-config-variable maxTags inf]
+    # Limit the number of tags listed to according to maxTagCloudTags.
+    set maxTagCloudTags [get-website-config-variable maxTagCloudTags inf]
+    if {![string is integer -strict $maxTagCloudTags]} {
+        set maxTagCloudTags -1
+    }
+    set tags [get-tag-list \
+            [get-website-config-variable sortTagsBy "name"] $maxTagCloudTags]
 
     append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
 
-    foreach tag [pick-at-most $tags $maxTags] {
+    foreach tag $tags {
         append tagCloud [format-link [get-tag-page $tag 0] 1 $tag]
     }
     append tagCloud {</ul></nav><!-- tag-cloud -->}
@@ -125,7 +129,8 @@ proc format-tag-cloud {} {
 proc format-footer {} {
     # Footer.
     set footer {}
-    if {[get-website-config-variable copyright {}] ne ""} {
+    set copyright [get-website-config-variable copyright {}]
+    if {$copyright ne ""} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }
     if {![get-current-page-variable hideFooter 0]} {
