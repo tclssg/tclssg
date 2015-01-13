@@ -8,6 +8,7 @@ package require msgcat
 package require struct
 package require fileutil
 package require textutil
+package require html
 package require sqlite3
 
 set PROFILE 0
@@ -25,8 +26,13 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.19.3
+    variable version 1.0.0b
     variable debugMode 1
+
+    proc version {} {
+        variable version
+        return $version
+    }
 
     proc configure {{scriptLocation .}} {
         # What follows is the configuration that is generally not supposed to
@@ -57,6 +63,8 @@ namespace eval tclssg {
         set ::tclssg::config(staticDirName) static
         set ::tclssg::config(articleTemplateFilename) article.thtml
         set ::tclssg::config(documentTemplateFilename) bootstrap.thtml
+        set ::tclssg::config(RssArticleTemplateFilename) rss-article.txml
+        set ::tclssg::config(RssDocumentTemplateFilename) rss-feed.txml
         set ::tclssg::config(websiteConfigFilename) website.conf
         set ::tclssg::config(skeletonDir) \
                 [file join $::tclssg::config(scriptLocation) skeleton]
@@ -138,6 +146,7 @@ namespace eval tclssg {
 
                 # Alias commands to be used in templates.
                 foreach {command alias} {
+                    ::tclssg::version                   tclssg-version
                     ::tclssg::utils::replace-path-root  replace-path-root
                     ::tclssg::utils::dict-default-get   dict-default-get
                     ::textutil::indent                  ::textutil::indent
@@ -157,6 +166,7 @@ namespace eval tclssg {
                     ::msgcat::mc                        mc
                     ::msgcat::mcset                     mcset
                     ::msgcat::mclocale                  mclocale
+                    ::html::html_entities               entities
                 } {
                     interp alias templateInterp $alias {} {*}$command
                 }
@@ -349,7 +359,8 @@ namespace eval tclssg {
         # tags -- blog post tags for every blog post.
         # tagPages -- a list of tag pages for every tag. See add-tag-pages.
         proc init {} {
-            sqlite3 tclssg-db :memory:
+            file delete /tmp/debug.db
+            sqlite3 tclssg-db /tmp/debug.db
             # Do not store variable values as columns to allow pages to set
             # custom variables. These variables can then be parsed by templates
             # without changes to the static site generator source itself.
@@ -679,7 +690,7 @@ namespace eval tclssg {
     # store it as $outputFile. The page data corresponding to the ids in
     # pageIds must be present in pages database table.
     proc generate-html-file {outputFile topPageId articleTemplate
-            documentTemplate} {
+            documentTemplate {extraVariables {}}} {
         set inputFiles {}
         set gen {} ;# article content accumulator
         set first 1
@@ -689,7 +700,8 @@ namespace eval tclssg {
         foreach id $pageIds {
             append gen [format-article $id $articleTemplate [expr {!$first}] \
                     [list collectionPageId $topPageId \
-                            collection [expr {!$first}]]]
+                            collection [expr {!$first}] \
+                            {*}$extraVariables]]
             lappend inputFiles [tclssg pages get-data $id inputFile]
             set first 0
         }
@@ -807,7 +819,7 @@ namespace eval tclssg {
     # For each tag add a page that collects the articles tagged with it using
     # add-article-collection.
     proc add-tag-pages {} {
-        set tagPageId [tclssg pages get-website-config-variable tagPage ""]
+        set tagPageId [tclssg pages get-website-config-variable tagPageId ""]
         if {[string is integer -strict $tagPageId]} {
             foreach tag [tclssg pages get-tag-list] {
                 set taggedPages [tclssg pages with-tag $tag]
@@ -926,12 +938,19 @@ namespace eval tclssg {
 
             # Parse date and modifiedDate into a Unix timestamp plus a format
             # string.
+            set clockOptions {}
+            set timezone [tclssg pages get-website-config-variable timezone ""]
+            if {$timezone ne ""} {
+                set clockOptions [list -timezone $timezone]
+            }
             set dateScanned [::tclssg::utils::incremental-clock-scan \
-                    [::tclssg::utils::dict-default-get {} $variables date]]
+                    [::tclssg::utils::dict-default-get {} $variables date] \
+                    $clockOptions]
             dict set variables dateScanned $dateScanned
             set modifiedDateScanned [::tclssg::utils::incremental-clock-scan \
                     [::tclssg::utils::dict-default-get {} \
-                            $variables modifiedDate]]
+                            $variables modifiedDate] \
+                    $clockOptions]
             dict set variables modifiedDateScanned $modifiedDateScanned
 
             # Add the current page to the page database with an appropriate
@@ -972,12 +991,12 @@ namespace eval tclssg {
                 {![tclssg pages get-variable $id hideFromSidebarLinks 0]}]
         tclssg pages set-website-config-variable sidebarPostIds $sidebarPostIds
 
-        # Replace the special pages' input filenames in the config with the
-        # numerical ids that they correspond in the database.
+        # Add numerical ids that correspond to the special pages' input
+        # filenames in the config to the database.
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [file join $contentDir \
                     [tclssg pages get-website-config-variable $varName ""]]
-            tclssg pages set-website-config-variable $varName \
+            tclssg pages set-website-config-variable ${varName}Id \
                     [tclssg pages input-file-to-id $value]
         }
         # Replace the config outputDir, which may be relative to inputDir, with
@@ -985,10 +1004,10 @@ namespace eval tclssg {
         tclssg pages set-website-config-variable outputDir $outputDir
 
         # Add a chronologically ordered blog index.
-        set blogIndexPage \
-                [tclssg pages get-website-config-variable blogIndexPage ""]
-        if {$blogIndexPage ne ""} {
-            add-article-collection $blogPostIds $blogIndexPage
+        set blogIndexPageId \
+                [tclssg pages get-website-config-variable blogIndexPageId ""]
+        if {$blogIndexPageId ne ""} {
+            add-article-collection $blogPostIds $blogIndexPageId
         }
 
         # Add pages with blog posts collected for each tag that have it.
@@ -1000,10 +1019,21 @@ namespace eval tclssg {
         # delete the links to them. The original blog index loaded from the disk
         # will share the outputFile with the first page of the one generated by
         # add-tag-pages meaning the links meant for one may end up pointing at
-        # the other. This is really less obscure than it may seem.
-        foreach id {blogIndexPage tagPage} {
-            tclssg pages delete $id
-            tclssg pages delete-links-to $id
+        # the other. This is really less obscure than it may seem. Updated
+        # blogIndexPageId to point at the actual blogIndexPageId.
+        foreach varName {blogIndexPageId tagPageId} {
+            set id [tclssg pages get-website-config-variable $varName {}]
+            if {$id ne ""} {
+                if {$varName ne "tagPageId"} {
+                    set outputFile [tclssg pages get-data $id outputFile ""]
+                }
+                tclssg pages delete $id
+                tclssg pages delete-links-to $id
+                if {$varName ne "tagPageId"} {
+                    set newId [tclssg pages output-file-to-id $outputFile]
+                    tclssg pages set-website-config-variable $varName $newId
+                }
+            }
         }
 
         # Process page data into HTML output.
@@ -1069,6 +1099,27 @@ namespace eval tclssg {
             set sitemapFile [file join $outputDir sitemap.xml]
             puts "writing sitemap to $sitemapFile"
             ::fileutil::writeFile $sitemapFile [tclssg make-sitemap $outputDir]
+        }
+
+        # Generate an RSS feed.
+        if {[tclssg page get-website-config-variable generateRssFeed 0]} {
+            set rssFeedFilename rss.xml
+            tclssg pages set-website-config-variable \
+                    rssFeedFilename $rssFeedFilename
+            set rssFile [file join $outputDir $rssFeedFilename]
+            set RssArticleTemplate \
+                    [read-template-file $inputDir RssArticleTemplateFilename]
+            set RssDocumentTemplate \
+                    [read-template-file $inputDir RssDocumentTemplateFilename]
+            puts "writing RSS feed to $rssFile"
+            tclssg pages set-variable $blogIndexPageId rss 1
+            generate-html-file \
+                    $rssFile \
+                    [tclssg pages \
+                            get-website-config-variable blogIndexPageId ""] \
+                    $RssArticleTemplate \
+                    $RssDocumentTemplate \
+                    {absoluteLinks 1}
         }
     }
 

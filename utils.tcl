@@ -9,9 +9,14 @@ namespace eval utils {
 
     interp alias {} read-file {} fileutil::cat
 
+    # Join and normalize paths.
+    proc join-path args {
+        return [::fileutil::lexnormalize [file join {*}$args]]
+    }
+
     # Transform a path relative to fromDir into the same path relative to toDir.
     proc replace-path-root {path fromDir toDir} {
-        fileutil::lexnormalize [
+        ::fileutil::lexnormalize [
             file join $toDir [
                 ::fileutil::relative $fromDir [file dirname $path]
             ] [
@@ -187,7 +192,7 @@ namespace eval utils {
     }
 
     # Try several formats for clock scan.
-    proc incremental-clock-scan {date {debug 0}} {
+    proc incremental-clock-scan {date options {debug 0}} {
         set date [regsub -all {[ :.T/]+} $date {-}]
 
         set resultTimeVal {}
@@ -203,16 +208,16 @@ namespace eval utils {
                 puts "$formatScan $date"
             }
             if {![catch {
-                    set scan [clock scan $date -format $formatScan]
+                    set scan [clock scan $date -format $formatScan {*}$options]
                 }]} {
                 # Work around unexpected treatment %Y and %Y-%m dates, see
                 # http://wiki.tcl.tk/2525.
                 set resultTimeVal [clock scan [join [list $date $padding] ""] \
-                        -format {%Y-%m-%d-%H-%M-%S}]
+                        -format {%Y-%m-%d-%H-%M-%S} {*}$options]
                 set resultFormat $formatStandard
                 if {$debug} {
                     puts "match"
-                    puts [clock format $scan]
+                    puts [clock format $scan {*}$options]
                 }
             }
         }

@@ -10,7 +10,9 @@ interp-source messages.tcl
     <meta charset="<%! get-website-config-variable charset UTF-8 %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
+    <% set description [get-website-config-variable description ""]; if {$description ne ""} { %>
+      <meta name="description" content="<%! entities $description %>">
+    <% } %>
     <meta name="author" content="">
 
     <% if {[get-website-config-variable url ""] ne ""} { %>

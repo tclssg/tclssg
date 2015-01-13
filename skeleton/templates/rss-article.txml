@@ -1,0 +1,17 @@
+<%
+
+interp-source common.tcl
+interp-source article.tcl
+
+# http://validator.w3.org/feed/docs/warning/ContainsHTML.html
+set title [get-current-page-variable title {}]
+set date [lindex [get-current-page-variable dateScanned {}] 0]
+
+%>
+    <item>
+        <%! subst-if-not-empty $title {<title><!\[CDATA\[$title\]\]></title>} %>
+        <link><%! absolute-link $currentPageId %></link>
+        <guid><%! absolute-link $currentPageId %></guid>
+        <description><![CDATA[<%! abbreviate-article $content $abbreviate 1 %>]]></description>
+        <%! subst-if-not-empty $date {<pubDate>[clock format $date -format {%a, %d %b %Y %H:%M:%S GMT} -timezone :UTC]</pubDate>}  %>
+    </item>

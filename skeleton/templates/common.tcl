@@ -32,8 +32,8 @@ proc link-or-nothing {websiteVarName} {
 }
 
 set rootDirPath [get-page-data $currentPageId rootDirPath]
-set indexLink [link-or-nothing indexPage]
-set blogIndexLink [link-or-nothing blogIndexPage]
+set indexLink [link-or-nothing indexPageId]
+set blogIndexLink [link-or-nothing blogIndexPageId]
 
 proc with-cache script {
     global currentPageId
@@ -57,4 +57,15 @@ proc format-link {id {li 1} {customTitle ""}} {
         set linkHtml "<li>$linkHtml</li>"
     }
     return $linkHtml
+}
+
+proc subst-if-not-empty args {
+    set values [lrange $args 0 end-1]
+    set str [lindex $args end]
+    foreach value $values {
+        if {$value eq ""} {
+            return ""
+        }
+    }
+    return [uplevel 1 [list subst $str]]
 }

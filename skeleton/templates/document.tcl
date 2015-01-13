@@ -55,7 +55,7 @@ proc format-document-title {} {
     lappend result $websiteTitle
 
 
-    return [join $result $sep]
+    return [entities [join $result $sep]]
 }
 
 

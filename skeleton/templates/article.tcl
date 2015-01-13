@@ -16,7 +16,7 @@ proc format-article-title {} {
     # Article title.
     global currentPageId
     global collection
-    set title [get-current-page-variable title {}]
+    set title [entities [get-current-page-variable title {}]]
     if {$title ne "" && !([get-current-page-variable hideTitle 0] ||
             [get-current-page-variable hideArticleTitle 0])} {
         set result {<h2 class="page-title">}
@@ -76,13 +76,18 @@ proc format-article-date {} {
     return $result
 }
 
-proc abbreviate-article {content {abbreviate 0}} {
+proc abbreviate-article {content {abbreviate 0} {absoluteLink 0}} {
     global currentPageId
+    if {$absoluteLink} {
+        set link [absolute-link $currentPageId]
+    } else {
+        set link [relative-link $currentPageId]
+    }
     if {$abbreviate} {
         if {[regexp {(.*?)<!-- *more *-->} $content match content]} {
             append content \
                     [format [get-current-page-variable moreText "(...)"] \
-                    [relative-link $currentPageId]]
+                    $link]
         }
     }
     return $content
@@ -91,8 +96,6 @@ proc abbreviate-article {content {abbreviate 0}} {
 
 proc format-article-tag-list {} {
     # Page tag list.
-    set tagPage [get-website-config-variable tagPage {}]
-
     global currentPageId
     set tagListHtml {}
 

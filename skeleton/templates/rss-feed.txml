@@ -1,0 +1,23 @@
+<%
+
+interp-source common.tcl
+interp-source document.tcl
+interp-source messages.tcl
+
+set copyright [entities [get-website-config-variable copyright {}]]
+
+%><?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+
+<channel>
+<atom:link href="<%! get-website-config-variable url {} %><%! get-website-config-variable rssFeedFilename {} %>" rel="self" type="application/rss+xml" />
+
+<title><%! get-website-config-variable websiteTitle {} %></title>
+<link><%! get-website-config-variable url {} %></link>
+<description><%! entities [get-website-config-variable description {}] %></description>
+<%! subst-if-not-empty $copyright {<copyright><!\[CDATA\[$copyright\]\]></copyright>} %>
+<language><%! lindex [split [get-website-config-variable locale en_US] _] 0 %></language>
+<generator>Tclssg <%! tclssg-version %></generator>
+<%= $content %>
+</channel>
+</rss>

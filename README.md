@@ -300,6 +300,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | pageVariables | `{ hideSidebarNote 1 title {Untitled page} }` | The default values for page variables. If a page doesn't set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | copyright | `{Copyright © 2015 You}` | A copyright line to display in the footer. |
 | comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on pages that have `showUserComments` set to `1`. Engine can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
+| timezone | `:UTC`, `{}` | Leave empty to use your computer's the local timezone. |
 
 Like page settings all 0/1 website settings default to `0`.
 
