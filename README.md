@@ -250,6 +250,7 @@ The following variables have an effect for any page they are set on:
 | draft | 0/1 | Do not process the page at all. Useful for keeping drafts in the same directory as published pages. |
 | hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index. |
 | locale | `en_US` | The page's language. The value of `locale` is used to internationalize small bits of text like "page #5" used in templates. Translations of each message to a given locale can be defined by copying the file `skeleton/templates/messages.tcl` to `templates/messages.tcl` in your `inputDir` and adding the translations there. |
+| favicon | `favicon.ico` | [Favicon](https://en.wikipedia.org/wiki/Favicon) filename and path relative to `outputDir`. |
 
 These variables only affect blog posts:
 
@@ -279,7 +280,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `title` is `{Hello!}` .  |
-| url | `{http://example.com/}` | The base URL for your website. It is currently only used for sitemap generation. The trailing slash is mandatory. |
+| url | `{http://example.com/}` | The base URL for your website. It is currently only used for sitemap generation and for canonical URLs. The trailing slash is mandatory. |
 | generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable `hideFromCollections`). |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |

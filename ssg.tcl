@@ -19,13 +19,13 @@ if {$PROFILE} {
 # Code conventions: Procedures ("procs") have names-like-this; variables have
 # namesLikeThis. "!" at the end of a proc's name means the proc modifies one or
 # more of the variables it is passed by name (e.g., "unqueue!"). "?" in the same
-# position means it returns a boolean value.
+# position means it returns a true/false value.
 
 namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 0.19.2
+    variable version 0.19.3
     variable debugMode 1
 
     proc configure {{scriptLocation .}} {
@@ -140,7 +140,7 @@ namespace eval tclssg {
                 foreach {command alias} {
                     ::tclssg::utils::replace-path-root  replace-path-root
                     ::tclssg::utils::dict-default-get   dict-default-get
-                    textutil::indent                    textutil::indent
+                    ::textutil::indent                  ::textutil::indent
                     ::tclssg::utils::slugify            slugify
                     ::tclssg::utils::choose-dir         choose-dir
                     puts                                puts
@@ -980,6 +980,9 @@ namespace eval tclssg {
             tclssg pages set-website-config-variable $varName \
                     [tclssg pages input-file-to-id $value]
         }
+        # Replace the config outputDir, which may be relative to inputDir, with
+        # the actual value of outputDir, which is not.
+        tclssg pages set-website-config-variable outputDir $outputDir
 
         # Add a chronologically ordered blog index.
         set blogIndexPage \

@@ -8,6 +8,15 @@ proc get-current-page-variable {name default} {
     return [get-page-variable $currentPageId $name $default]
 }
 
+proc absolute-link {id} {
+    set url [get-website-config-variable url ""]
+    if {$url eq ""} {
+        error "using absolute-link requires that url be set in website config"
+    }
+    set outputDir [get-website-config-variable outputDir ""]
+    return $url[replace-path-root [get-page-data $id outputFile] $outputDir ""]
+}
+
 proc relative-link {id} {
     global currentPageId
     return [get-page-link $currentPageId $id]

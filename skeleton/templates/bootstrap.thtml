@@ -12,7 +12,19 @@ interp-source messages.tcl
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <!-- <link rel="icon" href="<%= $rootDirPath %>/favicon.ico"> -->
+
+    <% if {[get-website-config-variable url ""] ne ""} { %>
+      <link ref="canonical" href="<%! absolute-link $currentPageId %>">
+    <% } %>
+    <% set prevPageId [get-current-page-variable prevPage ""]; if {$prevPageId ne ""} { %>
+      <link rel="prev" href="<%! relative-link $prevPageId %>">
+    <% } %>
+    <% set nextPageId [get-current-page-variable nextPage ""]; if {$nextPageId ne ""} { %>
+      <link rel="next" href="<%! relative-link $nextPageId %>">
+    <% } %>
+    <% set favicon [get-current-page-variable favicon ""]; if {$favicon ne ""} { %>
+      <link rel="icon" href="<%= $rootDirPath %>/<%= $favicon %>">
+    <% } %>
 
     <title><%! format-document-title %></title>
 
