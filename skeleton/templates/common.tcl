@@ -3,6 +3,8 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
+set rfc822 {%a, %d %b %Y %H:%M:%S GMT}
+
 proc get-current-page-variable {name default} {
     global currentPageId
     return [get-page-variable $currentPageId $name $default]

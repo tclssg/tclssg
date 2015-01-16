@@ -359,8 +359,7 @@ namespace eval tclssg {
         # tags -- blog post tags for every blog post.
         # tagPages -- a list of tag pages for every tag. See add-tag-pages.
         proc init {} {
-            file delete /tmp/debug.db
-            sqlite3 tclssg-db /tmp/debug.db
+            sqlite3 tclssg-db :memory:
             # Do not store variable values as columns to allow pages to set
             # custom variables. These variables can then be parsed by templates
             # without changes to the static site generator source itself.
@@ -530,7 +529,6 @@ namespace eval tclssg {
             }]
             return $result
         }
-
 
         # Procs for working with the table "links".
 
@@ -742,12 +740,12 @@ namespace eval tclssg {
 
     # Add one page or a series of pages that collect the articles of those pages
     # that are listed in pageIds. The number of pages added equals ([llength
-    # pageIds] / $blogPostsPerFile) rounded up to the nearest whole number. Page
+    # pageIds] / $blogPostsPerPage) rounded up to the nearest whole number. Page
     # settings are taken from the page $topPageId and its content is prepended
     # to every output page. Used for making the blog index page.
     proc add-article-collection {pageIds topPageId} {
-        set blogPostsPerFile [tclssg pages get-website-config-variable \
-                blogPostsPerFile 10]
+        set blogPostsPerPage [tclssg pages get-website-config-variable \
+                blogPostsPerPage 10]
         set i 0
         set currentPageArticles {}
         set pageNumber 0
@@ -765,7 +763,7 @@ namespace eval tclssg {
         foreach id $pageIds {
             lappend currentPageArticles $id
             # If there is enough posts for a page or this is the last post...
-            if {($i == $blogPostsPerFile - 1) ||
+            if {($i == $blogPostsPerPage - 1) ||
                     ($id eq [lindex $pageIds end])} {
 
                 set newInputFile \
@@ -1112,14 +1110,13 @@ namespace eval tclssg {
             set RssDocumentTemplate \
                     [read-template-file $inputDir RssDocumentTemplateFilename]
             puts "writing RSS feed to $rssFile"
-            tclssg pages set-variable $blogIndexPageId rss 1
+            tclssg pages set-website-config-variable buildDate [clock seconds]
             generate-html-file \
                     $rssFile \
                     [tclssg pages \
                             get-website-config-variable blogIndexPageId ""] \
                     $RssArticleTemplate \
-                    $RssDocumentTemplate \
-                    {absoluteLinks 1}
+                    $RssDocumentTemplate
         }
     }
 

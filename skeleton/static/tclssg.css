@@ -2,6 +2,15 @@ body {
     font-size: 18px;
 }
 
+.author {
+    margin: 0;
+}
+
+.page_info {
+    display: block;
+    margin-bottom: 10px;
+}
+
 :target {
    background-color: #ffffaa;
 }

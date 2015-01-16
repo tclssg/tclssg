@@ -2,20 +2,19 @@
 
 Tclsgg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
-**Warning! Tclssg is still in early development and may change rapidly in incompatible ways.**
-
-**As of version 0.19.2 minor changes that break existing template code and configuration files should still be expected before the codebase stabilizes.**
+**Warning! Tclssg is currently in beta and may still change in incompatible ways.**
 
 Features
 --------
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](#templating);
-* Distinguishes between plain old pages and blog posts [1];
-* Generates sitemaps.
-* Output is valid HTML5 and CSS level 3;
-* Can deploy over FTP with a single built-in command;
-* Can deploy over SCP or other protocols with a [custom deployment command](#using-deploycustom);
-* Supports external comment engines (currently: Disqus);
+* Plain old pages and blog posts [1];
+* RSS feeds;
+* SEO and usability features: sitemaps, canonical and previous/next links.
+* Valid HTML5 and CSS level 3 output;
+* Deployment over FTP with a single built-in command;
+* Deployment over SCP or other protocols with a [custom deployment command](#using-deploycustom);
+* Support for external comment engines (currently: Disqus);
 * All links generated are relative links making the generated HTML suitable to be viewed locally;
 * [Reasonably fast](https://github.com/dbohdan/tclssg/wiki/Performance);
 * Few dependencies.
@@ -33,7 +32,7 @@ Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, OS X and Windows XP/7
 
 To use it you will need Tcl 8.5 or newer, Tcllib and SQLite version 3 bindings for Tcl installed.
 
-To install Tcl and Tcllib on **Debian/Ubuntu** run the following command:
+To install those on **Debian/Ubuntu** run the following command:
 
     sudo apt-get install tcl tcllib libsqlite3-tcl
 
@@ -67,8 +66,8 @@ Glossary
 | Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content based on which HTML output is produced. When a page from the input directory is processed by Tclssg an HTML file is placed under the same relative path in the output directory with the same file name. For example, placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
 | Blog post | Blog posts are pages with special features enabled that help navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are presented in a chronological order  (based on their the `date` variables) on the blog index page. The order in which the links to blog posts appear on the sidebar is also determined by the posts' dates. The sidebar, tags and other features can be selectively disabled for an individual blog post. |
 | Index | The home/landing page of your website. Typically `index.md`. |
-| Blog index | The blog index is a page or a set of pages that present all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerFile` (see section ["Website settings"](#website-settings)). |
-| Tag page | A tag page is a page that shows all blog posts that have a certain tag in a chronological order. When you build your static website a tag page is created for each tag. Like the blog index a tag page will be broken into separate HTML files according the website setting `blogPostsPerFile`. The website setting `tagPage` (normally set to `blog/tag.md`) determines what page is used as the basis for tag pages. If you have a tag `space` then the content of `blog/tag.md` will be copied to `blog/tag-space.md`  |
+| Blog index | The blog index is a page or a set of pages that present all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerPage` (see section ["Website settings"](#website-settings)). |
+| Tag page | A tag page is a page that shows all blog posts that have a certain tag in a chronological order. When you build your static website a tag page is created for each tag. Like the blog index a tag page will be broken into separate HTML files according the website setting `blogPostsPerPage`. The website setting `tagPage` (normally set to `blog/tag.md`) determines what page is used as the basis for tag pages. If you have a tag `space` then the content of `blog/tag.md` will be copied to `blog/tag-space.md`  |
 | Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in the page file and the website config file. Tclssg's templating works in two stages: first, input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template (`article.thtml` by default) then one or several articles are inserted into the document template (`bootstrap.thtml`), one for normal pages and blog posts and several for the blog index. |
 | Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
 | Variable | In Tclssg a variable specifies one setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies the corresponding setting for just that individual page. When a variable is set the configuration ("config") file it specifies a setting for the website as a whole. |
@@ -201,17 +200,17 @@ To use this feature first set `expandMacrosInPages` to `1` and put `<% interp-so
     {
         title {Hello!}
     }
-    <% interp-source img-procs.tcl %>
+    <% interp-source img.tcl %>
 
 Now you can use the command
 
-    <%! local-image picture.png "Alt text" %>`
+    <%! img-local picture.png "Alt text" %>`
 
 to include an image from `inputDir/static/images` (`inputDir/static/images/picture.png` in this case). This command generates the same HTML markup as seen above.
 
 You can also use
 
-    <%! image http://example.com/image.png "Alt text" %>
+    <%! img http://example.com/image.png "Alt text" %>
 
 to make images sourced from anywhere responsive.
 
@@ -280,11 +279,14 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `title` is `{Hello!}` .  |
-| url | `{http://example.com/}` | The base URL for your website. It is currently only used for sitemap generation and for canonical URLs. The trailing slash is mandatory. |
+| url | `{http://example.com/}` | The base URL of your static website. It is used for sitemap generation and absolute links such as those in the RSS feed or canonical URLs. The trailing slash is mandatory. |
 | generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable `hideFromCollections`). |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
 | articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
 | documentTemplateFilename | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
+| RssArticleTemplateFilename | `rss-article.txml` | |
+| RssDocumentTemplateFilename | `rss-feed.txml` | |
+| RssFeedFilename | `rss.xml` | |
 | deployCopy | `{ path /var/www/ }` | The `path` sets the location to copy the output to when the command `deploy-copy` is run. |
 | deployCustom | | See [the corresponding section](#using-deploycustom) below. |
 | deployFtp | `{ server {ftp.hosting.example.net} port 21 user deployment password {long password} path htdocs }` | FTP deployment settings: the hostname and port of the server to upload the static website to, the FTP user name and password and the destination path on the server. The port is optional and defaults to 21 but all the other settings are mandatory. The password is not shown in Tclssg's logs. |
@@ -292,7 +294,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | charset | `utf-8` | The pages' character set. |
 | indexPage | `{index.md}` | The index page. |
 | blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If your blog index is `blog/index.md` the processed content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
-| blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed in one HTML file of the blog index. |
+| blogPostsPerPage | 10 | The maximum number of the blog posts that can be placed on one collection page (i.e., in one HTML file of the blog index page or a tag page). |
 | tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
 | maxTagCloudTags | `10`, `-1`, `inf` | How many tags to list in the sidebar. This is intended to be used with `sortTagsBy` set to `frequency` to only display the most common tags when you have a lot of them. Negative numbers or a non-number indicate no limit. |
@@ -335,7 +337,7 @@ Sample use session
         blogIndexPage blog/index.md
         tagPage blog/tag.md
         outputDir ../output
-        blogPostsPerFile 10
+        blogPostsPerPage 10
         pageVariables {
             moreText {(<a href="%s">read more</a>)}
             showUserComments 0
@@ -389,7 +391,7 @@ Sample use session
         blogIndexPage blog/index.md
         tagPage blog/tag.md
         outputDir ../output
-        blogPostsPerFile 10
+        blogPostsPerPage 10
         pageVariables {
             moreText {(<a href="%s">read more</a>)}
             showUserComments 0

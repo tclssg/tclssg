@@ -5,7 +5,7 @@ interp-source document.tcl
 interp-source messages.tcl
 
 set copyright [entities [get-website-config-variable copyright {}]]
-
+set buildDate [get-website-config-variable buildDate {}]
 %><?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
@@ -15,8 +15,9 @@ set copyright [entities [get-website-config-variable copyright {}]]
 <title><%! get-website-config-variable websiteTitle {} %></title>
 <link><%! get-website-config-variable url {} %></link>
 <description><%! entities [get-website-config-variable description {}] %></description>
-<%! subst-if-not-empty $copyright {<copyright><!\[CDATA\[$copyright\]\]></copyright>} %>
 <language><%! lindex [split [get-website-config-variable locale en_US] _] 0 %></language>
+<%= $copyright ne "" ? "<copyright><!\[CDATA\[$copyright\]\]></copyright>" : "" %>
+<%= $buildDate ne "" ? "<lastBuildDate>[clock format $buildDate -format $rfc822 -timezone :UTC]</lastBuildDate>" : "" %>
 <generator>Tclssg <%! tclssg-version %></generator>
 <%= $content %>
 </channel>

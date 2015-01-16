@@ -4,11 +4,12 @@ interp-source common.tcl
 interp-source article.tcl
 
 %>
-<%  set headerContent "[format-article-title][format-article-author][format-article-date]"
-    if {!(($content eq "") && ($headerContent eq ""))} { %>
+<%  set title [format-article-title]
+    set headerBlock "[format-article-author][format-article-date]"
+    if {($content ne "") || ($title ne "") || ($headerBlock ne "")} { %>
     <article>
         <header>
-            <%= $headerContent %>
+            <%= $title %><%= $headerBlock ne "" ? "<span class=\"page_info\">$headerBlock</span>" : "" %>
         </header>
         <%! abbreviate-article $content $abbreviate %>
         <%! format-article-tag-list %>

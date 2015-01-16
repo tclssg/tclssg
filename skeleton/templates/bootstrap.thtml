@@ -27,6 +27,9 @@ interp-source messages.tcl
     <% set favicon [get-current-page-variable favicon ""]; if {$favicon ne ""} { %>
       <link rel="icon" href="<%= $rootDirPath %>/<%= $favicon %>">
     <% } %>
+    <% if {[blog-post?] && [get-website-config-variable generateRssFeed 0]} { %>
+      <link rel="<%= $currentPageId eq [get-website-config-variable blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-variable url "" %><%! get-website-config-variable rssFeedFilename rss.xml %>">
+    <% } %>
 
     <title><%! format-document-title %></title>
 
@@ -57,6 +60,11 @@ interp-source messages.tcl
             <li><a href="<%! subst $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
+        <% if {[blog-post?] && [get-website-config-variable generateRssFeed 0]} { %>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a rel="<%= $currentPageId eq [get-website-config-variable blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-variable url "" %><%! get-website-config-variable rssFeedFilename rss.xml %>">RSS</a></li>
+          </ul>
+        <% } %>
         </div><!--/.nav-collapse -->
       </div>
     </div>

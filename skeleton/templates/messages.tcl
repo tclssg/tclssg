@@ -6,4 +6,6 @@
 mclocale [get-page-variable $currentPageId locale en_US]
 #mcset en_US {Tagged: %s} {Tagged: %s}
 #mcset en_US {Posts tagged "%s"} {Posts tagged "%s"}
-#mcset en_US {page %s} page %s}
+#mcset en_US {page %s} {page %s}
+#mcset en_US {Published %s} {x %s}
+#mcset en_US {Published %s, updated %s} {y %s,updated %s}

@@ -62,18 +62,30 @@ proc format-date {dateClass dateVarName scannedDateVarName} {
 
 proc format-article-date {} {
     # Article creation and modification date.
-    set result ""
+    set resultList {}
     if {![get-current-page-variable hideDate 0]} {
-        append result [format-date date date dateScanned]
-        if {$result ne ""} {
-            append result "<br>"
+        set dateF [format-date date date dateScanned]
+        if {$dateF ne ""} {
+            lappend resultList $dateF
         }
         if {![get-current-page-variable hideModifiedDate 0]} {
-            append result \
-                    [format-date modified modifiedDate modifiedDateScanned]
+            set modDateF [format-date modified modifiedDate modifiedDateScanned]
+            if {$modDateF ne ""} {
+                lappend resultList $modDateF
+            }
         }
     }
-    return $result
+    switch -exact -- [llength $resultList] {
+        0 {
+            return ""
+        }
+        1 {
+            return [format [mc "Published %s"] $dateF]
+        }
+        default {
+            return [format [mc "Published %s, updated %s"] $dateF $modDateF]
+        }
+    }
 }
 
 proc abbreviate-article {content {abbreviate 0} {absoluteLink 0}} {
