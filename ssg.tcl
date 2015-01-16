@@ -1370,7 +1370,19 @@ namespace eval tclssg {
 
     # This proc is run if Tclssg is the main script.
     proc main {argv0 argv} {
-        tclssg configure [file dirname $argv0]
+	# Note: Deal with symbolic links pointing to the actual
+	# location of the application to ensure that we look for the
+	# supporting code in the actual location, instead from where
+	# the link is.
+	#
+	# Note further the trick with ___; it ensures that the
+	# resolution of symlinks also applies to the nominally last
+	# segment of the path, i.e. the application name itself. This
+	# trick then requires the second 'file dirname' to strip off
+	# the ___ again after resolution.
+
+        tclssg configure \
+	    [file dirname [file dirname [file normalize $argv0/___]]]
 
         # Version.
         catch {
