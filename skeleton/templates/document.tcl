@@ -143,7 +143,7 @@ proc format-comments {} {
     set commentsConfig [get-website-config-variable comments {}]
     set engine [dict-default-get none $commentsConfig engine]
     set result {}
-    if {[get-current-page-variable showUserComments 0]} {
+    if {![get-current-page-variable hideUserComments 0]} {
         switch -nocase -- $engine {
             disqus { set result [format-comments-disqus] }
             none {}
@@ -151,7 +151,11 @@ proc format-comments {} {
             default { error "comments engine $engine not found" }
         }
     }
-    return "<div class=\"comments\">$result</div>"
+    if {$result eq ""} {
+        return ""
+    } else {
+        return "<div class=\"comments\">$result</div>"
+    }
 }
 
 proc format-comments-disqus {} {

@@ -16,16 +16,17 @@ proc format-article-title {} {
     # Article title.
     global currentPageId
     global collection
+    global collectionTopArticle
     set title [entities [get-current-page-variable title {}]]
     if {$title ne "" && !([get-current-page-variable hideTitle 0] ||
             [get-current-page-variable hideArticleTitle 0])} {
-        set result {<h2 class="page-title">}
-        if {[blog-post?] && $collection} {
+        set result {<h1 class="page-title">}
+        if {[blog-post?] && $collection && !$collectionTopArticle} {
             append result [format-link $currentPageId 0 $title]
         } else {
             append result $title
         }
-        append result {</h2>}
+        append result {</h1>}
         return $result
     } else {
         return ""

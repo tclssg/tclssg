@@ -6,7 +6,7 @@ interp-source article.tcl
 set title [get-current-page-variable title {}]
 set date [lindex [get-current-page-variable dateScanned {}] 0]
 
-%>
+%><% if {$collection && !$collectionTopArticle} { %>
     <item>
         <%= $title ne "" ? "<title><!\[CDATA\[$title\]\]></title>" : "" %>
         <link><%! absolute-link $currentPageId %></link>
@@ -14,3 +14,4 @@ set date [lindex [get-current-page-variable dateScanned {}] 0]
         <description><![CDATA[<%! abbreviate-article $content $abbreviate 1 %>]]></description>
         <%= $date ne "" ? "<pubDate>[clock format $date -format $rfc822 -timezone :UTC]</pubDate>" :  "" %>
     </item>
+<% } %>

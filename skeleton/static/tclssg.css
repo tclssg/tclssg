@@ -2,6 +2,10 @@ body {
     font-size: 18px;
 }
 
+header > h1 {
+    font-size: 30px;
+}
+
 .author {
     margin: 0;
 }

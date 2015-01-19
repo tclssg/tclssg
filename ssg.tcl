@@ -49,12 +49,12 @@ namespace eval tclssg {
         #set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
         set ::tclssg::config(markdownProcessor) :internal:
 
+        global auto_path
+        lappend auto_path [file join $::tclssg::config(scriptLocation) external]
+        puts $auto_path
+
         # Source Markdown if needed.
         if {$::tclssg::config(markdownProcessor) eq ":internal:"} {
-            set dir [file join $::tclssg::config(scriptLocation) \
-                    external markdown]
-            source [file join $dir pkgIndex.tcl]
-            unset dir
             package require Markdown
         }
 
@@ -63,8 +63,8 @@ namespace eval tclssg {
         set ::tclssg::config(staticDirName) static
         set ::tclssg::config(articleTemplateFilename) article.thtml
         set ::tclssg::config(documentTemplateFilename) bootstrap.thtml
-        set ::tclssg::config(RssArticleTemplateFilename) rss-article.txml
-        set ::tclssg::config(RssDocumentTemplateFilename) rss-feed.txml
+        set ::tclssg::config(rssArticleTemplateFilename) rss-article.txml
+        set ::tclssg::config(rssDocumentTemplateFilename) rss-feed.txml
         set ::tclssg::config(websiteConfigFilename) website.conf
         set ::tclssg::config(skeletonDir) \
                 [file join $::tclssg::config(scriptLocation) skeleton]
@@ -576,6 +576,14 @@ namespace eval tclssg {
                         $default \
                         [get-website-config-variable pageVariables {}] \
                         $name]
+                # Avoid an infinite loop when recursing by disabling failover.
+                set isBlogPost [get-variable $id blogPost 0 0]
+                if {$isBlogPost} {
+                    set default [::tclssg::utils::dict-default-get \
+                            $default \
+                            [get-website-config-variable blogPostVariables {}] \
+                            $name]
+                }
             }
 
             set result [lindex [tclssg-db eval {
@@ -695,10 +703,14 @@ namespace eval tclssg {
 
         set pageIds [list $topPageId \
                 {*}[tclssg pages get-data $topPageId articlesToAppend {}]]
+        set isCollection [expr {[llength $pageIds] > 1}]
+
         foreach id $pageIds {
             append gen [format-article $id $articleTemplate [expr {!$first}] \
                     [list collectionPageId $topPageId \
-                            collection [expr {!$first}] \
+                            collectionTopArticle \
+                                    [expr {$isCollection && $first}] \
+                            collection $isCollection \
                             {*}$extraVariables]]
             lappend inputFiles [tclssg pages get-data $id inputFile]
             set first 0
@@ -740,12 +752,12 @@ namespace eval tclssg {
 
     # Add one page or a series of pages that collect the articles of those pages
     # that are listed in pageIds. The number of pages added equals ([llength
-    # pageIds] / $blogPostsPerPage) rounded up to the nearest whole number. Page
+    # pageIds] / $blogPostsPerFile) rounded up to the nearest whole number. Page
     # settings are taken from the page $topPageId and its content is prepended
     # to every output page. Used for making the blog index page.
     proc add-article-collection {pageIds topPageId} {
-        set blogPostsPerPage [tclssg pages get-website-config-variable \
-                blogPostsPerPage 10]
+        set blogPostsPerFile [tclssg pages get-website-config-variable \
+                blogPostsPerFile 10]
         set i 0
         set currentPageArticles {}
         set pageNumber 0
@@ -763,7 +775,7 @@ namespace eval tclssg {
         foreach id $pageIds {
             lappend currentPageArticles $id
             # If there is enough posts for a page or this is the last post...
-            if {($i == $blogPostsPerPage - 1) ||
+            if {($i == $blogPostsPerFile - 1) ||
                     ($id eq [lindex $pageIds end])} {
 
                 set newInputFile \
@@ -871,7 +883,11 @@ namespace eval tclssg {
             error "can not generate the sitemap without a base URL specified"
         }
         foreach id [tclssg pages sorted-by-date] {
-            if {![tclssg pages get-variable $id hideFromCollections 0]} {
+            # Exclude from the site map pages that are hidden from from
+            # collections, blog index page beyond the first and tag pages.
+            if {(![tclssg pages get-variable $id hideFromCollections 0]) &&
+                    ([tclssg pages get-variable $id prevPage ""] eq "") &&
+                    ([tclssg pages get-variable $id tagPageTag ""] eq "")} {
                 set date [tclssg pages get-variable $id modifiedDateScanned ""]
                 if {![string is integer -strict [lindex $date 0]]} {
                     # No valid modifiedDate, so will just use the sorting date
@@ -1105,18 +1121,18 @@ namespace eval tclssg {
             tclssg pages set-website-config-variable \
                     rssFeedFilename $rssFeedFilename
             set rssFile [file join $outputDir $rssFeedFilename]
-            set RssArticleTemplate \
-                    [read-template-file $inputDir RssArticleTemplateFilename]
-            set RssDocumentTemplate \
-                    [read-template-file $inputDir RssDocumentTemplateFilename]
+            set rssArticleTemplate \
+                    [read-template-file $inputDir rssArticleTemplateFilename]
+            set rssDocumentTemplate \
+                    [read-template-file $inputDir rssDocumentTemplateFilename]
             puts "writing RSS feed to $rssFile"
             tclssg pages set-website-config-variable buildDate [clock seconds]
             generate-html-file \
                     $rssFile \
                     [tclssg pages \
                             get-website-config-variable blogIndexPageId ""] \
-                    $RssArticleTemplate \
-                    $RssDocumentTemplate
+                    $rssArticleTemplate \
+                    $rssDocumentTemplate
         }
     }
 
@@ -1322,17 +1338,8 @@ namespace eval tclssg {
         proc open {inputDir outputDir {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
-            package require platform
-            set platform [::platform::generic]
-
-            set openCommand [
-                switch -glob -- $platform {
-                    *win* { lindex {cmd /c start ""} }
-                    *osx* { lindex open }
-                    default { lindex xdg-open }
-                }
-            ] ;# The default is the freedesktop.org open command for *nix.
-            exec -- {*}$openCommand [
+            package require browse
+            ::browse::url [
                 file rootname [
                     file join $outputDir [
                         ::tclssg::utils::dict-default-get index.md \

@@ -10,10 +10,9 @@ interp-source messages.tcl
     <meta charset="<%! get-website-config-variable charset UTF-8 %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <% set description [get-website-config-variable description ""]; if {$description ne ""} { %>
+    <% set description [get-current-page-variable description ""]; if {$description ne ""} { %>
       <meta name="description" content="<%! entities $description %>">
     <% } %>
-    <meta name="author" content="">
 
     <% if {[get-website-config-variable url ""] ne ""} { %>
       <link ref="canonical" href="<%! absolute-link $currentPageId %>">
@@ -30,7 +29,14 @@ interp-source messages.tcl
     <% if {[blog-post?] && [get-website-config-variable generateRssFeed 0]} { %>
       <link rel="<%= $currentPageId eq [get-website-config-variable blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-variable url "" %><%! get-website-config-variable rssFeedFilename rss.xml %>">
     <% } %>
-
+    <% if {($prevPageId ne "") ||
+      ([get-current-page-variable tagPageTag ""] ne "") ||
+      [get-current-page-variable noindex 0]} {
+      # Tell search engines to not the blog index beyond the first page or
+      # tag pages.
+    %>
+      <meta name="robots" content="noindex">
+    <% } %>
     <title><%! format-document-title %></title>
 
     <!-- Bootstrap core CSS -->
@@ -75,20 +81,20 @@ interp-source messages.tcl
         <% if {[sidebar-note?] ||
                   ([blog-post?] &&
                       ([sidebar-links?] || [tag-cloud?]))} { %>
-          <div class="col-md-8">
+          <section class="col-md-8">
             <%= $content %>
             <%! format-prev-next-links {« Newer posts} {Older posts »} %>
-          </div>
-          <div class="col-md-4 well">
+          </section>
+          <div class="col-md-4 well content">
             <%! if {[sidebar-note?]} format-sidebar-note %>
             <%! if {[sidebar-links?]} { with-cache format-sidebar-links } %>
             <%! if {[tag-cloud?]} { with-cache format-tag-cloud } %>
           </div>
          <% } else { %>
-          <div class="col-md-12">
+          <section class="col-md-12 content">
             <%= $content %>
             <%! format-prev-next-links {« Newer posts} {Older posts »} %>
-          </div>
+          </section>
         <%  }
         %>
         <div>
@@ -100,12 +106,11 @@ interp-source messages.tcl
       <%! format-comments %>
 
 
-      <div class="footer">
+      <footer class="footer">
         <%! format-footer %>
-      </div>
+      </footer>
 
-    </div> <!-- /container -->
-
+    </div><!-- /container -->
 
 
     <!-- Bootstrap core JavaScript

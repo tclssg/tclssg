@@ -14,7 +14,7 @@ set buildDate [get-website-config-variable buildDate {}]
 
 <title><%! get-website-config-variable websiteTitle {} %></title>
 <link><%! get-website-config-variable url {} %></link>
-<description><%! entities [get-website-config-variable description {}] %></description>
+<description><%! entities [get-website-config-variable rssFeedDescription {}] %></description>
 <language><%! lindex [split [get-website-config-variable locale en_US] _] 0 %></language>
 <%= $copyright ne "" ? "<copyright><!\[CDATA\[$copyright\]\]></copyright>" : "" %>
 <%= $buildDate ne "" ? "<lastBuildDate>[clock format $buildDate -format $rfc822 -timezone :UTC]</lastBuildDate>" : "" %>

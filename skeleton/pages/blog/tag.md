@@ -5,5 +5,6 @@
     hideTitle 1
     hidePostTags 1
     hideFromCollections 1
+    hideUserComments 1
 }
 This is a tag page.
