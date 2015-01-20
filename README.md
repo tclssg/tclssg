@@ -229,7 +229,7 @@ Page settings are specified using page variables. Each page variable alters a se
 
 Values can be quoted with braces (`{value}`) or double quotes (`"value"`). If you want to set a page variable for more than one page at once look at the website setting `pageVariables` in the next section.
 
-The following variables have an effect for any page they are set on.
+The following variables have an effect for **any page** they are set on.
 
 ### Basic page information
 
@@ -254,6 +254,8 @@ The following variables have an effect for any page they are set on.
 
 ### Hiding elements
 
+| Variable name | Example value(s) | Description |
+|---------------|------------------|-------------|
 | draft | 0/1 | Do not process the page. Useful for keeping drafts in the same directory as published pages. |
 | hideUserComments | 0/1 | Do not display comments on this current page. |
 | hideTitle | 0/1 | Do not put the value of `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
@@ -265,7 +267,7 @@ The following variables have an effect for any page they are set on.
 | hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index, as well as sidebar links. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 
-These variables only affect blog posts:
+These variables only affect **blog posts**:
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
