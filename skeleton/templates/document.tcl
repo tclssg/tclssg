@@ -11,8 +11,7 @@ proc sidebar-links? {} {
 
 proc sidebar-note? {} {
     return [expr {
-        ([blog-post?] && ![get-current-page-variable hideSidebarNote 0]) ||
-        [get-current-page-variable showSidebarNote 0]
+        ![get-current-page-variable hideSidebarNote 0]
     }]
 }
 
@@ -128,8 +127,12 @@ proc format-tag-cloud {} {
 
 proc format-footer {} {
     # Footer.
+    global currentPageId
     set footer {}
-    set copyright [get-website-config-variable copyright {}]
+    set copyright [string map [list \
+        \$rootDirPath [get-page-data $currentPageId rootDirPath] \
+        \$year [clock format [clock seconds] -format %Y]
+    ] [get-website-config-variable copyright {}]]
     if {$copyright ne ""} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }

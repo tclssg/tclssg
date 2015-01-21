@@ -198,7 +198,7 @@ The problem is as follows: Bootstrap allows you to make images responsive (autom
 
 but with many images it introduces unnecessary repetition and you have to put in the image path manually. The following macros allow you to include responsive images in a page with a concise command.
 
-To use this feature first set `expandMacrosInPages` to `1` and put `<% interp-source img-procs.tcl %>` after the frontmatter in the file where you intend to use responsive images:
+To use this feature first set `expandMacrosInPages` to `1` and put `<% interp-source img.tcl %>` after the frontmatter in the file where you intend to use responsive images:
 
     {
         title {Hello!}
@@ -240,6 +240,7 @@ The following variables have an effect for **any page** they are set on.
 | `modified` or `modifiedDate` | same as `date` | Used to indicate when the content was last changed since the date in the `date` variable. Not used for sorting. |
 | author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
 | description | `{This is the main page of my website.}` | The content of the `<meta name="description">` tag. You should **not** set this one to the same value for multiple pages; see Matt Cutts [on the matter](https://www.youtube.com/watch?v=W4gr88oHb-k). |
+| `blog` or `blogPost` | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 
 ### Output document
 
@@ -260,11 +261,12 @@ The following variables have an effect for **any page** they are set on.
 | hideUserComments | 0/1 | Do not display comments on this current page. |
 | hideTitle | 0/1 | Do not put the value of `title` in the `<title>` tag and do not display it at the top of the page. The page title will then only be used for sidebar links to the page. |
 | hideArticleTitle | 0/1 | Do not display the value of `title` at the top of the page. |
-| `blog` or `blogPost` | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 | hideDate | 0/1 | Do not show the page date or the last modification date. |
 | hideModifiedDate | 0/1 | Do not show the last modification date. |
 | hideAuthor | 0/1 | Do not show the page author. |
 | hideFromCollections | 0/1 | Do not list the page or the blog post in the sitemap. Do not include the content of the blog post in article collections, namely the tag pages and the blog index, as well as sidebar links. |
+| sidebarNote | `{<h3>About</h3> This is my blog.}` | The content of the sidebar note in HTML. The note is displayed in a box to the right of the content. On blog posts its content is placed above the sidebar links and the tag cloud. |
+| hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 
 These variables only affect **blog posts**:
@@ -273,10 +275,8 @@ These variables only affect **blog posts**:
 |---------------|------------------|-------------|
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
 | moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. moreText is set to `(...)` (without a link to the page) by default. |
-| sidebarNote | `{<h3>About</h3> This is my blog.}` | The text of the sidebar note in HTML. The note is displayed above the sidebar links and the tag cloud. |
 | hideFromSidebarLinks | 0/1 | Unlists the post from other posts' sidebar links. Useful for post drafts you may want to share with others through a direct link but don't want any reader of your blog to see otherwise. |
 | hideSidebarLinks | 0/1 | Don't show the list of other blog posts with links to them in the sidebar on the present page. |
-| hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
 | hideSidebarTagCloud | 0/1 | Don't show the list of all tags with links to the appropriate tag pages. |
 
@@ -319,7 +319,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | maxSidebarLinks | `10`, `-1`, `inf` | How many of the most recent posts to link to in the sidebar. Negative numbers or a non-number indicate no limit. |
 | pageVariables | `{ title {Untitled page} }` | The default values for page variables. If a page (either a regular page or a blog post) does npt set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | blogPostVariables | `{ hideSidebarNote 1 title {Untitled post} }` | The default values for page variables on blog posts. On blog posts the default values set here override those in `pageVariables`. |
-| copyright | `{Copyright © 2015 You}` | A copyright line to display in the footer. |
+| copyright | `{Copyright © $year You}` | A copyright line to display in the footer. HTML is allowed on the copyright notice and the following variables are recognized and substituted: `$rootDirPath` for the relative path to the website root and `$year` for the current year. |
 | comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on your websites pages ( expect those that have `hideUserComments` set to `1`). `engine` can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 | timezone | `:UTC`, `{}` | The time zone that applies to the dates on blog pages. Leave empty to use your computer's the local time zone. |
 
