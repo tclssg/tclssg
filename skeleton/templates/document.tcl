@@ -45,11 +45,11 @@ proc format-document-title {} {
     }
 
     if {$tagPageTag ne ""} {
-        lappend result [format [mc {Posts tagged "%s"}] $tagPageTag]
+        lappend result [format [mc {Posts tagged "%1$s"}] $tagPageTag]
     }
 
     if {[string is integer $pageNumber] && ($pageNumber > 0)} {
-        lappend result [format [mc {page %s}] [expr {$pageNumber + 1}]]
+        lappend result [format [mc {page %1$s}] [expr {$pageNumber + 1}]]
     }
     lappend result $websiteTitle
 
@@ -57,6 +57,16 @@ proc format-document-title {} {
     return [entities [join $result $sep]]
 }
 
+proc format-navbar-brand {} {
+    set navbarBrand [string map [list \
+                    \$rootDirPath [get-current-page-data rootDirPath]] \
+            [get-current-page-variable navbarBrand {}]]
+    if {$navbarBrand ne ""} {
+        return $navbarBrand
+    } else {
+        return [get-website-config-variable websiteTitle {}]
+    }
+}
 
 proc format-sidebar-links {} {
     # Blog sidebar.
@@ -127,10 +137,9 @@ proc format-tag-cloud {} {
 
 proc format-footer {} {
     # Footer.
-    global currentPageId
     set footer {}
     set copyright [string map [list \
-        \$rootDirPath [get-page-data $currentPageId rootDirPath] \
+        \$rootDirPath [get-current-page-data rootDirPath] \
         \$year [clock format [clock seconds] -format %Y]
     ] [get-website-config-variable copyright {}]]
     if {$copyright ne ""} {

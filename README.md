@@ -246,12 +246,14 @@ The following variables have an effect for **any page** they are set on.
 
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
+| navbarBrand | `{}` | Replaces the `websiteTitle` in Bootstrap `.navbar-brand` link if not empty. Understands `$rootDirPath`. |
 | navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated like an expression inside the template. |
 | locale | `en_US` | The page's language. The value of `locale` is used to internationalize small bits of text like "page #5" used in templates. Translations of each message to a given locale can be defined by copying the file `skeleton/templates/messages.tcl` to `templates/messages.tcl` in your `inputDir` and adding the translations there. |
 | favicon | `favicon.ico` | [Favicon](https://en.wikipedia.org/wiki/Favicon) filename and path relative to `outputDir`. |
-| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | Lines to append to `<head>`. |
-| bodyExtra | `{<script>[...]</script>">}` | Lines to append to `<body>`. |
-| articleExtra | `{}` | Lines to append to `<article>`. |
+| headExtra | `{<link rel="stylesheet" href="./page-specific.css">}` | HTML to append to `<head>`. |
+| bodyExtra | `{<script>[...]</script>">}` | HTML to append to `<body>`. |
+| articleExtra | `{}` | HTML to append to `<article>`. |
+| pagePrelude | `{<% interp-source img.tcl %>}` | The content (normally macros) to prepend to each page's content before the macro expansion stage if macro expansion is enabled. This is not very useful in the pages themselves and is intended to be set in `pageVariables` or `blogPostVariables`. Example use would be to include `img.tcl` on all pages. Only use this setting if you know what you are doing. |
 
 ### Hiding elements
 
@@ -274,7 +276,7 @@ These variables only affect **blog posts**:
 | Variable name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
-| moreText | `{(<a href="%s">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `%s` in `moreText` is replaced with a link to the full blog post. moreText is set to `(...)` (without a link to the page) by default. |
+| moreText | `{(<a href="$link">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `$link` in `moreText` is replaced with a link to the full blog post. moreText is set to `(...)` (without a link to the page) by default. |
 | hideFromSidebarLinks | 0/1 | Unlists the post from other posts' sidebar links. Useful for post drafts you may want to share with others through a direct link but don't want any reader of your blog to see otherwise. |
 | hideSidebarLinks | 0/1 | Don't show the list of other blog posts with links to them in the sidebar on the present page. |
 | hidePostTags | 0/1 | Don't show whatever tags the present blog post has. |
@@ -319,7 +321,7 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | maxSidebarLinks | `10`, `-1`, `inf` | How many of the most recent posts to link to in the sidebar. Negative numbers or a non-number indicate no limit. |
 | pageVariables | `{ title {Untitled page} }` | The default values for page variables. If a page (either a regular page or a blog post) does npt set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
 | blogPostVariables | `{ hideSidebarNote 1 title {Untitled post} }` | The default values for page variables on blog posts. On blog posts the default values set here override those in `pageVariables`. |
-| copyright | `{Copyright © $year You}` | A copyright line to display in the footer. HTML is allowed on the copyright notice and the following variables are recognized and substituted: `$rootDirPath` for the relative path to the website root and `$year` for the current year. |
+| copyright | `{Copyright © $year You. See out <a href="$rootDirPath/privacy.html">privacy policy</a>.}` | A copyright line to display in the footer. HTML is allowed on the copyright notice and the following variables are recognized and substituted: `$rootDirPath` for the relative path to the website root and `$year` for the current year. |
 | comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on your websites pages ( expect those that have `hideUserComments` set to `1`). `engine` can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 | timezone | `:UTC`, `{}` | The time zone that applies to the dates on blog pages. Leave empty to use your computer's the local time zone. |
 

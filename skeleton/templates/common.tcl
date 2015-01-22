@@ -10,6 +10,11 @@ proc get-current-page-variable {name default} {
     return [get-page-variable $currentPageId $name $default]
 }
 
+proc get-current-page-data {name} {
+    global currentPageId
+    return [get-page-data $currentPageId $name]
+}
+
 proc absolute-link {id} {
     set url [get-website-config-variable url ""]
     if {$url eq ""} {

@@ -81,10 +81,10 @@ proc format-article-date {} {
             return ""
         }
         1 {
-            return [format [mc "Published %s"] $dateF]
+            return [format [mc {Published %1$s}] $dateF]
         }
         default {
-            return [format [mc "Published %s, updated %s"] $dateF $modDateF]
+            return [format [mc {Published %1$s, updated %2$s}] $dateF $modDateF]
         }
     }
 }
@@ -98,9 +98,8 @@ proc abbreviate-article {content {abbreviate 0} {absoluteLink 0}} {
     }
     if {$abbreviate} {
         if {[regexp {(.*?)<!-- *more *-->} $content match content]} {
-            append content \
-                    [format [get-current-page-variable moreText "(...)"] \
-                    $link]
+            append content [string map [list \$link $link] \
+                    [get-current-page-variable moreText "(...)"]]
         }
     }
     return $content
@@ -122,7 +121,7 @@ proc format-article-tag-list {} {
         }
 
         set tagListHtml "<nav class=\"container-fluid tags\"><ul>[format \
-                [mc {Tagged: %s}] [join $tagLinks]]</ul></nav><!-- tags -->"
+                [mc {Tagged: %1$s}] [join $tagLinks]]</ul></nav><!-- tags -->"
     }
 
     return $tagListHtml

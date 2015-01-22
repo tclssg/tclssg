@@ -4,8 +4,8 @@
 # LICENSE for details.
 
 mclocale [get-page-variable $currentPageId locale en_US]
-#mcset en_US {Tagged: %s} {Tagged: %s}
-#mcset en_US {Posts tagged "%s"} {Posts tagged "%s"}
-#mcset en_US {page %s} {page %s}
-#mcset en_US {Published %s} {Published %s}
-#mcset en_US {Published %s, updated %s} {Published %s,updated %s}
+#mcset en_US {Tagged: %1$s} {Tagged: %1$s}
+#mcset en_US {Posts tagged "%1$s"} {Posts tagged "%1$s"}
+#mcset en_US {page %1$s} {page %1$s}
+#mcset en_US {Published %1$s} {Published %1$s}
+#mcset en_US {Published %1$s, updated %2$s} {Published %1$s,updated %2$s}
