@@ -3,7 +3,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-mclocale [get-page-variable $currentPageId locale en_US]
+mclocale [get-page-setting $currentPageId locale en_US]
 #mcset en_US {Tagged: %1$s} {Tagged: %1$s}
 #mcset en_US {Posts tagged "%1$s"} {Posts tagged "%1$s"}
 #mcset en_US {page %1$s} {page %1$s}

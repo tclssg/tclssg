@@ -7,31 +7,31 @@ interp-source messages.tcl
 %><!DOCTYPE html>
 <html>
   <head>
-    <meta charset="<%! get-website-config-variable charset UTF-8 %>">
+    <meta charset="<%! get-website-config-setting charset UTF-8 %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <% set description [get-current-page-variable description ""]; if {$description ne ""} { %>
+    <% set description [get-current-page-setting description ""]; if {$description ne ""} { %>
       <meta name="description" content="<%! entities $description %>">
     <% } %>
 
-    <% if {[get-website-config-variable url ""] ne ""} { %>
+    <% if {[get-website-config-setting url ""] ne ""} { %>
       <link ref="canonical" href="<%! absolute-link $currentPageId %>">
     <% } %>
-    <% set prevPageId [get-current-page-variable prevPage ""]; if {$prevPageId ne ""} { %>
+    <% set prevPageId [get-current-page-setting prevPage ""]; if {$prevPageId ne ""} { %>
       <link rel="prev" href="<%! relative-link $prevPageId %>">
     <% } %>
-    <% set nextPageId [get-current-page-variable nextPage ""]; if {$nextPageId ne ""} { %>
+    <% set nextPageId [get-current-page-setting nextPage ""]; if {$nextPageId ne ""} { %>
       <link rel="next" href="<%! relative-link $nextPageId %>">
     <% } %>
-    <% set favicon [get-current-page-variable favicon ""]; if {$favicon ne ""} { %>
+    <% set favicon [get-current-page-setting favicon ""]; if {$favicon ne ""} { %>
       <link rel="icon" href="<%= $rootDirPath %>/<%= $favicon %>">
     <% } %>
-    <% if {[blog-post?] && [get-website-config-variable generateRssFeed 0]} { %>
-      <link rel="<%= $currentPageId eq [get-website-config-variable blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-variable url "" %><%! get-website-config-variable rssFeedFilename rss.xml %>">
+    <% if {[blog-post?] && [get-website-config-setting generateRssFeed 0]} { %>
+      <link rel="<%= $currentPageId eq [get-website-config-setting blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-setting url "" %><%! get-website-config-setting rssFeedFilename rss.xml %>">
     <% } %>
     <% if {($prevPageId ne "") ||
-      ([get-current-page-variable tagPageTag ""] ne "") ||
-      [get-current-page-variable noindex 0]} {
+      ([get-current-page-setting tagPageTag ""] ne "") ||
+      [get-current-page-setting noindex 0]} {
       # Tell search engines to not the blog index beyond the first page or
       # tag pages.
     %>
@@ -45,7 +45,7 @@ interp-source messages.tcl
     <link href="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
-    <%! get-current-page-variable headExtra "" %>
+    <%! get-current-page-setting headExtra "" %>
   </head>
 
   <body>
@@ -62,13 +62,13 @@ interp-source messages.tcl
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-          <% foreach {item link} [get-current-page-variable navbarItems {}] { %>
+          <% foreach {item link} [get-current-page-setting navbarItems {}] { %>
             <li><a href="<%! subst $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
-        <% if {[blog-post?] && [get-website-config-variable generateRssFeed 0]} { %>
+        <% if {[blog-post?] && [get-website-config-setting generateRssFeed 0]} { %>
           <ul class="nav navbar-nav navbar-right">
-            <li><a rel="<%= $currentPageId eq [get-website-config-variable blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-variable url "" %><%! get-website-config-variable rssFeedFilename rss.xml %>">RSS</a></li>
+            <li><a rel="<%= $currentPageId eq [get-website-config-setting blogIndexPageId ""] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! get-website-config-setting url "" %><%! get-website-config-setting rssFeedFilename rss.xml %>">RSS</a></li>
           </ul>
         <% } %>
         </div><!--/.nav-collapse -->
@@ -118,5 +118,5 @@ interp-source messages.tcl
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/js/bootstrap.min.js"></script>
-    <%! get-current-page-variable bodyExtra "" %>
+    <%! get-current-page-setting bodyExtra "" %>
 </html>

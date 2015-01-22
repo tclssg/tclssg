@@ -157,10 +157,10 @@ namespace eval tclssg {
                     puts                                puts
                     ::tclssg::templating::interpreter::with-cache
                                                         with-cache-for-filename
-                    ::tclssg::pages::get-setting        get-page-variable
+                    ::tclssg::pages::get-setting        get-page-setting
                     ::tclssg::pages::get-data           get-page-data
                     ::tclssg::pages::get-website-config-setting
-                                                    get-website-config-variable
+                                                    get-website-config-setting
                     ::tclssg::pages::get-tag-list       get-tag-list
                     ::tclssg::pages::get-link           get-page-link
                     ::tclssg::pages::get-tags           get-page-tags
@@ -1480,10 +1480,10 @@ namespace eval tclssg {
         set outputDir [::tclssg::utils::unqueue! argv]
 
         # Defaults for inputDir and outputDir.
-        if {$inputDir eq ""} {
+        if {($inputDir eq "") && ($outputDir eq "")} {
             set inputDir $::tclssg::config(defaultInputDir)
-        }
-        if {$outputDir eq ""} {
+            set outputDir $::tclssg::config(defaultOutputDir)
+        } elseif {$outputDir eq ""} {
             catch {
                 set outputDir [
                     ::tclssg::utils::dict-default-get {} [
