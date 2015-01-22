@@ -255,7 +255,7 @@ namespace eval utils {
 
     # Get variables set in page using Tcl list syntax at the beginning of the
     # post.
-    proc get-page-variables {rawContent} {
+    proc get-page-settings {rawContent} {
         global errorInfo
 
         set vars {}

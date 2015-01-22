@@ -115,17 +115,17 @@ proc main {argv0 argv} {
         ]
     }
 
-    # get-page-variables
+    # get-page-settings
     assert-all-equal -listmode [
-        get-page-variables "{hello world} Hello, world!"
+        get-page-settings "{hello world} Hello, world!"
     ] [
-        get-page-variables "{ hello world } Hello, world!"
+        get-page-settings "{ hello world } Hello, world!"
     ] [
-        get-page-variables "{hello world}
+        get-page-settings "{hello world}
 
             Hello, world!"
     ] [
-        get-page-variables "{
+        get-page-settings "{
                 hello world
             }
             Hello, world!"

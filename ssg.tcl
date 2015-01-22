@@ -96,13 +96,13 @@ namespace eval tclssg {
         # to HTML).
         proc prepare-content {rawContent id {extraVariables {}}} {
             set choppedContent \
-                    [lindex [::tclssg::utils::get-page-variables $rawContent] 1]
+                    [lindex [::tclssg::utils::get-page-settings $rawContent] 1]
             # Macroexpand content if needed then convert it from Markdown to
             # HTML.
-            if {[tclssg pages get-website-config-variable \
+            if {[tclssg pages get-website-config-setting \
                         expandMacrosInPages 0]} {
                 set choppedContent [join [list \
-                        [tclssg pages get-variable $id pagePrelude ""] \
+                        [tclssg pages get-setting $id pagePrelude ""] \
                         $choppedContent] ""]
                 set choppedContent [interpreter expand \
                         $choppedContent \
@@ -157,9 +157,9 @@ namespace eval tclssg {
                     puts                                puts
                     ::tclssg::templating::interpreter::with-cache
                                                         with-cache-for-filename
-                    ::tclssg::pages::get-variable       get-page-variable
+                    ::tclssg::pages::get-setting        get-page-variable
                     ::tclssg::pages::get-data           get-page-data
-                    ::tclssg::pages::get-website-config-variable
+                    ::tclssg::pages::get-website-config-setting
                                                     get-website-config-variable
                     ::tclssg::pages::get-tag-list       get-tag-list
                     ::tclssg::pages::get-link           get-page-link
@@ -212,7 +212,7 @@ namespace eval tclssg {
 
             # Expand template for page pageData.
             proc expand {template id {extraVariables {}}} {
-                up [tclssg pages get-website-config-variable inputDir ""]
+                up [tclssg pages get-website-config-setting inputDir ""]
                 var-set currentPageId $id
                 inject $extraVariables
                 set listing [parse $template]
@@ -353,17 +353,17 @@ namespace eval tclssg {
         #
         # pages -- page data for every page. Page data is the information about
         # the page that is *not* set by the user directly in preamble
-        # (variables) section of the page file.
+        # (settings) section of the page file.
         # links -- relative hyperlink HREFs to link from page $id to page
         # $targetId.
-        # variables -- page variables for every page.
+        # settings -- page settings for every page.
         # websiteConfig -- website-wide settings.
         # tags -- blog post tags for every blog post.
         # tagPages -- a list of tag pages for every tag. See add-tag-pages.
         proc init {} {
             sqlite3 tclssg-db :memory:
-            # Do not store variable values as columns to allow pages to set
-            # custom variables. These variables can then be parsed by templates
+            # Do not store settings values as columns to allow pages to set
+            # custom settings. These settings can then be parsed by templates
             # without changes to the static site generator source itself.
             tclssg-db eval {
                 CREATE TABLE pages(
@@ -383,7 +383,7 @@ namespace eval tclssg {
                     link TEXT,
                     PRIMARY KEY (id, targetId)
                 );
-                CREATE TABLE variables(
+                CREATE TABLE settings(
                     id INTEGER,
                     name TEXT,
                     value TEXT,
@@ -431,7 +431,7 @@ namespace eval tclssg {
             return [tclssg-db last_insert_rowid]
         }
         # Make a copy of page $id in table pages return the id of the copy.
-        proc copy {id copyVariables} {
+        proc copy {id copySettings} {
             tclssg-db eval {
                 INSERT INTO pages(
                     inputFile,
@@ -463,9 +463,9 @@ namespace eval tclssg {
                     link
                 FROM links WHERE id = $id;
             }
-            if {$copyVariables} {
+            if {$copySettings} {
                 tclssg-db eval {
-                    INSERT INTO variables(
+                    INSERT INTO settings(
                         id,
                         name,
                         value)
@@ -473,7 +473,7 @@ namespace eval tclssg {
                         $newPageId,
                         name,
                         value
-                    FROM variables WHERE id = $id;
+                    FROM settings WHERE id = $id;
                 }
             }
             return $newPageId
@@ -487,7 +487,7 @@ namespace eval tclssg {
                     DELETE FROM links WHERE id = $id;
                 }
                 tclssg-db eval {
-                    DELETE FROM variables WHERE id = $id;
+                    DELETE FROM settings WHERE id = $id;
                 }
             }
         }
@@ -563,33 +563,33 @@ namespace eval tclssg {
             }
         }
 
-        # Procs for working with the table "variables".
+        # Procs for working with the table "settings".
 
 
-        proc set-variable {id name value} {
+        proc set-setting {id name value} {
             tclssg-db eval {
-                INSERT OR REPLACE INTO variables(id, name, value)
+                INSERT OR REPLACE INTO settings(id, name, value)
                 VALUES ($id, $name, $value);
             }
         }
-        proc get-variable {id name default {pageVariablesFailover 1}} {
-            if {$pageVariablesFailover} {
+        proc get-setting {id name default {pageSettingsFailover 1}} {
+            if {$pageSettingsFailover} {
                 set default [::tclssg::utils::dict-default-get \
                         $default \
-                        [get-website-config-variable pageVariables {}] \
+                        [get-website-config-setting pageSettings {}] \
                         $name]
                 # Avoid an infinite loop when recursing by disabling failover.
-                set isBlogPost [get-variable $id blogPost 0 0]
+                set isBlogPost [get-setting $id blogPost 0 0]
                 if {$isBlogPost} {
                     set default [::tclssg::utils::dict-default-get \
                             $default \
-                            [get-website-config-variable blogPostVariables {}] \
+                            [get-website-config-setting blogPostSettings {}] \
                             $name]
                 }
             }
 
             set result [lindex [tclssg-db eval {
-                SELECT ifnull(max(value), $default) FROM variables
+                SELECT ifnull(max(value), $default) FROM settings
                 WHERE id = $id AND name = $name;
             }] 0]
             return $result
@@ -599,13 +599,13 @@ namespace eval tclssg {
         # Procs for working with the table "websiteConfig".
 
 
-        proc set-website-config-variable {name value} {
+        proc set-website-config-setting {name value} {
             tclssg-db eval {
                 INSERT OR REPLACE INTO websiteConfig(name, value)
                 VALUES ($name, $value);
             }
         }
-        proc get-website-config-variable {name default} {
+        proc get-website-config-setting {name default} {
             set result [lindex [tclssg-db eval {
                 SELECT ifnull(max(value), $default) FROM websiteConfig
                 WHERE name = $name;
@@ -740,7 +740,7 @@ namespace eval tclssg {
     proc read-template-file {inputDir varName} {
         set templateFile [
             ::tclssg::utils::choose-dir [
-                tclssg pages get-website-config-variable \
+                tclssg pages get-website-config-setting \
                         $varName \
                         $::tclssg::config($varName)
             ] [
@@ -758,7 +758,7 @@ namespace eval tclssg {
     # settings are taken from the page $topPageId and its content is prepended
     # to every output page. Used for making the blog index page.
     proc add-article-collection {pageIds topPageId} {
-        set blogPostsPerFile [tclssg pages get-website-config-variable \
+        set blogPostsPerFile [tclssg pages get-website-config-setting \
                 blogPostsPerFile 10]
         set i 0
         set currentPageArticles {}
@@ -768,7 +768,7 @@ namespace eval tclssg {
         # Filter out pages to that set hideFromCollections to 1.
         set pageIds [::struct::list filterfor x $pageIds {
             ($x ne $topPageId) &&
-            ![tclssg pages get-variable $x hideFromCollections 0]
+            ![tclssg pages get-setting $x hideFromCollections 0]
         }]
 
         set prevIndexPageId {}
@@ -805,13 +805,13 @@ namespace eval tclssg {
                         $currentPageArticles
 
                 if {$pageNumber > 0} {
-                    tclssg pages set-variable $newId \
+                    tclssg pages set-setting $newId \
                             prevPage $prevIndexPageId
-                    tclssg pages set-variable $prevIndexPageId \
+                    tclssg pages set-setting $prevIndexPageId \
                             nextPage $newId
                 }
 
-                tclssg pages set-variable $newId pageNumber $pageNumber
+                tclssg pages set-setting $newId pageNumber $pageNumber
 
                 puts " with posts [list [::struct::list mapfor x \
                         $currentPageArticles {tclssg pages get-data \
@@ -831,7 +831,7 @@ namespace eval tclssg {
     # For each tag add a page that collects the articles tagged with it using
     # add-article-collection.
     proc add-tag-pages {} {
-        set tagPageId [tclssg pages get-website-config-variable tagPageId ""]
+        set tagPageId [tclssg pages get-website-config-setting tagPageId ""]
         if {[string is integer -strict $tagPageId]} {
             foreach tag [tclssg pages get-tag-list] {
                 set taggedPages [tclssg pages with-tag $tag]
@@ -854,7 +854,7 @@ namespace eval tclssg {
                 for {set i 0} {$i < [llength $resultIds]} {incr i} {
                     set id [lindex $resultIds $i]
                     tclssg pages add-tag-page $id $tag $i
-                    tclssg pages set-variable $id tagPageTag $tag
+                    tclssg pages set-setting $id tagPageTag $tag
                 }
             }
         }
@@ -862,12 +862,12 @@ namespace eval tclssg {
 
     # Check the website config for errors that may not be caught elsewhere.
     proc validate-config {inputDir contentDir} {
-        set url [tclssg pages get-website-config-variable url {}]
+        set url [tclssg pages get-website-config-setting url {}]
         if {($url ne "") && ([string index $url end] ne "/")} {
             error {'url' in website config does not end with '/'}
         }
         foreach varName {indexPage blogIndexPage tagPage} {
-            set value [tclssg pages get-website-config-variable $varName ""]
+            set value [tclssg pages get-website-config-setting $varName ""]
             set path [file join $contentDir $value]
             if {($value ne "") && (![file exists $path])} {
                 error "the file set for $varName in the website config does\
@@ -876,7 +876,7 @@ namespace eval tclssg {
         }
     }
 
-    # Generate a sitemap for the static website. This requires the variable
+    # Generate a sitemap for the static website. This requires the setting
     # "url" to be set in the website config.
     proc make-sitemap {outputDir} {
         set header [::tclssg::utils::trim-indentation {
@@ -896,21 +896,21 @@ namespace eval tclssg {
         }]
 
         set result ""
-        set url [tclssg page get-website-config-variable url ""]
+        set url [tclssg page get-website-config-setting url ""]
         if {$url eq ""} {
             error "can not generate the sitemap without a base URL specified"
         }
         foreach id [tclssg pages sorted-by-date] {
             # Exclude from the site map pages that are hidden from from
             # collections, blog index page beyond the first and tag pages.
-            if {(![tclssg pages get-variable $id hideFromCollections 0]) &&
-                    ([tclssg pages get-variable $id prevPage ""] eq "") &&
-                    ([tclssg pages get-variable $id tagPageTag ""] eq "")} {
-                set date [tclssg pages get-variable $id modifiedDateScanned ""]
+            if {(![tclssg pages get-setting $id hideFromCollections 0]) &&
+                    ([tclssg pages get-setting $id prevPage ""] eq "") &&
+                    ([tclssg pages get-setting $id tagPageTag ""] eq "")} {
+                set date [tclssg pages get-setting $id modifiedDateScanned ""]
                 if {![string is integer -strict [lindex $date 0]]} {
                     # No valid modifiedDate, so will just use the sorting date
                     # for when the page was last modified.
-                    set date [tclssg pages get-variable $id dateScanned ""]
+                    set date [tclssg pages get-setting $id dateScanned ""]
                 }
                 if {[string is integer -strict [lindex $date 0]]} {
                     set lastmod "\n  <lastmod>[clock format [lindex $date 0] \
@@ -928,8 +928,8 @@ namespace eval tclssg {
         return $result
     }
 
-    # Synonymous variable names in the page frontmatter.
-    variable variableSynonyms [dict create {*}{
+    # Synonymous setting names in the page frontmatter.
+    variable settingSynonyms [dict create {*}{
         blogPost blog modifiedDate modified
     }]
 
@@ -938,54 +938,54 @@ namespace eval tclssg {
     proc compile-website {inputDir outputDir websiteConfig} {
         tclssg pages init
         foreach {key value} $websiteConfig {
-            tclssg pages set-website-config-variable $key $value
+            tclssg pages set-website-config-setting $key $value
         }
 
-        tclssg pages set-website-config-variable inputDir $inputDir
+        tclssg pages set-website-config-setting inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
 
         validate-config $inputDir $contentDir
 
-        variable variableSynonyms
+        variable settingSynonyms
 
         # Load the page files into the page database.
         foreach file [::fileutil::findByPattern $contentDir -glob *.md] {
             # May want to change the rawContent preloading behavior for very
             # large (larger than memory) websites.
             set rawContent [read-file $file]
-            set variables [lindex \
-                    [::tclssg::utils::get-page-variables $rawContent] 0]
+            set settings [lindex \
+                    [::tclssg::utils::get-page-settings $rawContent] 0]
 
             # Skip pages marked as drafts.
-            if {[::tclssg::utils::dict-default-get 0 $variables draft]} {
+            if {[::tclssg::utils::dict-default-get 0 $settings draft]} {
                 continue
             }
 
             # Set the values for empty keys to those of their synonym keys, if
             # present.
-            foreach {varName synonym} $variableSynonyms {
-                if {![dict exists $variables $varName] &&
-                        [dict exists $variables $synonym]} {
-                    dict set variables $varName [dict get $variables $synonym]
+            foreach {varName synonym} $settingSynonyms {
+                if {![dict exists $settings $varName] &&
+                        [dict exists $settings $synonym]} {
+                    dict set settings $varName [dict get $settings $synonym]
                 }
             }
 
             # Parse date and modifiedDate into a Unix timestamp plus a format
             # string.
             set clockOptions {}
-            set timezone [tclssg pages get-website-config-variable timezone ""]
+            set timezone [tclssg pages get-website-config-setting timezone ""]
             if {$timezone ne ""} {
                 set clockOptions [list -timezone $timezone]
             }
             set dateScanned [::tclssg::utils::incremental-clock-scan \
-                    [::tclssg::utils::dict-default-get {} $variables date] \
+                    [::tclssg::utils::dict-default-get {} $settings date] \
                     $clockOptions]
-            dict set variables dateScanned $dateScanned
+            dict set settings dateScanned $dateScanned
             set modifiedDateScanned [::tclssg::utils::incremental-clock-scan \
                     [::tclssg::utils::dict-default-get {} \
-                            $variables modifiedDate] \
+                            $settings modifiedDate] \
                     $clockOptions]
-            dict set variables modifiedDateScanned $modifiedDateScanned
+            dict set settings modifiedDateScanned $modifiedDateScanned
 
             # Add the current page to the page database with an appropriate
             # output filename.
@@ -999,11 +999,11 @@ namespace eval tclssg {
                             [lindex $dateScanned 0]]
 
             tclssg pages add-tags $id_ \
-                    [::tclssg::utils::dict-default-get {} $variables tags]
-            dict unset variables tags
+                    [::tclssg::utils::dict-default-get {} $settings tags]
+            dict unset settings tags
 
-            foreach {var value} $variables {
-                tclssg pages set-variable $id_ $var $value
+            foreach {var value} $settings {
+                tclssg pages set-setting $id_ $var $value
             }
         }
 
@@ -1019,27 +1019,27 @@ namespace eval tclssg {
         # that should be linked to in the blog sidebar.
         set blogPostIds [::struct::list filterfor id \
                 [tclssg pages sorted-by-date] \
-                {[tclssg pages get-variable $id blogPost 0]}]
+                {[tclssg pages get-setting $id blogPost 0]}]
         set sidebarPostIds [::struct::list filterfor id \
                 $blogPostIds \
-                {![tclssg pages get-variable $id hideFromSidebarLinks 0]}]
-        tclssg pages set-website-config-variable sidebarPostIds $sidebarPostIds
+                {![tclssg pages get-setting $id hideFromSidebarLinks 0]}]
+        tclssg pages set-website-config-setting sidebarPostIds $sidebarPostIds
 
         # Add numerical ids that correspond to the special pages' input
         # filenames in the config to the database.
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [file join $contentDir \
-                    [tclssg pages get-website-config-variable $varName ""]]
-            tclssg pages set-website-config-variable ${varName}Id \
+                    [tclssg pages get-website-config-setting $varName ""]]
+            tclssg pages set-website-config-setting ${varName}Id \
                     [tclssg pages input-file-to-id $value]
         }
         # Replace the config outputDir, which may be relative to inputDir, with
         # the actual value of outputDir, which is not.
-        tclssg pages set-website-config-variable outputDir $outputDir
+        tclssg pages set-website-config-setting outputDir $outputDir
 
         # Add a chronologically ordered blog index.
         set blogIndexPageId \
-                [tclssg pages get-website-config-variable blogIndexPageId ""]
+                [tclssg pages get-website-config-setting blogIndexPageId ""]
         if {$blogIndexPageId ne ""} {
             add-article-collection $blogPostIds $blogIndexPageId
         }
@@ -1056,7 +1056,7 @@ namespace eval tclssg {
         # the other. This is really less obscure than it may seem. Update
         # blogIndexPageId to point at the actual blogIndexPageId.
         foreach varName {blogIndexPageId tagPageId} {
-            set id [tclssg pages get-website-config-variable $varName {}]
+            set id [tclssg pages get-website-config-setting $varName {}]
             if {$id ne ""} {
                 if {$varName ne "tagPageId"} {
                     set outputFile [tclssg pages get-data $id outputFile ""]
@@ -1065,7 +1065,7 @@ namespace eval tclssg {
                 tclssg pages delete-links-to $id
                 if {$varName ne "tagPageId"} {
                     set newId [tclssg pages output-file-to-id $outputFile]
-                    tclssg pages set-website-config-variable $varName $newId
+                    tclssg pages set-website-config-setting $varName $newId
                 }
             }
         }
@@ -1129,16 +1129,16 @@ namespace eval tclssg {
                 1
 
         # Generate a sitemap.
-        if {[tclssg page get-website-config-variable generateSitemap 0]} {
+        if {[tclssg page get-website-config-setting generateSitemap 0]} {
             set sitemapFile [file join $outputDir sitemap.xml]
             puts "writing sitemap to $sitemapFile"
             ::fileutil::writeFile $sitemapFile [tclssg make-sitemap $outputDir]
         }
 
         # Generate an RSS feed.
-        if {[tclssg page get-website-config-variable generateRssFeed 0]} {
+        if {[tclssg page get-website-config-setting generateRssFeed 0]} {
             set rssFeedFilename rss.xml
-            tclssg pages set-website-config-variable \
+            tclssg pages set-website-config-setting \
                     rssFeedFilename $rssFeedFilename
             set rssFile [file join $outputDir $rssFeedFilename]
             set rssArticleTemplate \
@@ -1146,11 +1146,11 @@ namespace eval tclssg {
             set rssDocumentTemplate \
                     [read-template-file $inputDir rssDocumentTemplateFilename]
             puts "writing RSS feed to $rssFile"
-            tclssg pages set-website-config-variable buildDate [clock seconds]
+            tclssg pages set-website-config-setting buildDate [clock seconds]
             generate-html-file \
                     $rssFile \
                     [tclssg pages \
-                            get-website-config-variable blogIndexPageId ""] \
+                            get-website-config-setting blogIndexPageId ""] \
                     $rssArticleTemplate \
                     $rssDocumentTemplate
         }
@@ -1480,10 +1480,10 @@ namespace eval tclssg {
         set outputDir [::tclssg::utils::unqueue! argv]
 
         # Defaults for inputDir and outputDir.
-        if {$inputDir eq "" && $outputDir eq ""} {
+        if {$inputDir eq ""} {
             set inputDir $::tclssg::config(defaultInputDir)
-            set outputDir $::tclssg::config(defaultOutputDir)
-        } elseif {$outputDir eq ""} {
+        }
+        if {$outputDir eq ""} {
             catch {
                 set outputDir [
                     ::tclssg::utils::dict-default-get {} [
