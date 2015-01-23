@@ -64,7 +64,7 @@ Glossary
 | Term | Explanation |
 |---------|-------------|
 | Page | The main building block of your static website. A page is a file with the extension `.md` and Markdown content. When a typical page from the input directory is processed by Tclssg an HTML file is placed under the same relative path in the output directory with the same file name. For example, placing the page `test/page1.md` in `inputDir`  will generate the HTML file `test/page1.html` in `outputDir`. A page can be a blog post (see below) or not. |
-| Blog post | Blog posts are pages with special properties that help navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are presented in a chronological order (based on their the `date` variables) on the blog index page. The order in which the links to blog posts appear on the sidebar is also determined by the posts' dates. The sidebar, tags and other features can be selectively disabled for any individual blog post or for all of them by default. |
+| Blog post | Blog posts are pages with special properties that help navigate a typical blog: tags for categorization and a sidebar with links to other blog posts. Blog posts are presented in a chronological order (based on their the `date` settings) on the blog index page. The order in which the links to blog posts appear on the sidebar is also determined by the posts' dates. The sidebar, tags and other features can be selectively disabled for any individual blog post or for all of them by default. |
 | Index | The home page of your website. Typically `index.md` in `inputDir`. |
 | Blog index | The blog index is a page or a set of pages that present all of your blog posts in the order from the latest to the oldest. The website setting `blogIndex` (normally typically set to `blog/index.md`) determines what page is used as the basis for the blog index. To avoid producing overly long webpages and HTML files that are too large the blog index page will be broken into separate HTML files according the website setting `blogPostsPerFile` (see section ["Website settings"](#website-settings)). |
 | Tag page | A tag page is a page that shows all blog posts that have a certain tag in a chronological order. When you build your static website a tag page is created for each tag. Like the blog index a tag page will be broken into separate HTML files according the website setting `blogPostsPerFile`. The website setting `tagPage` (normally set to `blog/tag.md`) determines what page is used as the basis for tag pages. If you have a tag `space` then the content of `blog/tag.md` will be copied to `blog/tag-space.md`  |
@@ -72,8 +72,8 @@ Glossary
 | Document | A single output file that is an HTML or XML document (the latter in the case of RSS). May include one or more articles: one for regular pages and blog posts, more on the blog index page and on tag pages. |
 | Collection | A document that contains more than one article, i.e., the blog index or a tag pages. |
 | Template | A file with Tcl code embedded in HTML markup. Once a page has been converted from Markdown to HTML its content is rendered according to the template's logic (code), which interprets the settings specified in the page file and the website config file. Tclssg's templating works in two stages: first, input pages are processed into [HTML5 articles](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/article) (delimited by the tags `<article>...</article>`) using the article template (`article.thtml` by default) then one or several articles are inserted into the document template (`bootstrap.thtml`), one for normal pages and blog posts and several for the blog index. |
-| Configuration file | The file `website.conf` in the input directory that specifies the settings (variables) that apply to the static website as a whole like the website title. |
-| Variable | In Tclssg a variable specifies one setting for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a variable is set in a page file it specifies the corresponding setting for just that individual page. When a variable is set the configuration ("config") file it specifies a setting for the website as a whole. |
+| Configuration file | The file `website.conf` in the input directory that specifies the settings that apply to the static website as a whole like the website title. |
+| Setting | In Tclssg a settings specifies one option for either the whole website or an individual page. Those range from the page title, which you'd normally want to set for each page, to the password for the FTP server your want to deploy your website to. When a setting is set in a page file it specifies the corresponding setting for just that individual page. When a setting is set the configuration ("config") file it specifies a setting for the website as a whole. |
 | Static file | A file that should be copied verbatim into to the output directory. Those are stored in a subdirectory of the input directory (`inputDir/static`). File paths relative to `inputDir/static` are preserved, which means that, e.g., `website/input/static/blah/file.zip` will be copied to `website/output/blah/file.zip`.  |
 | Project skeleton | A starting point for Tclssg websites contained in the `skeleton` directory. |
 | Output | The static website ready to be deployed. Consists of HTML files created by Tclssg based on the content in the input directory plus the static files. It is placed in the output directory `outputDir`. |
@@ -84,7 +84,7 @@ Usage
     usage: ./ssg.tcl <command> [options] [inputDir [outputDir]]
 
 `inputDir` specifies the directory where the input for Tclssg is located. It defaults to `website/input` in the current directory.
-`outputDir` is where the static website's files are placed when the output is generated. When neither `inputDir` nor `outputDir` is supplied on the command line `outputDir` defaults to `website/output`; if `inputDir` is supplied but not `outputDir` then Tclssg will use the value of the variable `outputDir` in the configuration file `inputDir/website.conf`.
+`outputDir` is where the static website's files are placed when the output is generated. When neither `inputDir` nor `outputDir` is supplied on the command line `outputDir` defaults to `website/output`; if `inputDir` is supplied but not `outputDir` then Tclssg will use the value of the setting `outputDir` in the configuration file `inputDir/website.conf`.
 
 Possible commands are
 
@@ -119,12 +119,12 @@ The default layout of the input directory is as follows:
     │   └── bootstrap.thtml
     └── website.conf <-- The configuration file.
 
-Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings by setting variables in `website.conf` and the per-page settings by setting variables in the individual page files. Those are two different sets of variables but defaults for page variables can be set in `website.conf` (look for `pageVariables` below).
+Once you've initialized your website project with `init` you can customize it by specifying general and per-page settings. Specify its general settings in `website.conf` and the per-page settings in the individual page files. Those are two different categories of settings but defaults for page settings can be set in `website.conf` (look for `pageSettings` below).
 
 Markup
 ------
 
-Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate the break between the teaser (the part of the article shown on the blog index and on tag pages) and the rest of the content. Use page variables to customize page settings. Example:
+Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate the break between the teaser (the part of the article shown on the blog index and on tag pages) and the rest of the content. Use page settings to customize the page's output. Example:
 
 ```markdown
 {
@@ -219,7 +219,7 @@ to make images sourced from anywhere responsive.
 
 Page settings
 ------------------
-Page settings are specified using page variables. Each page variable alters a setting for just the page it is set on. Page variables are set at in the front matter (immediately at the top of a page source file) using Tcl dict syntax. Example:
+Page settings are specified using page settings. Each page setting alters a parameter for just the page it is set on. Page settings are set at in the front matter (immediately at the top of a page source file) using Tcl dict syntax. Example:
 
     {
         variableNameOne short_value
@@ -227,24 +227,24 @@ Page settings are specified using page variables. Each page variable alters a se
     }
     Lorem ipsum... (The rest of the page content follows.)
 
-Values can be quoted with braces (`{value}`) or double quotes (`"value"`). If you want to set a page variable for more than one page at once look at the website setting `pageVariables` in the next section.
+Values can be quoted with braces (`{value}`) or double quotes (`"value"`). If you want to set a page variable for more than one page at once look at the website setting `pageSettings` in the next section.
 
-The following variables have an effect for **any page** they are set on.
+The following settings have an effect for **any page** they are set on.
 
 ### Basic page information
 
-| Variable name | Example value(s) | Description |
+| Setting name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | title | `{Some title}` | The title of the individual page. By default it goes in the `<title>` tag and the article header at the top of the page. It is also used as the text for sidebar links to the page. |
 | date | `2014`, `2014/06/23`, `2014-06-23`, `2014-06-23 14:35`, `2014-06-23 14:35:01` | Blog posts are sorted on the `date` field. The date must be in an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-like format of year-month-day-hour-minute-second. Dashes, spaces, colons, slashes, dots and `T` are all treated the same for sorting, so `2014-06-23T14:35:01` is equivalent to `2014 06 23 14 35 01`. |
-| `modified` or `modifiedDate` | same as `date` | Used to indicate when the content was last changed since the date in the `date` variable. Not used for sorting. |
+| `modified` or `modifiedDate` | same as `date` | Used to indicate when the content was last changed since the date in the `date` setting. Not used for sorting. |
 | author | `McPerson` | The name of the author or the person responsible for the page. Will be displayed under the title. |
 | description | `{This is the main page of my website.}` | The content of the `<meta name="description">` tag. You should **not** set this one to the same value for multiple pages; see Matt Cutts [on the matter](https://www.youtube.com/watch?v=W4gr88oHb-k). |
 | `blog` or `blogPost` | 0/1 | If this is set to 1 the page will be a blog post. It will show in the blog post list. |
 
 ### Output document
 
-| Variable name | Example value(s) | Description |
+| Setting name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | navbarBrand | `{}` | Replaces the `websiteTitle` in Bootstrap `.navbar-brand` link if not empty. Understands `$rootDirPath`. |
 | navbarItems | `{ Home $indexLink Blog $blogIndexLink Contact {$rootDirPath/contact.html}`  |  The list of items to display in the navbar at the top of the page. The format of the list is `{LinkText LinkHref LinkText LinkHref...}` where LinkHref is treated like an expression inside the template. |
@@ -257,7 +257,7 @@ The following variables have an effect for **any page** they are set on.
 
 ### Hiding elements
 
-| Variable name | Example value(s) | Description |
+| Setting name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | draft | 0/1 | Do not process the page. Useful for keeping drafts in the same directory as published pages. |
 | hideUserComments | 0/1 | Do not display comments on this current page. |
@@ -271,9 +271,9 @@ The following variables have an effect for **any page** they are set on.
 | hideSidebarNote | 0/1 | Don't show the sidebar note on the present page. |
 | hideFooter | 0/1 | Disable the "Powered by" footer. The copyright notice, if enabled, is still displayed. |
 
-These variables only affect **blog posts**:
+These settings only affect **blog posts**:
 
-| Variable name | Example value(s) | Description |
+| Setting name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | tags | `{tag1 tag2 {tag three with multiple words} {tag four} tag-five}` | Blog post tags for categorization. Each tag will link to its respective tag page. |
 | moreText | `{(<a href="$link">read on</a>)}` | What appears at the end of the teaser (the content before `<!-- more -->`) on the blog index page; `$link` in `moreText` is replaced with a link to the full blog post. moreText is set to `(...)` (without a link to the page) by default. |
@@ -289,22 +289,22 @@ Website settings
 
 The following settings are specified in the file `website.conf` in `inputDir` and affect all pages. The format of `website.conf` is as follows:
 
-    variableNameOne short_value
-    variableNameTwo {A variable value with spaces.}
+    settingNameOne short_value
+    settingNameTwo {A value with spaces.}
 
 Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 
-| Variable name | Example value(s) | Description |
+| Setting name | Example value(s) | Description |
 |---------------|------------------|-------------|
 | websiteTitle | `{My Awesome Website}` | The text that is displayed in the navbar at the top of every page (Bootstrap's `navbar-brand`) as well as appended to the `<title>` tag of every page's HTML output. For this example value the `<title>` tag of a page will say "Hello! &#124; My Awesome Website" if its `title` is `{Hello!}` .  |
 | url | `{http://example.com/}` | The base URL of your static website. It is used for sitemap generation and absolute links such as those in the RSS feed or canonical URLs. The trailing slash is mandatory. |
 | outputDir | `../output`, `/var/www/` | The destination directory under which HTML output is produced if no `outputDir` is given in the command line arguments. Relative paths are interpreted as relative to `inputDir`, so, for example, if `outputDir` is set to `../output` and you run Tclssg with the command line arguments `build myproject/input` the effective output directory will be `myproject/output`. |
-| generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page variable `hideFromCollections`). |
+| generateSitemap | 0/1 | Generate a [sitemap](https://en.wikipedia.org/wiki/Site_map) for the static website. This will create the file `sitemap.xml` in `outputDir` listing all the pages of the static website except those that are explicitly hidden from collections (see the page setting `hideFromCollections`). |
 | generateRssFeed | 0/1 | Generate a [RSS feed](https://en.wikipedia.org/wiki/RSS) for the static website. This will create the file `rss.xml` (of `rssFeedFilename`) in `outputDir` with the posts as the first HTML file of the index page. |
 | rssFeedFilename | `rss.xml` | |
 | rssFeedDescription | `{This is my blog's RSS feed. New posts every week.}` | The `<description>` tag content in the RSS feed. |
-| articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this variable is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
-| documentTemplateFilename | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this variable is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
+| articleTemplateFilename | `article.thtml` | Sets the file name of the desired article template file, which determines what goes between the `<article>...</article>` tags for each page. If no value for this setting is specified then the value `article.thtml` is used. Tclssg looks for the article template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton.  |
+| documentTemplateFilename | `article.thtml` | Sets the file name of the desired document template file, which determines the HTML document structure of the output (expect for what goes between the `<article>...</article>` tags). If no value for this setting is specified then the value `bootstrap.thtml` is used. Tclssg looks for the page template file in `inputDir/templates` first then in the `templates` subdirectory of the project skeleton. |
 | rssArticleTemplateFilename | `rss-article.txml` | |
 | rssDocumentTemplateFilename | `rss-feed.txml` | |
 | deployCopy | `{ path /var/www/ }` | `path` sets the location to copy the output to when the command `deploy-copy` is run. |
@@ -313,15 +313,15 @@ Values can be quoted with braces (`{value}`) or double quotes (`"value"`).
 | expandMacrosInPages | 0/1 | Whether template macros are allowed in pages. If set to `0` macro code in a page will be treated as Markdown text just like the rest of the page. |
 | charset | `utf-8` | The pages' character set. |
 | indexPage | `{index.md}` | The index page. |
-| blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If your blog index is `blog/index.md` the processed content of `blog/index.md` is prepended to each HTML page of the output and its variables will be used for the page settings. |
-| tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its variables will be used for the page settings. |
+| blogIndexPage | `{blog/index.md}` | The page that will contain your blog posts in a chronological order. If your blog index is `blog/index.md` the processed content of `blog/index.md` is prepended to each HTML page of the output and its settings will be used for the page settings. |
+| tagPage | `{blog/tag.md}` | The page to use as a basis when creating tag pages. If your `tagPage` is set to `blog/tag.md` the processed content of `blog/tag.md` is prepended to each HTML page of every tag page created and its settings will be used for the page settings. |
 | blogPostsPerFile | 10 | The maximum number of the blog posts that can be placed on one collection page (i.e., in one HTML file of the blog index page or a tag page). |
 | sortTagsBy | `frequency`, `name` | Determines the order in which tags get displayed in the tag cloud. Currently there are two possible settings: `frequency` (most often used tags first) and `name` (default; sort tags alphabetically by the name of the tag itself). |
 | maxTagCloudTags | `10`, `-1`, `inf` | How many tags to list in the sidebar. This is intended to be used with `sortTagsBy` set to `frequency` to only display the most common tags when you have a lot of them. Negative numbers or a non-number indicate no limit. |
 | maxSidebarLinks | `10`, `-1`, `inf` | How many of the most recent posts to link to in the sidebar. Negative numbers or a non-number indicate no limit. |
-| pageVariables | `{ title {Untitled page} }` | The default values for page variables. If a page (either a regular page or a blog post) does npt set a page variable Tclssg will look for that variable's value in `pageVariables` before falling back on a built-in default. If it does set some variable then its value overrides the one in `pageVariables`. |
-| blogPostVariables | `{ hideSidebarNote 1 title {Untitled post} }` | The default values for page variables on blog posts. On blog posts the default values set here override those in `pageVariables`. |
-| copyright | `{Copyright © $year You. See out <a href="$rootDirPath/privacy.html">privacy policy</a>.}` | A copyright line to display in the footer. HTML is allowed on the copyright notice and the following variables are recognized and substituted: `$rootDirPath` for the relative path to the website root and `$year` for the current year. |
+| pageVariables | `{ title {Untitled page} }` | The default values for page settings. If a page (either a regular page or a blog post) does npt set a page settings Tclssg will look for that setting's value in `pageVariables` before falling back on a built-in default. If it does set some settings then its value overrides the one in `pageVariables`. |
+| blogPostVariables | `{ hideSidebarNote 1 title {Untitled post} }` | The default values for page settings on blog posts. On blog posts the default values set here override those in `pageVariables`. |
+| copyright | `{Copyright © $year You. See out <a href="$rootDirPath/privacy.html">privacy policy</a>.}` | A copyright line to display in the footer. HTML is allowed on the copyright notice and the following settings are recognized and substituted: `$rootDirPath` for the relative path to the website root and `$year` for the current year. |
 | comments | `{ engine none disqusShortname {} }` | Selects what comment engine (external software or service for blog comments) to use on your websites pages ( expect those that have `hideUserComments` set to `1`). `engine` can be either `none` or `disqus`. For Disqus the value of `disqusShortname` specifies your [shortname](https://help.disqus.com/customer/portal/articles/466208-what-s-a-shortname-), which identifies you to the service. |
 | timezone | `:UTC`, `{}` | The time zone that applies to the dates on blog pages. Leave empty to use your computer's the local time zone. |
 

@@ -4,8 +4,8 @@
 # LICENSE for details.
 
 proc format-article-author {} {
-    set author [get-current-page-variable author ""]
-    if {$author ne "" && ![get-current-page-variable hideAuthor 0]} {
+    set author [get-current-page-setting author ""]
+    if {$author ne "" && ![get-current-page-setting hideAuthor 0]} {
         return [format {<address class="author">%s</address>} $author]
     } else {
         return ""
@@ -17,9 +17,9 @@ proc format-article-title {} {
     global currentPageId
     global collection
     global collectionTopArticle
-    set title [entities [get-current-page-variable title {}]]
-    if {$title ne "" && !([get-current-page-variable hideTitle 0] ||
-            [get-current-page-variable hideArticleTitle 0])} {
+    set title [entities [get-current-page-setting title {}]]
+    if {$title ne "" && !([get-current-page-setting hideTitle 0] ||
+            [get-current-page-setting hideArticleTitle 0])} {
         set result {<h1 class="page-title">}
         if {[blog-post?] && $collection && !$collectionTopArticle} {
             append result [format-link $currentPageId 0 $title]
@@ -34,8 +34,8 @@ proc format-article-title {} {
 }
 
 proc format-date {dateClass dateVarName scannedDateVarName} {
-    set date [get-current-page-variable $dateVarName {}]
-    set dateScanned [get-current-page-variable $scannedDateVarName {}]
+    set date [get-current-page-setting $dateVarName {}]
+    set dateScanned [get-current-page-setting $scannedDateVarName {}]
 
     if {$date ne ""} {
         set datetime [clock format \
@@ -48,8 +48,8 @@ proc format-date {dateClass dateVarName scannedDateVarName} {
 }
 
 proc format-date {dateClass dateVarName scannedDateVarName} {
-    set date [get-current-page-variable $dateVarName {}]
-    set dateScanned [get-current-page-variable $scannedDateVarName {}]
+    set date [get-current-page-setting $dateVarName {}]
+    set dateScanned [get-current-page-setting $scannedDateVarName {}]
 
     if {$date ne ""} {
         set datetime [clock format \
@@ -64,12 +64,12 @@ proc format-date {dateClass dateVarName scannedDateVarName} {
 proc format-article-date {} {
     # Article creation and modification date.
     set resultList {}
-    if {![get-current-page-variable hideDate 0]} {
+    if {![get-current-page-setting hideDate 0]} {
         set dateF [format-date date date dateScanned]
         if {$dateF ne ""} {
             lappend resultList $dateF
         }
-        if {![get-current-page-variable hideModifiedDate 0]} {
+        if {![get-current-page-setting hideModifiedDate 0]} {
             set modDateF [format-date modified modifiedDate modifiedDateScanned]
             if {$modDateF ne ""} {
                 lappend resultList $modDateF
@@ -99,7 +99,7 @@ proc abbreviate-article {content {abbreviate 0} {absoluteLink 0}} {
     if {$abbreviate} {
         if {[regexp {(.*?)<!-- *more *-->} $content match content]} {
             append content [string map [list \$link $link] \
-                    [get-current-page-variable moreText "(...)"]]
+                    [get-current-page-setting moreText "(...)"]]
         }
     }
     return $content

@@ -5,9 +5,9 @@
 
 set rfc822 {%a, %d %b %Y %H:%M:%S GMT}
 
-proc get-current-page-variable {name default} {
+proc get-current-page-setting {name default} {
     global currentPageId
-    return [get-page-variable $currentPageId $name $default]
+    return [get-page-setting $currentPageId $name $default]
 }
 
 proc get-current-page-data {name} {
@@ -16,11 +16,11 @@ proc get-current-page-data {name} {
 }
 
 proc absolute-link {id} {
-    set url [get-website-config-variable url ""]
+    set url [get-website-config-setting url ""]
     if {$url eq ""} {
         error "using absolute-link requires that url be set in website config"
     }
-    set outputDir [get-website-config-variable outputDir ""]
+    set outputDir [get-website-config-setting outputDir ""]
     return $url[replace-path-root [get-page-data $id outputFile] $outputDir ""]
 }
 
@@ -30,7 +30,7 @@ proc relative-link {id} {
 }
 
 proc link-or-nothing {websiteVarName} {
-    set targetId [get-website-config-variable $websiteVarName {}]
+    set targetId [get-website-config-setting $websiteVarName {}]
     if {$targetId ne ""} {
         lindex [relative-link $targetId]
     } else {
@@ -48,7 +48,7 @@ proc with-cache script {
 }
 
 proc blog-post? {} {
-    get-current-page-variable blogPost 0
+    get-current-page-setting blogPost 0
 }
 
 proc format-link {id {li 1} {customTitle ""}} {
@@ -56,7 +56,7 @@ proc format-link {id {li 1} {customTitle ""}} {
     if {$customTitle ne ""} {
         set title $customTitle
     } else {
-        set title [get-page-variable $id title $link]
+        set title [get-page-setting $id title $link]
     }
 
     set linkHtml "<a href=\"$link\">$title</a>"

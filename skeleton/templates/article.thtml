@@ -13,6 +13,6 @@ interp-source article.tcl
         </header>
         <%! abbreviate-article $content $abbreviate %>
         <%! format-article-tag-list %>
-        <%! get-current-page-variable articleExtra "" %>
+        <%! get-current-page-setting articleExtra "" %>
     <% if {$collection && !$collectionTopArticle} { %></article><% } %>
 <% } %>
