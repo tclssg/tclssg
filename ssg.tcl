@@ -102,7 +102,8 @@ namespace eval tclssg {
             if {[tclssg pages get-website-config-setting \
                         expandMacrosInPages 0]} {
                 set choppedContent [join [list \
-                        [tclssg pages get-setting $id pagePrelude ""] \
+                        [::tclssg::utils::trim-indentation \
+                                [tclssg pages get-setting $id pagePrelude ""]] \
                         $choppedContent] ""]
                 set choppedContent [interpreter expand \
                         $choppedContent \
@@ -862,10 +863,23 @@ namespace eval tclssg {
 
     # Check the website config for errors that may not be caught elsewhere.
     proc validate-config {inputDir contentDir} {
+        # Check that the website URL end with a '/'.
         set url [tclssg pages get-website-config-setting url {}]
         if {($url ne "") && ([string index $url end] ne "/")} {
-            error {'url' in website config does not end with '/'}
+            error {'url' in the website config does not end with '/'}
         }
+
+        # Check for obsolete settings.
+        if {([tclssg pages get-website-config-setting \
+                pageVariables {}] ne "")  ||
+                ([tclssg pages get-website-config-setting \
+                        blogPostVariables {}] ne "")} {
+            error "website config settings 'pageVariables' and\
+                    'blogPostVariables' have been renamed\
+                    'pageSettings' and 'blogPostSettings' respectively."
+        }
+
+        # Check that collection top pages actually exist.
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [tclssg pages get-website-config-setting $varName ""]
             set path [file join $contentDir $value]
@@ -1443,6 +1457,25 @@ namespace eval tclssg {
         }
     } ;# namespace command
 
+    proc read-output-dir {inputDir} {
+        set outputDir [
+            ::tclssg::utils::dict-default-get {} [
+                ::tclssg::load-config $inputDir 0
+            ] outputDir
+        ]
+        puts $outputDir
+        # Make relative path from config relative to inputDir.
+        if {$outputDir ne "" &&
+                [::tclssg::utils::path-is-relative? $outputDir]} {
+            set outputDir [
+                ::fileutil::lexnormalize [
+                    file join $inputDir $outputDir
+                ]
+            ]
+        }
+        return $outputDir
+    }
+
     # This proc is run if Tclssg is the main script.
     proc main {argv0 argv} {
 	# Note: Deal with symbolic links pointing to the actual
@@ -1482,24 +1515,15 @@ namespace eval tclssg {
         # Defaults for inputDir and outputDir.
         if {($inputDir eq "") && ($outputDir eq "")} {
             set inputDir $::tclssg::config(defaultInputDir)
-            set outputDir $::tclssg::config(defaultOutputDir)
+            catch {
+                set outputDir [read-output-dir $inputDir]
+            }
+            if {$outputDir eq ""} {
+                set outputDir $::tclssg::config(defaultOutputDir)
+            }
         } elseif {$outputDir eq ""} {
             catch {
-                set outputDir [
-                    ::tclssg::utils::dict-default-get {} [
-                        ::tclssg::load-config $inputDir 0
-                    ] outputDir
-                ]
-                puts $outputDir
-                # Make relative path from config relative to inputDir.
-                if {$outputDir ne "" &&
-                        [::tclssg::utils::path-is-relative? $outputDir]} {
-                    set outputDir [
-                        ::fileutil::lexnormalize [
-                            file join $inputDir $outputDir
-                        ]
-                    ]
-                }
+                set outputDir [read-output-dir $inputDir]
             }
             if {$outputDir eq ""} {
                 puts [
