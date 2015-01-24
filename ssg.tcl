@@ -29,6 +29,12 @@ namespace eval tclssg {
     variable version 1.0.0b
     variable debugMode 1
 
+    # When active intermediate results of processing are saved to
+    # ../tmp/<page>/... for analysis. Should be exposed as cmdline
+    # flag as a regular (advanced) user has use for it, i.e. debugging
+    # their own macros, etc.
+    variable dumpIntermediates 0
+
     proc version {} {
         variable version
         return $version
@@ -105,12 +111,19 @@ namespace eval tclssg {
                         [::tclssg::utils::trim-indentation \
                                 [tclssg pages get-setting $id pagePrelude ""]] \
                         $choppedContent] "\n"]
+
+		::tclssg::save-intermediate content-1-2expand $choppedContent
                 set choppedContent [interpreter expand \
                         $choppedContent \
                         $id \
                         $extraVariables]
             }
+
             set cookedContent [markdown-to-html $choppedContent]
+
+	    ::tclssg::save-intermediate content-2-markdown $choppedContent
+	    ::tclssg::save-intermediate content-3-html     $cookedContent
+
             return $cookedContent
         }
 
@@ -947,6 +960,27 @@ namespace eval tclssg {
         blogPost blog modifiedDate modified
     }]
 
+    proc init-intermediate {outputDir file} {
+	variable dumpIntermediates
+	if {!$dumpIntermediates} return
+	puts "   Saving intermediate stages of $file ..."
+
+	# Create stem for the page's intermediate files. Path
+	# separators are encoded, I wanted to avoid a deep hierarchy.
+	set file [string map {/ %2f \\ %2f} $file]
+	variable tempStem [file dirname $outputDir]/tmp/$file
+	return
+    }
+
+    proc save-intermediate {suffix data} {
+	variable dumpIntermediates
+	if {!$dumpIntermediates} return
+	variable tempStem
+	puts "     Stage $suffix ..."
+	fileutil::writeFile ${tempStem}.$suffix $data
+	return
+    }
+
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
     proc compile-website {inputDir outputDir websiteConfig} {
@@ -967,13 +1001,17 @@ namespace eval tclssg {
             # May want to change the rawContent preloading behavior for very
             # large (larger than memory) websites.
             set rawContent [read-file $file]
-            set settings [lindex \
-                    [::tclssg::utils::get-page-settings $rawContent] 0]
+	    lassign [::tclssg::utils::get-page-settings $rawContent] \
+		settings baseContent
 
             # Skip pages marked as drafts.
             if {[::tclssg::utils::dict-default-get 0 $settings draft]} {
                 continue
             }
+
+	    init-intermediate $outputDir $file
+	    save-intermediate front-0-raw.tcl $settings
+	    save-intermediate content-0-raw   $baseContent
 
             # Set the values for empty keys to those of their synonym keys, if
             # present.
@@ -1016,6 +1054,7 @@ namespace eval tclssg {
                     [::tclssg::utils::dict-default-get {} $settings tags]
             dict unset settings tags
 
+	    save-intermediate front-1-final.tcl $settings
             foreach {var value} $settings {
                 tclssg pages set-setting $id_ $var $value
             }
@@ -1123,6 +1162,9 @@ namespace eval tclssg {
 
             # Expand templates, first for the article then for the HTML
             # document.
+
+	    init-intermediate $outputDir [tclssg pages get-data $id inputFile]
+
             tclssg pages set-data $id cookedContent [
                 templating prepare-content \
                         [tclssg pages get-data $id rawContent] \
