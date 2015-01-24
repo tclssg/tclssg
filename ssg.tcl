@@ -17,10 +17,15 @@ if {$PROFILE} {
     ::profiler::init
 }
 
-# Code conventions: Procedures ("procs") have names-like-this; variables have
-# namesLikeThis. "!" at the end of a proc's name means the proc modifies one or
-# more of the variables it is passed by name (e.g., "unqueue!"). "?" in the same
-# position means it returns a true/false value.
+# Code conventions:
+#
+# Only use spaces for indentation. Keep the line width for code outside of
+# templates under 80 characters.
+#
+# Procedures ("procs") have names-like-this; variables have namesLikeThis. "!"
+# at the end of a proc's name means the proc modifies one or more of the
+# variables it is passed by name (e.g., "unqueue!"). "?" in the same position
+# means it returns a true/false value.
 
 namespace eval tclssg {
     namespace export *
@@ -30,7 +35,7 @@ namespace eval tclssg {
     variable debugMode 1
 
     # When active intermediate results of processing are saved to
-    # ../tmp/<page>/... for analysis. Should be exposed as cmdline
+    # $debugDir for analysis. Should be exposed as cmdline
     # flag as a regular (advanced) user has use for it, i.e. debugging
     # their own macros, etc.
     variable dumpIntermediates 0
@@ -75,6 +80,7 @@ namespace eval tclssg {
                 [file join $::tclssg::config(scriptLocation) skeleton]
         set ::tclssg::config(defaultInputDir) [file join "website" "input"]
         set ::tclssg::config(defaultOutputDir) [file join "website" "output"]
+        set ::tclssg::config(defaultDebugDir) [file join "website" "debug"]
 
         set ::tclssg::config(templateBrackets) {<% %>}
 
@@ -112,7 +118,7 @@ namespace eval tclssg {
                                 [tclssg pages get-setting $id pagePrelude ""]] \
                         $choppedContent] "\n"]
 
-		::tclssg::save-intermediate content-1-2expand $choppedContent
+                ::tclssg::save-intermediate content-1-toexpand $choppedContent
                 set choppedContent [interpreter expand \
                         $choppedContent \
                         $id \
@@ -121,8 +127,8 @@ namespace eval tclssg {
 
             set cookedContent [markdown-to-html $choppedContent]
 
-	    ::tclssg::save-intermediate content-2-markdown $choppedContent
-	    ::tclssg::save-intermediate content-3-html     $cookedContent
+            ::tclssg::save-intermediate content-2-markdown $choppedContent
+            ::tclssg::save-intermediate content-3-html     $cookedContent
 
             return $cookedContent
         }
@@ -960,30 +966,32 @@ namespace eval tclssg {
         blogPost blog modifiedDate modified
     }]
 
-    proc init-intermediate {outputDir file} {
-	variable dumpIntermediates
-	if {!$dumpIntermediates} return
-	puts "   Saving intermediate stages of $file ..."
+    proc init-intermediate {inputDir debugDir file} {
+        variable dumpIntermediates
+        if {!$dumpIntermediates} {
+            return
+        }
 
-	# Create stem for the page's intermediate files. Path
-	# separators are encoded, I wanted to avoid a deep hierarchy.
-	set file [string map {/ %2f \\ %2f} $file]
-	variable tempStem [file dirname $outputDir]/tmp/$file
-	return
+        variable tempStem [::tclssg::utils::replace-path-root \
+                $file $inputDir $debugDir]
+        puts "    saving intermediate stages of $file to $tempStem.\[stage\]..."
+        return
     }
 
     proc save-intermediate {suffix data} {
-	variable dumpIntermediates
-	if {!$dumpIntermediates} return
-	variable tempStem
-	puts "     Stage $suffix ..."
-	fileutil::writeFile ${tempStem}.$suffix $data
-	return
+        variable dumpIntermediates
+        if {!$dumpIntermediates} {
+            return
+        }
+        variable tempStem
+        puts "        stage $suffix ..."
+        fileutil::writeFile ${tempStem}.$suffix $data
+        return
     }
 
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
-    proc compile-website {inputDir outputDir websiteConfig} {
+    proc compile-website {inputDir outputDir debugDir websiteConfig} {
         tclssg pages init
         foreach {key value} $websiteConfig {
             tclssg pages set-website-config-setting $key $value
@@ -1001,17 +1009,17 @@ namespace eval tclssg {
             # May want to change the rawContent preloading behavior for very
             # large (larger than memory) websites.
             set rawContent [read-file $file]
-	    lassign [::tclssg::utils::get-page-settings $rawContent] \
-		settings baseContent
+            lassign [::tclssg::utils::get-page-settings $rawContent] \
+                settings baseContent
 
             # Skip pages marked as drafts.
             if {[::tclssg::utils::dict-default-get 0 $settings draft]} {
                 continue
             }
 
-	    init-intermediate $outputDir $file
-	    save-intermediate front-0-raw.tcl $settings
-	    save-intermediate content-0-raw   $baseContent
+            init-intermediate $inputDir $debugDir $file
+            save-intermediate frontmatter-0-raw.tcl $settings
+            save-intermediate content-0-raw $baseContent
 
             # Set the values for empty keys to those of their synonym keys, if
             # present.
@@ -1054,7 +1062,7 @@ namespace eval tclssg {
                     [::tclssg::utils::dict-default-get {} $settings tags]
             dict unset settings tags
 
-	    save-intermediate front-1-final.tcl $settings
+            save-intermediate frontmatter-1-final.tcl $settings
             foreach {var value} $settings {
                 tclssg pages set-setting $id_ $var $value
             }
@@ -1163,7 +1171,8 @@ namespace eval tclssg {
             # Expand templates, first for the article then for the HTML
             # document.
 
-	    init-intermediate $outputDir [tclssg pages get-data $id inputFile]
+            init-intermediate $inputDir $debugDir \
+                    [tclssg pages get-data $id inputFile]
 
             tclssg pages set-data $id cookedContent [
                 templating prepare-content \
@@ -1250,7 +1259,7 @@ namespace eval tclssg {
                 -prefixes 0 \
                 -unknown ::tclssg::command::unknown
 
-        proc init {inputDir outputDir {options {}}} {
+        proc init {inputDir outputDir {debugDir {}} {options {}}} {
             foreach dir [
                 list $::tclssg::config(contentDirName) \
                      $::tclssg::config(templateDirName) \
@@ -1273,24 +1282,25 @@ namespace eval tclssg {
                     $::tclssg::config(skeletonDir) $inputDir 0 $skipRegExp
         }
 
-        proc build {inputDir outputDir {options {}}} {
+        proc build {inputDir outputDir {debugDir {}} {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
             if {[file isdir $inputDir]} {
-                ::tclssg::compile-website $inputDir $outputDir $websiteConfig
+                ::tclssg::compile-website $inputDir $outputDir $debugDir \
+                        $websiteConfig
             } else {
                 error "couldn't access directory \"$inputDir\""
             }
         }
 
-        proc clean {inputDir outputDir {options {}}} {
+        proc clean {inputDir outputDir {debugDir {}} {options {}}} {
             foreach file [::fileutil::find $outputDir {file isfile}] {
                 puts "deleting $file"
                 file delete $file
             }
         }
 
-        proc update {inputDir outputDir {options {}}} {
+        proc update {inputDir outputDir {debugDir {}} {options {}}} {
             set updateSourceDirs [
                 list $::tclssg::config(staticDirName) {static files}
             ]
@@ -1314,7 +1324,7 @@ namespace eval tclssg {
             }
         }
 
-        proc deploy-copy {inputDir outputDir {options {}}} {
+        proc deploy-copy {inputDir outputDir {debugDir {}} {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
             set deployDest [dict get $websiteConfig deployCopy path]
@@ -1322,7 +1332,7 @@ namespace eval tclssg {
             ::tclssg::utils::copy-files $outputDir $deployDest 1
         }
 
-        proc deploy-custom {inputDir outputDir {options {}}} {
+        proc deploy-custom {inputDir outputDir {debugDir {}} {options {}}} {
             proc exec-deploy-command {key} {
                 foreach varName {deployCustomCommand outputDir file fileRel} {
                     upvar 1 $varName $varName
@@ -1370,7 +1380,7 @@ namespace eval tclssg {
             puts "done."
         }
 
-        proc deploy-ftp {inputDir outputDir {options {}}} {
+        proc deploy-ftp {inputDir outputDir {debugDir {}} {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
             package require ftp
@@ -1411,7 +1421,7 @@ namespace eval tclssg {
             ::ftp::Close $conn
         }
 
-        proc open {inputDir outputDir {options {}}} {
+        proc open {inputDir outputDir {debugDir {}} {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
 
             package require browse
@@ -1425,11 +1435,11 @@ namespace eval tclssg {
             ].html
         }
 
-        proc version {inputDir outputDir {options {}}} {
+        proc version {inputDir outputDir {debugDir {}} {options {}}} {
             puts $::tclssg::config(version)
         }
 
-        proc help {{inputDir ""} {outputDir ""} {options ""}} {
+        proc help {{inputDir ""} {outputDir ""} {debugDir ""} {options ""}} {
             global argv0
 
             # Format: {command description {option optionDescription ...} ...}.
@@ -1499,40 +1509,40 @@ namespace eval tclssg {
         }
     } ;# namespace command
 
-    proc read-output-dir {inputDir} {
-        set outputDir [
+    # Read the setting $settingName from website config in $inputDir
+    proc read-path-setting {inputDir settingName} {
+        set value [
             ::tclssg::utils::dict-default-get {} [
                 ::tclssg::load-config $inputDir 0
-            ] outputDir
+            ] $settingName
         ]
-        puts $outputDir
         # Make relative path from config relative to inputDir.
-        if {$outputDir ne "" &&
-                [::tclssg::utils::path-is-relative? $outputDir]} {
-            set outputDir [
+        if {$value ne "" &&
+                [::tclssg::utils::path-is-relative? $value]} {
+            set value [
                 ::fileutil::lexnormalize [
-                    file join $inputDir $outputDir
+                    file join $inputDir $value
                 ]
             ]
         }
-        return $outputDir
+        return $value
     }
 
     # This proc is run if Tclssg is the main script.
     proc main {argv0 argv} {
-	# Note: Deal with symbolic links pointing to the actual
-	# location of the application to ensure that we look for the
-	# supporting code in the actual location, instead from where
-	# the link is.
-	#
-	# Note further the trick with ___; it ensures that the
-	# resolution of symlinks also applies to the nominally last
-	# segment of the path, i.e. the application name itself. This
-	# trick then requires the second 'file dirname' to strip off
-	# the ___ again after resolution.
+        # Note: Deal with symbolic links pointing to the actual
+        # location of the application to ensure that we look for the
+        # supporting code in the actual location, instead from where
+        # the link is.
+        #
+        # Note further the trick with ___; it ensures that the
+        # resolution of symlinks also applies to the nominally last
+        # segment of the path, i.e. the application name itself. This
+        # trick then requires the second 'file dirname' to strip off
+        # the ___ again after resolution.
 
         tclssg configure \
-	    [file dirname [file dirname [file normalize $argv0/___]]]
+        [file dirname [file dirname [file normalize $argv0/___]]]
 
         # Version.
         catch {
@@ -1553,12 +1563,13 @@ namespace eval tclssg {
         }
         set inputDir [::tclssg::utils::unqueue! argv]
         set outputDir [::tclssg::utils::unqueue! argv]
+        set debugDir {}
 
         # Defaults for inputDir and outputDir.
         if {($inputDir eq "") && ($outputDir eq "")} {
             set inputDir $::tclssg::config(defaultInputDir)
             catch {
-                set outputDir [read-output-dir $inputDir]
+                set outputDir [read-path-setting $inputDir outputDir]
             }
             if {$outputDir eq ""} {
                 set outputDir $::tclssg::config(defaultOutputDir)
@@ -1580,10 +1591,18 @@ namespace eval tclssg {
                 exit 1
             }
         }
+        if {$debugDir eq ""} {
+            catch {
+                set debugDir [read-path-setting $inputDir debugDir]
+            }
+            if {$debugDir eq ""} {
+                set debugDir $::tclssg::config(defaultDebugDir)
+            }
+        }
 
         # Execute command.
         if {[catch {
-                tclssg command $command $inputDir $outputDir $options
+                tclssg command $command $inputDir $outputDir $debugDir $options
             } errorMessage]} {
             puts "\n*** error: $errorMessage ***"
             if {$::tclssg::debugMode} {
