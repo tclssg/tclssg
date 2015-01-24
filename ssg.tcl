@@ -104,7 +104,7 @@ namespace eval tclssg {
                 set choppedContent [join [list \
                         [::tclssg::utils::trim-indentation \
                                 [tclssg pages get-setting $id pagePrelude ""]] \
-                        $choppedContent] ""]
+                        $choppedContent] "\n"]
                 set choppedContent [interpreter expand \
                         $choppedContent \
                         $id \
