@@ -146,7 +146,7 @@ proc format-footer {} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }
     if {![get-current-page-setting hideFooter 0]} {
-        append footer {<div class="powered-by"><small>Powered by <a href="https://github.com/dbohdan/tclssg">Tclssg</a> and <a href="http://getbootstrap.com/">Bootstrap</a></small></div>}
+        append footer {<div class="powered-by"><small>Powered by <a href="https://github.com/tclssg/tclssg">Tclssg</a> and <a href="http://getbootstrap.com/">Bootstrap</a></small></div>}
     }
     return $footer
 }
