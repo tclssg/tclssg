@@ -34,12 +34,6 @@ namespace eval tclssg {
     variable version 1.0.0b
     variable debugMode 1
 
-    # When active intermediate results of processing are saved to
-    # $debugDir for analysis. Should be exposed as cmdline
-    # flag as a regular (advanced) user has use for it, i.e. debugging
-    # their own macros, etc.
-    variable dumpIntermediates 0
-
     proc version {} {
         variable version
         return $version
@@ -118,7 +112,8 @@ namespace eval tclssg {
                                 [tclssg pages get-setting $id pagePrelude ""]] \
                         $choppedContent] "\n"]
 
-                ::tclssg::save-intermediate content-1-toexpand $choppedContent
+                tclssg debugger save-intermediate-id \
+                        $id content-1-toexpand $choppedContent
                 set choppedContent [interpreter expand \
                         $choppedContent \
                         $id \
@@ -127,8 +122,10 @@ namespace eval tclssg {
 
             set cookedContent [markdown-to-html $choppedContent]
 
-            ::tclssg::save-intermediate content-2-markdown $choppedContent
-            ::tclssg::save-intermediate content-3-html     $cookedContent
+            tclssg debugger save-intermediate-id \
+                    $id content-2-markdown $choppedContent
+            tclssg debugger save-intermediate-id \
+                    $id content-3-html $cookedContent
 
             return $cookedContent
         }
@@ -697,6 +694,68 @@ namespace eval tclssg {
         }
     } ;# namespace pages
 
+    # Data dumping facilities to help debug templates and Tclssg itself.
+    namespace eval debugger {
+        namespace export *
+        namespace ensemble create
+
+        # When active intermediate results of processing are saved to $debugDir
+        # for analysis. To enable pass the command line option "--debug" to
+        # when building a project.
+        variable dumpIntermediates 0
+
+        variable inputDirSetting
+        variable debugDirSetting
+
+        variable previousFilename {}
+
+        proc enable {} {
+            variable dumpIntermediates
+            set dumpIntermediates 1
+        }
+
+        proc init {inputDir debugDir} {
+            variable inputDirSetting
+            variable debugDirSetting
+            set inputDirSetting $inputDir
+            set debugDirSetting $debugDir
+        }
+
+        # Save $data for file $filename in the debug directory with filename
+        # suffix $suffix.
+        proc save-intermediate {filename suffix data} {
+            variable dumpIntermediates
+            if {!$dumpIntermediates} {
+                return
+            }
+            variable inputDirSetting
+            variable debugDirSetting
+            variable previousFilename
+
+            set dest "[::tclssg::utils::replace-path-root \
+                    $filename $inputDirSetting $debugDirSetting].$suffix"
+            if {$filename ne $previousFilename} {
+                puts "    saving intermediate stage $suffix of\
+                        $filename to $dest"
+            } else {
+                puts "        saving stage $suffix to $dest"
+            }
+
+            fileutil::writeFile $dest $data
+            set previousFilename $filename
+            return
+        }
+
+        # Same as save-intermediate but gets the filename from the pages
+        # database.
+        proc save-intermediate-id {id suffix data} {
+            return [save-intermediate \
+                    [tclssg pages get-data $id inputFile] \
+                    $suffix \
+                    $data]
+        }
+    } ;# debugger
+
     # Make one HTML article (HTML content enclosed in an <article>...</article>
     # tag) out of the content of page $id according to an article template.
     proc format-article {id articleTemplate {abbreviate 0} \
@@ -966,33 +1025,11 @@ namespace eval tclssg {
         blogPost blog modifiedDate modified
     }]
 
-    proc init-intermediate {inputDir debugDir file} {
-        variable dumpIntermediates
-        if {!$dumpIntermediates} {
-            return
-        }
-
-        variable tempStem [::tclssg::utils::replace-path-root \
-                $file $inputDir $debugDir]
-        puts "    saving intermediate stages of $file to $tempStem.\[stage\]..."
-        return
-    }
-
-    proc save-intermediate {suffix data} {
-        variable dumpIntermediates
-        if {!$dumpIntermediates} {
-            return
-        }
-        variable tempStem
-        puts "        stage $suffix ..."
-        fileutil::writeFile ${tempStem}.$suffix $data
-        return
-    }
-
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
     proc compile-website {inputDir outputDir debugDir websiteConfig} {
         tclssg pages init
+        tclssg debugger init $inputDir $debugDir
         foreach {key value} $websiteConfig {
             tclssg pages set-website-config-setting $key $value
         }
@@ -1017,9 +1054,10 @@ namespace eval tclssg {
                 continue
             }
 
-            init-intermediate $inputDir $debugDir $file
-            save-intermediate frontmatter-0-raw.tcl $settings
-            save-intermediate content-0-raw $baseContent
+            tclssg debugger save-intermediate \
+                    $file frontmatter-0-raw.tcl $settings
+            tclssg debugger save-intermediate \
+                    $file content-0-raw $baseContent
 
             # Set the values for empty keys to those of their synonym keys, if
             # present.
@@ -1062,7 +1100,8 @@ namespace eval tclssg {
                     [::tclssg::utils::dict-default-get {} $settings tags]
             dict unset settings tags
 
-            save-intermediate frontmatter-1-final.tcl $settings
+            tclssg debugger save-intermediate \
+                    $file frontmatter-1-final.tcl $settings
             foreach {var value} $settings {
                 tclssg pages set-setting $id_ $var $value
             }
@@ -1170,9 +1209,6 @@ namespace eval tclssg {
 
             # Expand templates, first for the article then for the HTML
             # document.
-
-            init-intermediate $inputDir $debugDir \
-                    [tclssg pages get-data $id inputFile]
 
             tclssg pages set-data $id cookedContent [
                 templating prepare-content \
@@ -1284,6 +1320,10 @@ namespace eval tclssg {
 
         proc build {inputDir outputDir {debugDir {}} {options {}}} {
             set websiteConfig [::tclssg::load-config $inputDir]
+
+            if {"debug" in $options} {
+                tclssg debugger enable
+            }
 
             if {[file isdir $inputDir]} {
                 ::tclssg::compile-website $inputDir $outputDir $debugDir \
@@ -1449,7 +1489,10 @@ namespace eval tclssg {
                     --templates {copy template files from the project skeleton\
                             to inputDir}
                 }
-                build {build the static website} {}
+                build {build the static website} {
+                    --debug {dump the results of intermediate stages of content\
+                        processing to disk}
+                }
                 clean {delete all files in outputDir} {}
                 update {update the inputDir for a new version of Tclssg by\
                         copying the static files (e.g., CSS) of the project\
