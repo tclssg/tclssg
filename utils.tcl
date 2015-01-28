@@ -39,6 +39,10 @@ namespace eval utils {
     # removes lines at the beginning and the end of the text that were turned
     # blank by the unindentation.
     proc trim-indentation {msg {whitespaceChars " "}} {
+        if {$msg eq ""} {
+            return ""
+        }
+
         set msgLines [split $msg "\n"]
         set maxLength [string length $msg]
 

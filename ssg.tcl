@@ -1619,7 +1619,7 @@ namespace eval tclssg {
             }
         } elseif {$outputDir eq ""} {
             catch {
-                set outputDir [read-output-dir $inputDir]
+                set outputDir [read-path-setting $inputDir outputDir]
             }
             if {$outputDir eq ""} {
                 puts [
