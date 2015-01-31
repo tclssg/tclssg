@@ -97,6 +97,13 @@ namespace eval tclssg {
             }
         }
 
+        proc inline-markdown-to-html {text} {
+            set html [markdown-to-html $text]
+            # strip paragraph wrapping, we assume to be in an inline context.
+            regexp {<p>(.*)</p>} $html -> html
+            return $html
+        }
+
         # Make HTML out of rawContent (remove frontmatter, if any; expand macros
         # if expandMacrosInPages is enabled in websiteConfig; convert Markdown
         # to HTML).
@@ -172,6 +179,8 @@ namespace eval tclssg {
                     ::tclssg::utils::slugify            slugify
                     ::tclssg::utils::choose-dir         choose-dir
                     puts                                puts
+                    ::tclssg::templating::inline-markdown-to-html
+                                                        markdown-to-html
                     ::tclssg::templating::interpreter::with-cache
                                                         with-cache-for-filename
                     ::tclssg::pages::get-setting        get-page-setting
