@@ -231,6 +231,32 @@ namespace eval Markdown {
 
                     append result <pre><code> $code_result \n </code></pre>
                 }
+                {^(?:(?:`{3,})|(?:~{3,}))(?:\{?\S+\}?)?\s*$} {
+                    # FENCED CODE BLOCKS
+                    set code_result {}
+
+                    if {[string index $line 0] eq {`}} {
+                        set end_match {^`{3,}\s*$}
+                    } else {
+                        set end_match {^~{3,}\s*$}
+                    }
+
+                    while {$index < $no_lines} {
+                        incr index
+
+                        set line [lindex $lines $index]
+
+                        if {[regexp $end_match $line]} {
+                            incr index
+                            break
+                        }
+
+                        lappend code_result [html_escape $line]
+                    }
+                    set code_result [join $code_result \n]
+
+                    append result <pre><code> $code_result </code></pre>
+                }
                 {^[ ]{0,3}(?:\*|-|\+) |^[ ]{0,3}\d+\. } {
                     # LISTS
                     set list_result {}
@@ -322,7 +348,7 @@ namespace eval Markdown {
                 }
                 {^<(?:p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del)} {
                     # HTML BLOCKS
-                    set re_htmltag {<(/?)(\w+)(?:\s+\w+=\"[^\"]+\")*\s*>}
+                    set re_htmltag {<(/?)(\w+)(?:\s+\w+=(?:\"[^\"]+\"|'[^']+'))*\s*>}
                     set buffer {}
 
                     while {$index < $no_lines} \
@@ -355,6 +381,120 @@ namespace eval Markdown {
                     }
 
                     append result $buffer
+                }
+                {(?:^\s{0,3}|[^\\]+)\|} {
+                    # SIMPLE TABLES
+                    set cell_align {}
+                    set row_count 0
+
+                    while {$index < $no_lines} \
+                    {
+                        # insert a space between || to handle empty cells
+                        set row_cols [regexp -inline -all {(?:[^|]|\\\|)+} \
+                            [regsub -all {\|(?=\|)} [string trim $line] {| }] \
+                        ]
+
+                        if {$row_count == 0} \
+                        {
+                            set sep_cols [lindex $lines [expr $index + 1]]
+
+                            # check if we have a separator row
+                            if {[regexp {^\s{0,3}\|?(?:\s*:?-+:?(?:\s*$|\s*\|))+} $sep_cols]} \
+                            {
+                                set sep_cols [regexp -inline -all {(?:[^|]|\\\|)+} \
+                                    [string trim $sep_cols]]
+
+                                foreach {cell_data} $sep_cols \
+                                {
+                                    switch -regexp $cell_data {
+                                        {:-*:} {
+                                            lappend cell_align center
+                                        }
+                                        {:-+} {
+                                            lappend cell_align left
+                                        }
+                                        {-+:} {
+                                            lappend cell_align right
+                                        }
+                                        default {
+                                            lappend cell_align {}
+                                        }
+                                    }
+                                }
+
+                                incr index
+                            }
+
+                            append result "<table class=\"table\">\n"
+                            append result "<thead>\n"
+                            append result "  <tr>\n"
+
+                            if {$cell_align ne {}} {
+                                set num_cols [llength $cell_align]
+                            } else {
+                                set num_cols [llength $row_cols]
+                            }
+
+                            for {set i 0} {$i < $num_cols} {incr i} \
+                            {
+                                if {[set align [lindex $cell_align $i]] ne {}} {
+                                    append result "    <th style=\"text-align: $align\">"
+                                } else {
+                                    append result "    <th>"
+                                }
+
+                                append result [parse_inline [string trim \
+                                    [lindex $row_cols $i]]] </th> "\n"
+                            }
+
+                            append result "  </tr>\n"
+                            append result "</thead>\n"
+                        } else {
+                            if {$row_count == 1} {
+                                append result "<tbody>\n"
+                            }
+
+                            append result "  <tr>\n"
+
+                            if {$cell_align ne {}} {
+                                set num_cols [llength $cell_align]
+                            } else {
+                                set num_cols [llength $row_cols]
+                            }
+
+                            for {set i 0} {$i < $num_cols} {incr i} \
+                            {
+                                if {[set align [lindex $cell_align $i]] ne {}} {
+                                    append result "    <td style=\"text-align: $align\">"
+                                } else {
+                                    append result "    <td>"
+                                }
+
+                                append result [parse_inline [string trim \
+                                    [lindex $row_cols $i]]] </td> "\n"
+                            }
+
+                            append result "  </tr>\n"
+                        }
+
+                        incr row_count
+
+                        set line [lindex $lines [incr index]]
+
+                        if {![regexp {(?:^\s{0,3}|[^\\]+)\|} $line]} {
+                            switch $row_count {
+                                1 {
+                                    append result "</table>\n"
+                                }
+                                default {
+                                    append result "</tbody>\n"
+                                    append result "</table>\n"
+                                }
+                            }
+
+                            break
+                        }
+                    }
                 }
                 default {
                     # PARAGRAPHS AND SETTEXT STYLE HEADERS
@@ -439,7 +579,7 @@ namespace eval Markdown {
                     # ESCAPES
                     set next_chr [string index $text [expr $index + 1]]
 
-                    if {[string first $next_chr {\`*_\{\}[]()#+-.!>}] != -1} {
+                    if {[string first $next_chr {\`*_\{\}[]()#+-.!>|}] != -1} {
                         set chr $next_chr
                         incr index
                     }
