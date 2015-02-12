@@ -1594,7 +1594,7 @@ namespace eval tclssg {
         # the ___ again after resolution.
 
         tclssg configure \
-        [file dirname [file dirname [file normalize $argv0/___]]]
+                [file dirname [file dirname [file normalize $argv0/___]]]
 
         # Version.
         catch {

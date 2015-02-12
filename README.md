@@ -10,7 +10,7 @@ Features
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](https://github.com/tclssg/tclssg/wiki/Templating);
 * Plain old pages and blog posts [1];
 * RSS feeds;
-* SEO and usability features: sitemaps, canonical and previous/next links, noindex on collection pages.
+* SEO and usability features out of the box: site maps, canonical and previous/next links, noindex on collection pages.
 * Valid HTML5 and CSS level 3 output;
 * Deployment over FTP;
 * Deployment over SCP or other protocols with a [custom deployment command](https://github.com/tclssg/tclssg/wiki/Using-deployCustom);
@@ -45,6 +45,10 @@ On **Windows** the easiest option is to install ActiveTcl from [ActiveState](htt
 
     c:\Tcl\bin\teacup.exe install html
 
+On **OS X** use [MacPorts](https://www.macports.org/) or install ActiveTcl for Mac. With MacPorts:
+
+    sudo port install tcllib tcl-sqlite3
+
 Once you have the dependencies installed clone this repository, `cd` into it then run
 
     chmod +x ssg.tcl
@@ -59,8 +63,6 @@ or on Windows
     ssg.cmd open
 
 This will create a new website project in the directory `website/input` based on the default project skeleton, build the website in `website/output` and open the result in your web browser.
-
-For more information on how to use Tclssg see the user's guide on [the wiki](https://github.com/tclssg/tclssg/wiki/).
 
 Markup
 ------
@@ -85,10 +87,12 @@ exercitation sed eu Excepteur dolore deserunt cupidatat aliquip irure in
 fugiat eu laborum est.
 ```
 
-FAQ
----
+User's guide
+------------
 
-Answers to frequently asked questions about Tclssg can be found on the [FAQ wiki page](https://github.com/tclssg/tclssg/wiki/FAQ).
+For more information on how to use Tclssg read the **User's guide** on the [project wiki](https://github.com/tclssg/tclssg/wiki).
+
+Answers to frequently asked questions can be found on the [FAQ page](https://github.com/tclssg/tclssg/wiki/FAQ).
 
 License
 -------
