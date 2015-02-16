@@ -3,7 +3,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-namespace eval utils {
+namespace eval ::tclssg::utils {
     namespace export *
     namespace ensemble create
 
