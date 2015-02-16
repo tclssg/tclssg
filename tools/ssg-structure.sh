@@ -1,10 +1,10 @@
 #!/bin/sh
 set -e
-temp_file=$(mktemp)
+temp_file="$(mktemp)"
 trap "rm -f \"$temp_file\"" 0 1 2 3 15
-grep -n proc      ssg.tcl  > $temp_file
-grep -n namespace ssg.tcl >> $temp_file
-cat $temp_file \
+grep -n proc      ssg.tcl  > "$temp_file"
+grep -n namespace ssg.tcl >> "$temp_file"
+cat "$temp_file" \
 | grep -v 'namespace export' \
 | grep -v 'namespace ensemble' \
 | grep -v 'namespace current' \
