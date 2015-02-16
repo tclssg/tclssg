@@ -50,8 +50,7 @@ namespace eval ::tclssg::templating::interpreter {
             ::msgcat::mcset                     mcset
             ::msgcat::mclocale                  mclocale
             ::html::html_entities               entities
-            ::tclssg::templating::interpreter::parse
-                                                parse-template
+            ::tclssg::templating::parse         parse-template
         } {
             interp alias templateInterp $alias {} {*}$command
         }
@@ -98,43 +97,10 @@ namespace eval ::tclssg::templating::interpreter {
         up [tclssg pages get-website-config-setting inputDir ""]
         var-set currentPageId $id
         inject $extraVariables
-        set listing [parse $template]
+        set listing [tclssg templating parse $template]
         set result [interp eval templateInterp $listing]
         down
         return $result
-    }
-
-    # Convert a template into Tcl code.
-    # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl.tk/20363).
-    proc parse {template} {
-        set result {}
-        lassign $::tclssg::config(templateBrackets) leftBracket rightBracket
-        set regExpr [format {^(.*?)%s(.*?)%s(.*)$} $leftBracket $rightBracket]
-        set listing "set _output {}\n"
-        while {[regexp $regExpr $template \
-                match preceding token template]} {
-            append listing [list append _output $preceding]\n
-            # Process <%= ... %> (expression), <%! ... %> (command)
-            # and <% ... %> (raw code) syntax.
-            switch -exact -- [string index $token 0] {
-                = {
-                    append listing \
-                            [format {append _output [expr %s]} \
-                                    [list [string range $token 1 end]]]
-                }
-                ! {
-                    append listing \
-                            [format {append _output [%s]} \
-                                    [string range $token 1 end]]
-                }
-                default {
-                    append listing $token
-                }
-            }
-            append listing \n
-        }
-        append listing [list append _output $template]\n
-        return $listing
     }
 
     # Run $script and cache the result. Return that result immediately
