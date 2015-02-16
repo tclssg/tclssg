@@ -32,8 +32,8 @@ proc main {argv0 argv} {
     set scriptLocation [file dirname $argv0]
 
     # Import utility functions.
-    source [file join $scriptLocation utils.tcl]
-    namespace import ::utils::*
+    source [file join $scriptLocation lib tclssg utils utils.tcl]
+    namespace import ::tclssg::utils::*
 
     # incremental-clock-scan
     assert-all-equal [
