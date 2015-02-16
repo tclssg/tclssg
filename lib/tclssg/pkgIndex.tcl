@@ -3,7 +3,7 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-package ifneeded tclssg-lib 0 [format {
-    source %s
-    import %s
-} [file join $dir tclssg-lib.tcl] $dir]
+package ifneeded tclssg-lib 0 [list apply {{dir} {
+    source [file join $dir tclssg-lib.tcl]
+    import $dir
+}} $dir]
