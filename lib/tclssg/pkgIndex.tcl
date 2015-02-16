@@ -4,6 +4,6 @@
 # LICENSE for details.
 
 package ifneeded tclssg-lib 0 [format {
-        source %s
-        import %s
-} [file join $dir tclssg.tcl] $dir]
+    source %s
+    import %s
+} [file join $dir tclssg-lib.tcl] $dir]
