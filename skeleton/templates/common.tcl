@@ -5,6 +5,8 @@
 
 set rfc822 {%a, %d %b %Y %H:%M:%S GMT}
 
+# Old auxiliary setting access procs.
+
 proc get-current-page-setting {name default} {
     global currentPageId
     return [get-page-setting $currentPageId $name $default]
@@ -14,6 +16,35 @@ proc get-current-page-data {name} {
     global currentPageId
     return [get-page-data $currentPageId $name]
 }
+
+# New setting access procs with a more concise syntax.
+
+proc data {name} {
+    global currentPageId
+    return [get-page-data $currentPageId $name]
+}
+
+proc page-data {page name} {
+    return [get-page-data $page $name]
+}
+
+proc setting {name {default ""}} {
+    global currentPageId
+    return [get-page-setting $currentPageId $name $default]
+}
+
+proc website-setting {name {default ""}} {
+    return [get-website-config-setting $name $default]
+}
+
+proc page-setting {page name {default ""}} {
+    if {![string is -strict integer $page]} {
+        error "page id must be an integer; got \"$page\""
+    }
+    return [get-page-setting $page $name $default]
+}
+
+# Utility procs.
 
 proc absolute-link {id} {
     set url [get-website-config-setting url ""]
@@ -75,4 +106,8 @@ proc subst-if-not-empty args {
         }
     }
     return [uplevel 1 [list subst $str]]
+}
+
+proc template-proc {name arguments body} {
+    proc $name $arguments [parse-template $body]
 }

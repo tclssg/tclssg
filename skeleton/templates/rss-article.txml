@@ -3,8 +3,8 @@
 interp-source common.tcl
 interp-source article.tcl
 
-set title [get-current-page-setting title {}]
-set date [lindex [get-current-page-setting dateScanned {}] 0]
+set title [setting title {}]
+set date [lindex [setting dateScanned {}] 0]
 
 %><% if {$collection && !$collectionTopArticle} { %>
     <item>

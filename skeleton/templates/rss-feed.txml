@@ -4,18 +4,18 @@ interp-source common.tcl
 interp-source document.tcl
 interp-source messages.tcl
 
-set copyright [entities [get-website-config-setting copyright {}]]
-set buildDate [get-website-config-setting buildDate {}]
+set copyright [entities [website-setting copyright {}]]
+set buildDate [website-setting buildDate {}]
 %><?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
-<atom:link href="<%! get-website-config-setting url {} %><%! get-website-config-setting rssFeedFilename {} %>" rel="self" type="application/rss+xml" />
+<atom:link href="<%! website-setting url {} %><%! website-setting rssFeedFilename {} %>" rel="self" type="application/rss+xml" />
 
-<title><%! get-website-config-setting websiteTitle {} %></title>
-<link><%! get-website-config-setting url {} %></link>
-<description><%! entities [get-website-config-setting rssFeedDescription {}] %></description>
-<language><%! lindex [split [get-website-config-setting locale en_US] _] 0 %></language>
+<title><%! website-setting websiteTitle {} %></title>
+<link><%! website-setting url {} %></link>
+<description><%! entities [website-setting rssFeedDescription {}] %></description>
+<language><%! lindex [split [website-setting locale en_US] _] 0 %></language>
 <%= $copyright ne "" ? "<copyright><!\[CDATA\[$copyright\]\]></copyright>" : "" %>
 <%= $buildDate ne "" ? "<lastBuildDate>[clock format $buildDate -format $rfc822 -timezone :UTC]</lastBuildDate>" : "" %>
 <generator>Tclssg <%! tclssg-version %></generator>

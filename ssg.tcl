@@ -195,6 +195,8 @@ namespace eval tclssg {
                     ::msgcat::mcset                     mcset
                     ::msgcat::mclocale                  mclocale
                     ::html::html_entities               entities
+                    ::tclssg::templating::interpreter::parse
+                                                        parse-template
                 } {
                     interp alias templateInterp $alias {} {*}$command
                 }
@@ -251,7 +253,8 @@ namespace eval tclssg {
             # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl.tk/20363).
             proc parse {template} {
                 set result {}
-                set regExpr {^(.*?)<%(.*?)%>(.*)$}
+                lassign $::tclssg::config(templateBrackets) leftBracket rightBracket
+                set regExpr [format {^(.*?)%s(.*?)%s(.*)$} $leftBracket $rightBracket]
                 set listing "set _output {}\n"
                 while {[regexp $regExpr $template \
                         match preceding token template]} {

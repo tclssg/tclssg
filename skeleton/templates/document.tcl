@@ -5,19 +5,19 @@
 
 proc sidebar-links? {} {
     return [expr {
-        [blog-post?] && ![get-current-page-setting hideSidebarLinks 0]
+        [blog-post?] && ![setting hideSidebarLinks 0]
     }]
 }
 
 proc sidebar-note? {} {
     return [expr {
-        ![get-current-page-setting hideSidebarNote 0]
+        ![setting hideSidebarNote 0]
     }]
 }
 
 proc tag-cloud? {} {
     return [expr {
-        [blog-post?] && ![get-current-page-setting hideSidebarTagCloud 0]
+        [blog-post?] && ![setting hideSidebarTagCloud 0]
     }]
 }
 
@@ -30,14 +30,14 @@ proc pick-at-most {list limit} {
 }
 
 proc format-document-title {} {
-    set websiteTitle [get-website-config-setting websiteTitle {}]
+    set websiteTitle [website-setting websiteTitle {}]
 
     set sep { | }
 
-    set pageTitle [get-current-page-setting title {}]
-    set hideTitle [get-current-page-setting hideTitle 0]
-    set pageNumber [get-current-page-setting pageNumber {}]
-    set tagPageTag [get-current-page-setting tagPageTag {}]
+    set pageTitle [setting title {}]
+    set hideTitle [setting hideTitle 0]
+    set pageNumber [setting pageNumber {}]
+    set tagPageTag [setting tagPageTag {}]
 
     set result {}
     if {(!$hideTitle) && ($pageTitle ne "")} {
@@ -59,12 +59,12 @@ proc format-document-title {} {
 
 proc format-navbar-brand {} {
     set navbarBrand [string map [list \
-                    \$rootDirPath [get-current-page-data rootDirPath]] \
-            [get-current-page-setting navbarBrand {}]]
+                    \$rootDirPath [data rootDirPath]] \
+            [setting navbarBrand {}]]
     if {$navbarBrand ne ""} {
         return $navbarBrand
     } else {
-        return [get-website-config-setting websiteTitle {}]
+        return [website-setting websiteTitle {}]
     }
 }
 
@@ -75,8 +75,8 @@ proc format-sidebar-links {} {
         append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
 
         # Limit the number of posts linked to according to maxSidebarLinks.
-        set sidebarPostIds [get-website-config-setting sidebarPostIds {}]
-        set maxSidebarLinks [get-website-config-setting maxSidebarLinks inf]
+        set sidebarPostIds [website-setting sidebarPostIds {}]
+        set maxSidebarLinks [website-setting maxSidebarLinks inf]
 
         foreach id [pick-at-most $sidebarPostIds $maxSidebarLinks] {
             append sidebar [format-link $id]
@@ -90,13 +90,13 @@ proc format-sidebar-links {} {
 proc format-sidebar-note {} {
     return [format \
             {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
-            [get-current-page-setting sidebarNote ""]]
+            [setting sidebarNote ""]]
 }
 
 proc format-prev-next-links {prevLinkTitle nextLinkTitle} {
     # Blog "next" and "previous" blog index page links.
-    set prevPageReal [get-current-page-setting prevPage {}]
-    set nextPageReal [get-current-page-setting nextPage {}]
+    set prevPageReal [setting prevPage {}]
+    set nextPageReal [setting nextPage {}]
     set links {}
     if {[blog-post?] && (($prevPageReal ne "") || ($nextPageReal ne ""))} {
         append links {<nav class="prev-next text-center"><ul class="pager">}
@@ -118,12 +118,12 @@ proc format-tag-cloud {} {
     set tagCloud {}
 
     # Limit the number of tags listed to according to maxTagCloudTags.
-    set maxTagCloudTags [get-website-config-setting maxTagCloudTags inf]
+    set maxTagCloudTags [website-setting maxTagCloudTags inf]
     if {![string is integer -strict $maxTagCloudTags]} {
         set maxTagCloudTags -1
     }
     set tags [get-tag-list \
-            [get-website-config-setting sortTagsBy "name"] $maxTagCloudTags]
+            [website-setting sortTagsBy "name"] $maxTagCloudTags]
 
     append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
 
@@ -139,23 +139,23 @@ proc format-footer {} {
     # Footer.
     set footer {}
     set copyright [string map [list \
-        \$rootDirPath [get-current-page-data rootDirPath] \
+        \$rootDirPath [data rootDirPath] \
         \$year [clock format [clock seconds] -format %Y]
-    ] [get-website-config-setting copyright {}]]
+    ] [website-setting copyright {}]]
     if {$copyright ne ""} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }
-    if {![get-current-page-setting hideFooter 0]} {
+    if {![setting hideFooter 0]} {
         append footer {<div class="powered-by"><small>Powered by <a href="https://github.com/tclssg/tclssg">Tclssg</a> and <a href="http://getbootstrap.com/">Bootstrap</a></small></div>}
     }
     return $footer
 }
 
 proc format-comments {} {
-    set commentsConfig [get-website-config-setting comments {}]
+    set commentsConfig [website-setting comments {}]
     set engine [dict-default-get none $commentsConfig engine]
     set result {}
-    if {![get-current-page-setting hideUserComments 0]} {
+    if {![setting hideUserComments 0]} {
         switch -nocase -- $engine {
             disqus { set result [format-comments-disqus] }
             none {}
@@ -171,7 +171,7 @@ proc format-comments {} {
 }
 
 proc format-comments-disqus {} {
-    set commentsConfig [get-website-config-setting comments {}]
+    set commentsConfig [website-setting comments {}]
     set disqusShortname [dict-default-get {} $commentsConfig disqusShortname]
     set result [string map [list {%disqusShortname} $disqusShortname] {
         <div id="disqus_thread"></div>
