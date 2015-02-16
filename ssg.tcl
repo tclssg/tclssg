@@ -1583,6 +1583,19 @@ namespace eval tclssg {
         return $value
     }
 
+    # Display an error message and exit if inputDir does not exist or isn't a
+    # directory.
+    proc check-input-directory {inputDir} {
+        if {![file exist $inputDir]} {
+            puts "inputDir \"$inputDir\" does not exist"
+            exit 1
+        }
+        if {![file isdirectory $inputDir]} {
+            puts "inputDir \"$inputDir\" exists but is not a directory"
+            exit 1
+        }
+    }
+
     # This proc is run if Tclssg is the main script.
     proc main {argv0 argv} {
         # Note: Deal with symbolic links pointing to the actual
@@ -1653,6 +1666,14 @@ namespace eval tclssg {
             if {$debugDir eq ""} {
                 set debugDir $::tclssg::config(defaultDebugDir)
             }
+        }
+
+        # Check if inputDir exists for commands that require it.
+        if {($command in [::struct::list map \
+                    [info commands ::tclssg::command::*] \
+                    {namespace tail}]) &&
+                ($command ni [list "help" "init" "version"])} {
+            check-input-directory $inputDir
         }
 
         # Execute command.
