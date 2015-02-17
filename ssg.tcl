@@ -663,13 +663,13 @@ namespace eval tclssg {
                 [file dirname [file dirname [file normalize $argv0/___]]]
 
         # Version.
+        set currentPath [pwd]
         catch {
-            set currentPath [pwd]
             cd $::tclssg::config(scriptLocation)
             append ::tclssg::config(version) \
                     " (commit [string range [exec git rev-parse HEAD] 0 9])"
-            cd $currentPath
         }
+        cd $currentPath
 
         # Get command line options, including directories to operate on.
         set command [::tclssg::utils::unqueue! argv]
