@@ -24,6 +24,9 @@ header > h1 {
   color: #777;
   border-top: 1px solid #e5e5e5;
   text-align: center;
+  position:fixed;
+  bottom:0;
+  width: 100%;	
 }
 
 nav.tags > ul {
