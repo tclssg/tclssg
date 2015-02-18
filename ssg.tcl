@@ -739,8 +739,7 @@ namespace eval tclssg {
         if {[catch {
                 tclssg command $command $inputDir $outputDir $debugDir $options
             } errorMessage]} {
-            set errorMessage {}
-            append errorMessage "\n*** error: $errorMessage ***"
+            set errorMessage "\n*** error: $errorMessage ***"
             if {$::tclssg::debugMode} {
                 global errorInfo
                 append errorMessage "\nTraceback:\n$errorInfo"
