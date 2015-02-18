@@ -633,16 +633,26 @@ namespace eval tclssg {
         return $value
     }
 
+    # Display the message and exit with exit code 1 if run as the main script
+    # or cause a simple error otherwise.
+    proc error-message {message} {
+        if {[main-script?]} {
+            puts $message
+            exit 1
+        } else {
+            error $message
+        }
+    }
+
     # Display an error message and exit if inputDir does not exist or isn't a
     # directory.
     proc check-input-directory {inputDir} {
+        set errorMessage {}
         if {![file exist $inputDir]} {
-            puts "inputDir \"$inputDir\" does not exist"
-            exit 1
-        }
-        if {![file isdirectory $inputDir]} {
-            puts "inputDir \"$inputDir\" exists but is not a directory"
-            exit 1
+            error-message "inputDir \"$inputDir\" does not exist"
+        } elseif {![file isdirectory $inputDir]} {
+            error-message \
+                    "inputDir \"$inputDir\" exists but is not a directory"
         }
     }
 
@@ -697,7 +707,7 @@ namespace eval tclssg {
                 set outputDir [read-path-setting $inputDir outputDir]
             }
             if {$outputDir eq ""} {
-                puts [
+                error-message [
                     ::tclssg::utils::trim-indentation {
                         error: no outputDir given.
 
@@ -706,7 +716,6 @@ namespace eval tclssg {
                                          file.
                     }
                 ]
-                exit 1
             }
         }
         if {$debugDir eq ""} {
@@ -730,12 +739,13 @@ namespace eval tclssg {
         if {[catch {
                 tclssg command $command $inputDir $outputDir $debugDir $options
             } errorMessage]} {
-            puts "\n*** error: $errorMessage ***"
+            set errorMessage {}
+            append errorMessage "\n*** error: $errorMessage ***"
             if {$::tclssg::debugMode} {
                 global errorInfo
-                puts "\nTraceback:\n$errorInfo"
+                append errorMessage "\nTraceback:\n$errorInfo"
             }
-            exit 1
+            error-message $errorMessage
         }
     }
 } ;# namespace tclssg
