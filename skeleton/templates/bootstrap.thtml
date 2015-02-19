@@ -32,8 +32,8 @@ interp-source messages.tcl
     <% if {([setting prevPage] ne "") ||
           ([setting tagPageTag] ne "") ||
           [setting noindex 0]} {
-      # Tell search engines to not the blog index beyond the first page or
-      # tag pages.
+      # Tell search engines to not index the tag pages or the blog index
+      # beyond the first page.
     %>
       <meta name="robots" content="noindex">
     <% } %>
@@ -42,10 +42,12 @@ interp-source messages.tcl
     <!-- Bootstrap core CSS -->
     <link href="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap theme -->
-    <link href="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/css/bootstrap-theme.min.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <link href="<%= $rootDirPath %>/tclssg.css" rel="stylesheet">
-    <%! setting headExtra "" %>
+    <link href="<%! string map [list \$rootDirPath $rootDirPath] [setting bootstrapTheme] %>" rel="stylesheet">
+    <!-- Custom stylesheets, if any -->
+    <% foreach cssLink [setting customCss] { %>
+      <link href="<%! string map [list \$rootDirPath $rootDirPath] $cssLink %>" rel="stylesheet">
+    <% } %>
+    <%! setting headExtra %>
   </head>
 
   <body>

@@ -19,7 +19,7 @@ Features
 * Support for external comment engines (currently: Disqus);
 * Relative links in the HTML output that make it suitable for viewing over *file://*;
 * [Reasonably fast](https://github.com/tclssg/tclssg/wiki/Performance);
-* Few dependencies.
+* Few dependencies. Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Windows and Mac.
 
 1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 
