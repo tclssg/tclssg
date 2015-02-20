@@ -13,7 +13,7 @@ proc img {src {alt ""} {center 1}} {
 
 proc img-local args {
     global currentPageId
-    set prefix "[data rootDirPath]/"
+    set prefix "[get-page-data $currentPageId rootDirPath]/"
     lset args 0 "${prefix}images/[lindex $args 0]"
     img {*}$args
 }
