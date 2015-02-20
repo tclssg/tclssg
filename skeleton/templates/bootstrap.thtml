@@ -83,17 +83,17 @@ interp-source messages.tcl
         <% if {[sidebar-note?] ||
                   ([blog-post?] &&
                       ([sidebar-links?] || [tag-cloud?]))} { %>
-          <section class="col-<%! setting responsiveThreshold %>-8">
+          <section class="col-<%! setting gridClassPrefix %>-8">
             <%= $content %>
             <%! format-prev-next-links {« Newer posts} {Older posts »} %>
           </section>
-          <div class="col-<%! setting responsiveThreshold %>-4 well content">
+          <div class="col-<%! setting gridClassPrefix %>-4 well content">
             <%! if {[sidebar-note?]} format-sidebar-note %>
             <%! if {[sidebar-links?]} { with-cache format-sidebar-links } %>
             <%! if {[tag-cloud?]} { with-cache format-tag-cloud } %>
           </div>
          <% } else { %>
-          <section class="col-<%! setting responsiveThreshold %>-12 content">
+          <section class="col-<%! setting gridClassPrefix %>-12 content">
             <%= $content %>
             <%! format-prev-next-links {« Newer posts} {Older posts »} %>
           </section>
