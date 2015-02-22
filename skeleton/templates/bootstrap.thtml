@@ -83,16 +83,16 @@ interp-source messages.tcl
         <% if {[sidebar-note?] ||
                   ([blog-post?] &&
                       ([sidebar-links?] || [tag-cloud?]))} { %>
-          <% 
-             set class_prefix [setting gridClassPrefix col-md-]
-             set content_column_width [setting contentColumns 8]
-             set sidebar_column_width [expr {12 - $content_column_width}]
-             set content_class "$class_prefix$content_column_width"
-	     set sidebar_class "$class_prefix$sidebar_column_width"
-	     if {[setting sidebarPosition right] eq "left"} {
-                 append content_class " ${class_prefix}push-$sidebar_column_width"
-                 append sidebar_class " ${class_prefix}pull-$content_column_width"
-             }
+          <%
+            set class_prefix [setting gridClassPrefix col-md-]
+            set content_column_width [setting contentColumns 8]
+            set sidebar_column_width [expr {12 - $content_column_width}]
+            set content_class "$class_prefix$content_column_width"
+            set sidebar_class "$class_prefix$sidebar_column_width"
+            if {[setting sidebarPosition right] eq "left"} {
+                append content_class " ${class_prefix}push-$sidebar_column_width"
+                append sidebar_class " ${class_prefix}pull-$content_column_width"
+            }
           %>
           <section class="<%= $content_class %>">
             <%= $content %>
