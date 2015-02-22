@@ -83,11 +83,22 @@ interp-source messages.tcl
         <% if {[sidebar-note?] ||
                   ([blog-post?] &&
                       ([sidebar-links?] || [tag-cloud?]))} { %>
-          <section class="<%! setting gridClassPrefix col-md- %><%! setting contentColumns 8 %>">
+          <% 
+             set class_prefix [setting gridClassPrefix col-md-]
+             set content_column_width [setting contentColumns 8]
+             set sidebar_column_width [expr {12 - $content_column_width}]
+             set content_class "$class_prefix$content_column_width"
+	     set sidebar_class "$class_prefix$sidebar_column_width"
+	     if {[setting sidebarPosition right] eq "left"} {
+                 append content_class " ${class_prefix}push-$sidebar_column_width"
+                 append sidebar_class " ${class_prefix}pull-$content_column_width"
+             }
+          %>
+          <section class="<%= $content_class %>">
             <%= $content %>
             <%! format-prev-next-links {« Newer posts} {Older posts »} %>
           </section>
-          <div class="<%! setting gridClassPrefix col-md- %><%= 12 - [setting contentColumns 8] %> well content">
+          <div class="<%= $sidebar_class %> well content">
             <%! if {[sidebar-note?]} format-sidebar-note %>
             <%! if {[sidebar-links?]} { with-cache format-sidebar-links } %>
             <%! if {[tag-cloud?]} { with-cache format-tag-cloud } %>
