@@ -4,6 +4,8 @@ interp-source common.tcl
 interp-source document.tcl
 interp-source messages.tcl
 
+lassign [rss-feed-link] rssFeedRel rssFeedUrl
+
 %><!DOCTYPE html>
 <html>
   <head>
@@ -27,7 +29,7 @@ interp-source messages.tcl
       <link rel="icon" href="<%= $rootDirPath %>/<%! setting favicon %>">
     <% } %>
     <% if {[blog-post?] && [website-setting generateRssFeed 0]} { %>
-      <link rel="<%= $currentPageId eq [website-setting blogIndexPageId] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! website-setting url %><%! website-setting rssFeedFilename rss.xml %>">
+      <link rel="<%= $rssFeedRel %>" type="application/rss+xml" href="<%= $rssFeedUrl %>">
     <% } %>
     <% if {([setting prevPage] ne "") ||
           ([setting tagPageTag] ne "") ||
@@ -70,7 +72,7 @@ interp-source messages.tcl
           </ul>
         <% if {[blog-post?] && [website-setting generateRssFeed 0]} { %>
           <ul class="nav navbar-nav navbar-right">
-            <li><a rel="<%= $currentPageId eq [website-setting blogIndexPageId] ? "alternate" : "home" %>" type="application/rss+xml" href="<%! website-setting url %><%! website-setting rssFeedFilename rss.xml %>">RSS</a></li>
+            <li><a rel="<%= $rssFeedRel %>" type="application/rss+xml" href="<%= $rssFeedUrl %>">RSS</a></li>
           </ul>
         <% } %>
         </div><!--/.nav-collapse -->

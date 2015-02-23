@@ -10,11 +10,19 @@ set buildDate [website-setting buildDate {}]
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
-<atom:link href="<%! website-setting url {} %><%! website-setting rssFeedFilename {} %>" rel="self" type="application/rss+xml" />
+<atom:link href="<%! website-setting url {} %><%! website-setting {rss feedFilename} {} %>" rel="self" type="application/rss+xml" />
 
-<title><%! website-setting websiteTitle {} %></title>
-<link><%! website-setting url {} %></link>
-<description><%! entities [website-setting rssFeedDescription {}] %></description>
+<title><%! format-document-title %></title>
+<link><%!
+    if {[setting tagPageTag] ne ""} {
+        # Tag page RSS feeds link the the corresponding tag page.
+        absolute-link $currentPageId
+    } else {
+        # The main blog feed links to the blog index.
+        absolute-link [ website-setting blogIndexPageId {} ]
+    }
+%></link>
+<description><%! entities [website-setting {rss feedDescription} {}] %></description>
 <language><%! lindex [split [website-setting locale en_US] _] 0 %></language>
 <%= $copyright ne "" ? "<copyright><!\[CDATA\[$copyright\]\]></copyright>" : "" %>
 <%= $buildDate ne "" ? "<lastBuildDate>[clock format $buildDate -format $rfc822 -timezone :UTC]</lastBuildDate>" : "" %>

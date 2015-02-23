@@ -103,7 +103,7 @@ namespace eval tclssg {
     # store it as $outputFile. The page data corresponding to the ids in
     # pageIds must be present in pages database table.
     proc generate-html-file {outputFile topPageId articleTemplate
-            documentTemplate {extraVariables {}}} {
+            documentTemplate {extraVariables {}} {silent 0}} {
         set inputFiles {}
         set gen {} ;# article content accumulator
         set first 1
@@ -130,7 +130,9 @@ namespace eval tclssg {
             file mkdir $subdir
         }
 
-        puts "processing page file [lindex $inputFiles 0] into $outputFile"
+        if {!$silent} {
+            puts "processing page file [lindex $inputFiles 0] into $outputFile"
+        }
         # Take page settings form the first page.
         set output [
             format-document $gen $topPageId $documentTemplate
@@ -142,12 +144,13 @@ namespace eval tclssg {
     # in $inputDir) from ::tclssg::config(skeletonDir). The name resolution
     # scheme is a bit convoluted right now. It can later be made per-directory
     # or metadata-based.
-    proc read-template-file {inputDir varName} {
+    proc read-template-file {inputDir websiteConfigKey
+            defaultTclssgConfigIndex} {
         set templateFile [
             ::tclssg::utils::choose-dir [
                 tclssg pages get-website-config-setting \
-                        $varName \
-                        $::tclssg::config($varName)
+                        $websiteConfigKey \
+                        $::tclssg::config($defaultTclssgConfigIndex)
             ] [
                 list [file join $inputDir $::tclssg::config(templateDirName)] \
                         [file join $::tclssg::config(skeletonDir) \
@@ -435,10 +438,14 @@ namespace eval tclssg {
 
         # Read template files.
         set articleTemplate [
-            read-template-file $inputDir articleTemplateFilename
+            read-template-file $inputDir \
+                    articleTemplateFilename \
+                    articleTemplateFilename
         ]
         set documentTemplate [
-            read-template-file $inputDir documentTemplateFilename
+            read-template-file $inputDir \
+                    documentTemplateFilename \
+                    documentTemplateFilename
         ]
 
         # Create a list of pages that are blog posts and a list of blog posts
@@ -556,30 +563,56 @@ namespace eval tclssg {
                 1
 
         # Generate a sitemap.
-        if {[tclssg page get-website-config-setting generateSitemap 0]} {
+        if {[tclssg page get-website-config-setting {sitemap enable} 0]} {
             set sitemapFile [file join $outputDir sitemap.xml]
             puts "writing sitemap to $sitemapFile"
             ::fileutil::writeFile $sitemapFile [tclssg make-sitemap $outputDir]
         }
 
+        tclssg pages set-website-config-setting buildDate [clock seconds]
+
         # Generate an RSS feed.
-        if {[tclssg page get-website-config-setting generateRssFeed 0]} {
-            set rssFeedFilename rss.xml
+        if {[tclssg page get-website-config-setting {rss enable} 0]} {
+            # Set the default filename if not present.
+            set feedFilename [tclssg page get-website-config-setting \
+                    {rss feedFilename} rss.xml]
             tclssg pages set-website-config-setting \
-                    rssFeedFilename $rssFeedFilename
-            set rssFile [file join $outputDir $rssFeedFilename]
+                    {rss feedFilename} $feedFilename
+
+            # Read RSS templates.
             set rssArticleTemplate \
-                    [read-template-file $inputDir rssArticleTemplateFilename]
+                    [read-template-file $inputDir \
+                            {rss articleTemplateFilename} \
+                            rssArticleTemplateFilename]
             set rssDocumentTemplate \
-                    [read-template-file $inputDir rssDocumentTemplateFilename]
-            puts "writing RSS feed to $rssFile"
-            tclssg pages set-website-config-setting buildDate [clock seconds]
-            generate-html-file \
-                    $rssFile \
+                    [read-template-file $inputDir \
+                            {rss documentTemplateFilename} \
+                            rssDocumentTemplateFilename]
+
+            set rssFeeds [list \
                     [tclssg pages \
                             get-website-config-setting blogIndexPageId ""] \
-                    $rssArticleTemplate \
-                    $rssDocumentTemplate
+                    [file join $outputDir $feedFilename]]
+
+            if {[tclssg page get-website-config-setting {rss tagFeeds} 0]} {
+                foreach pageId [tclssg page get-tag-pages 0] {
+                    lappend rssFeeds $pageId
+                    lappend rssFeeds [file rootname \
+                            [tclssg page get-data $pageId outputFile]].xml
+                }
+            }
+
+            foreach {pageId rssFile} $rssFeeds {
+                puts "writing RSS feed for page [tclssg page get-data \
+                        $pageId inputFile] to $rssFile"
+                generate-html-file \
+                        $rssFile \
+                        $pageId \
+                        $rssArticleTemplate \
+                        $rssDocumentTemplate \
+                        {} \
+                        1
+            }
         }
     }
 

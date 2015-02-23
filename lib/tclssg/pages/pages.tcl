@@ -263,18 +263,57 @@ namespace eval ::tclssg::pages {
 
     # Procs for working with the table "websiteConfig".
 
-
+    # Set website config setting $name to $value. See get-website-config-setting
+    # for the semantics of $name when it is a list.
     proc set-website-config-setting {name value} {
-        tclssg-db eval {
-            INSERT OR REPLACE INTO websiteConfig(name, value)
-            VALUES ($name, $value);
+        set nameInTable [lindex $name 0]
+        set dictKey [lrange $name 1 end]
+
+        if {[llength $dictKey] > 0} {
+            set dictionary [get-website-config-setting $nameInTable ""]
+            dict set dictionary {*}$dictKey $value
+            set-website-config-setting $nameInTable $dictionary
+        } else {
+            tclssg-db eval {
+                INSERT OR REPLACE INTO websiteConfig(name, value)
+                VALUES ($name, $value);
+            }
         }
+
     }
+    # Get website config setting $name. If $name is a list the first item is
+    # is used as the name of the value to retrieve from the table websiteConfig.
+    # The rest of is then treated as a list of keys in the dict that the value
+    # represents.
     proc get-website-config-setting {name default} {
-        set result [lindex [tclssg-db eval {
-            SELECT ifnull(max(value), $default) FROM websiteConfig
-            WHERE name = $name;
+        set nameInTable [lindex $name 0]
+        set dictKey [lrange $name 1 end]
+
+        set exists [lindex [tclssg-db eval {
+            SELECT exists(
+                SELECT 1 FROM websiteConfig
+                WHERE name = $nameInTable
+            );
         }] 0]
+
+        if {$exists} {
+            set databaseResult [lindex [tclssg-db eval {
+                SELECT value FROM websiteConfig
+                WHERE name = $nameInTable;
+            }] 0]
+            if {[llength $dictKey] > 0} {
+                if {[dict exists $databaseResult $dictKey]} {
+                    set result [dict get $databaseResult {*}$dictKey]
+                } else {
+                    set result $default
+                }
+            } else {
+                set result $databaseResult
+            }
+        } else {
+            set result $default
+        }
+
         return $result
     }
 
@@ -300,6 +339,13 @@ namespace eval ::tclssg::pages {
         set result [tclssg-db eval {
             SELECT id FROM tagPages
             WHERE tag = $tag AND pageNumber = $pageNumber;
+        }]
+        return $result
+    }
+    proc get-tag-pages {pageNumber} {
+        set result [tclssg-db eval {
+            SELECT id FROM tagPages
+            WHERE pageNumber = $pageNumber;
         }]
         return $result
     }

@@ -57,6 +57,25 @@ proc format-document-title {} {
     return [entities [join $result $sep]]
 }
 
+proc rss-feed-link {} {
+    global currentPageId
+    set tagPageTag [setting tagPageTag]
+    if {$tagPageTag ne ""} {
+        set rel alternate
+        set pageId [get-tag-page $tagPageTag 0]
+        set url [regsub {.html$} [absolute-link $pageId] .xml]
+    } else {
+        if {$currentPageId eq [website-setting blogIndexPageId]} {
+            set rel alternate
+        } else {
+            set rel home
+        }
+        set url "[ website-setting url ][ website-setting \
+                rssFeedFilename rss.xml ]"
+    }
+    return [list $rel $url]
+}
+
 proc format-navbar-brand {} {
     set navbarBrand [string map [list \
                     \$rootDirPath [data rootDirPath]] \
