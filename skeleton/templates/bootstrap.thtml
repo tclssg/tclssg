@@ -73,7 +73,7 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
         <% if {[blog-post?] && [website-setting {rss enable} 0]} { %>
           <ul class="nav navbar-nav navbar-right">
             <li><a rel="<%= $rssFeedRel %>" type="application/rss+xml" href="<%= $rssFeedUrl %>"><%=
-              ([setting tagPageTag] ne "") && ([website-setting {rss tagFeeds}]) ?
+              ([setting tagPageTag] ne "") && ([website-setting {rss tagFeeds} 0]) ?
               [mc "Tag RSS"] : [mc "RSS"]
             %></a></li>
           </ul>

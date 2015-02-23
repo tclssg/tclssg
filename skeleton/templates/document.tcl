@@ -61,7 +61,7 @@ proc format-document-title {} {
 proc rss-feed-link {} {
     global currentPageId
     set tagPageTag [setting tagPageTag]
-    if {($tagPageTag ne "") && ([website-setting {rss tagFeeds}])} {
+    if {($tagPageTag ne "") && ([website-setting {rss tagFeeds} 0])} {
         set rel alternate
         set pageId [get-tag-page $tagPageTag 0]
         set url [regsub {.html$} [absolute-link $pageId] .xml]
@@ -172,8 +172,7 @@ proc format-footer {} {
 }
 
 proc format-comments {} {
-    set commentsConfig [website-setting comments {}]
-    set engine [dict-default-get none $commentsConfig engine]
+    set engine [website-setting {comments engine} none]
     set result {}
     if {![setting hideUserComments 0]} {
         switch -nocase -- $engine {
@@ -191,8 +190,7 @@ proc format-comments {} {
 }
 
 proc format-comments-disqus {} {
-    set commentsConfig [website-setting comments {}]
-    set disqusShortname [dict-default-get {} $commentsConfig disqusShortname]
+    set disqusShortname [website-setting {comments disqusShortname} {}]
     set result [string map [list {%disqusShortname} $disqusShortname] {
         <div id="disqus_thread"></div>
         <script type="text/javascript">
