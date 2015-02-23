@@ -137,25 +137,29 @@ proc main {argv0 argv} {
     # Remove the temporary file so that Tclssg can replace it with
     # a temporary project directory.
     file delete $tempProjectDir
+
+    proc project-subdir {subdir} {
+        upvar 1 tempProjectDir tempProjectDir
+        return [file join $tempProjectDir $subdir]
+    }
+
     set tclssgArguments [
-        list [file join $tempProjectDir input] \
-             [file join $tempProjectDir output]
+        list [project-subdir input] [project-subdir output]
     ]
     exec tclsh ssg.tcl version
     exec tclsh ssg.tcl help
     exec tclsh ssg.tcl init {*}$tclssgArguments
 
     # Set deployment options in the website config.
-    set config [::fileutil::cat [file join $tempProjectDir input website.conf]]
-    dict set config deployCopy path [file join $tempProjectDir deploy-copy-test]
+    set configFile [file join [project-subdir input] website.conf]
+    set config [::fileutil::cat $configFile]
+    dict set config deployCopy path [project-subdir deploy-copy-test]
     dict set config deployCustom [list \
-        start "cp -r \"\$outputDir\" \
-                [file join $tempProjectDir deploy-custom-test]" \
+        start "cp -r \"\$outputDir\" [project-subdir deploy-custom-test]" \
         file {} \
         end {} \
     ]
-    puts $config
-    ::fileutil::writeFile [file join $tempProjectDir input website.conf] $config
+    ::fileutil::writeFile $configFile $config
 
     exec tclsh ssg.tcl build {*}$tclssgArguments
     exec tclsh ssg.tcl update --templates --yes {*}$tclssgArguments
@@ -163,6 +167,13 @@ proc main {argv0 argv} {
     exec tclsh ssg.tcl deploy-copy {*}$tclssgArguments
     exec tclsh ssg.tcl deploy-custom {*}$tclssgArguments
     exec tclsh ssg.tcl clean {*}$tclssgArguments
+
+    # Compare the results of deploy-custom and deploy-copy if diff -r is
+    # available.
+    if {![catch {exec diff -r [project-subdir input] [project-subdir input]}]} {
+        exec diff -r [project-subdir deploy-copy-test] \
+                [project-subdir deploy-custom-test]
+    }
 
     # Tclssg as a library.
     puts "running tclssg library tests..."
