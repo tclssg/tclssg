@@ -51,6 +51,10 @@ namespace eval ::tclssg::templating::interpreter {
             ::msgcat::mclocale                  mclocale
             ::html::html_entities               entities
             ::tclssg::templating::parse         parse-template
+            ::tclssg::read-data-file            read-data-file
+            ::csv::iscomplete                   ::csv::iscomplete
+            ::csv::split                        ::csv::split
+            ::json::json2dict                   ::json::json2dict
         } {
             interp alias templateInterp $alias {} {*}$command
         }

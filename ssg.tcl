@@ -10,6 +10,8 @@ package require fileutil
 package require textutil
 package require html
 package require sqlite3
+package require csv
+package require json
 
 set PROFILE 0
 if {$PROFILE} {
@@ -66,6 +68,7 @@ namespace eval tclssg {
         set ::tclssg::config(contentDirName) pages
         set ::tclssg::config(templateDirName) templates
         set ::tclssg::config(staticDirName) static
+        set ::tclssg::config(dataDirName) data
         set ::tclssg::config(articleTemplateFilename) article.thtml
         set ::tclssg::config(documentTemplateFilename) bootstrap.thtml
         set ::tclssg::config(rssArticleTemplateFilename) rss-article.txml
@@ -140,10 +143,11 @@ namespace eval tclssg {
         ::fileutil::writeFile $outputFile $output
     }
 
-    # Read the template named in $varName from $inputDir or (if it is not found
-    # in $inputDir) from ::tclssg::config(skeletonDir). The name resolution
-    # scheme is a bit convoluted right now. It can later be made per-directory
-    # or metadata-based.
+    # Read a template file from $inputDir or (if it is not found in $inputDir)
+    # from ::tclssg::config(skeletonDir). The template filename is read from
+    # $websiteConfigKey, or, if it is not set, from
+    # ::tclssg::config($defaultTclssgConfigIndex). Name resolution can later be
+    # made metadata-based.
     proc read-template-file {inputDir websiteConfigKey
             defaultTclssgConfigIndex} {
         set templateFile [
@@ -159,6 +163,12 @@ namespace eval tclssg {
         ]
         return [read-file $templateFile]
     }
+
+    proc read-data-file {filename} {
+        set dataDir [tclssg page get-website-config-setting dataDir ""]
+        return [read-file [file join $dataDir $filename]]
+    }
+
 
     # Add one page or a series of pages that collect the articles of those pages
     # that are listed in pageIds. The number of pages added equals ([llength
@@ -365,6 +375,8 @@ namespace eval tclssg {
 
         tclssg pages set-website-config-setting inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
+        tclssg page set-website-config-setting dataDir \
+                [file join $inputDir $::tclssg::config(dataDirName)]
 
         validate-config $inputDir $contentDir
 
