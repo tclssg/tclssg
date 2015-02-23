@@ -89,13 +89,13 @@ namespace eval ::tclssg::command {
 
     proc deploy-custom {inputDir outputDir {debugDir {}} {options {}}} {
         proc exec-deploy-command {key} {
-            foreach varName {deployCustomCommand outputDir file fileRel} {
+            foreach varName {deployCustom outputDir file fileRel} {
                 upvar 1 $varName $varName
             }
-            if {[dict exists $deployCustomCommand $key] &&
-                ([dict get $deployCustomCommand $key] ne "")} {
+            if {[dict exists $deployCustom $key] &&
+                ([dict get $deployCustom $key] ne "")} {
                 set preparedCommand [subst -nocommands \
-                        [dict get $deployCustomCommand $key]]
+                        [dict get $deployCustom $key]]
                 set exitStatus 0
                 set error [catch \
                         {set output \
@@ -122,8 +122,8 @@ namespace eval ::tclssg::command {
         }
         set websiteConfig [::tclssg::load-config $inputDir]
 
-        set deployCustomCommand \
-                [dict get $websiteConfig deployCustomCommand]
+        set deployCustom \
+                [dict get $websiteConfig deployCustom]
 
         puts "deploying..."
         exec-deploy-command start

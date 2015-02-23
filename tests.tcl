@@ -144,9 +144,24 @@ proc main {argv0 argv} {
     exec tclsh ssg.tcl version
     exec tclsh ssg.tcl help
     exec tclsh ssg.tcl init {*}$tclssgArguments
+
+    # Set deployment options in the website config.
+    set config [::fileutil::cat [file join $tempProjectDir input website.conf]]
+    dict set config deployCopy path [file join $tempProjectDir deploy-copy-test]
+    dict set config deployCustom [list \
+        start "cp -r \"\$outputDir\" \
+                [file join $tempProjectDir deploy-custom-test]" \
+        file {} \
+        end {} \
+    ]
+    puts $config
+    ::fileutil::writeFile [file join $tempProjectDir input website.conf] $config
+
     exec tclsh ssg.tcl build {*}$tclssgArguments
     exec tclsh ssg.tcl update --templates --yes {*}$tclssgArguments
     exec tclsh ssg.tcl build {*}$tclssgArguments
+    exec tclsh ssg.tcl deploy-copy {*}$tclssgArguments
+    exec tclsh ssg.tcl deploy-custom {*}$tclssgArguments
     exec tclsh ssg.tcl clean {*}$tclssgArguments
 
     # Tclssg as a library.
