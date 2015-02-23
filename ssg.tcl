@@ -164,11 +164,12 @@ namespace eval tclssg {
         return [read-file $templateFile]
     }
 
+    # Returns the contents of the file $filename in the data file subdirectory
+    # of inputDir (usually "data").
     proc read-data-file {filename} {
         set dataDir [tclssg page get-website-config-setting dataDir ""]
-        return [read-file [file join $dataDir $filename]]
+        return [read-file [file join $dataDir [file tail $filename]]]
     }
-
 
     # Add one page or a series of pages that collect the articles of those pages
     # that are listed in pageIds. The number of pages added equals ([llength
