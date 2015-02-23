@@ -51,8 +51,9 @@ proc format-document-title {} {
     if {[string is integer $pageNumber] && ($pageNumber > 0)} {
         lappend result [format [mc {page %1$s}] [expr {$pageNumber + 1}]]
     }
-    lappend result $websiteTitle
-
+    if {$websiteTitle ne ""} {
+        lappend result $websiteTitle
+    }
 
     return [entities [join $result $sep]]
 }
