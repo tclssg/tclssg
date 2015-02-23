@@ -28,7 +28,7 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
     <% if {[setting favicon] ne ""} { %>
       <link rel="icon" href="<%= $rootDirPath %>/<%! setting favicon %>">
     <% } %>
-    <% if {[blog-post?] && [website-setting generateRssFeed 0]} { %>
+    <% if {[blog-post?] && [website-setting {rss enable} 0]} { %>
       <link rel="<%= $rssFeedRel %>" type="application/rss+xml" href="<%= $rssFeedUrl %>">
     <% } %>
     <% if {([setting prevPage] ne "") ||
@@ -70,7 +70,7 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
             <li><a href="<%! subst $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
-        <% if {[blog-post?] && [website-setting generateRssFeed 0]} { %>
+        <% if {[blog-post?] && [website-setting {rss enable} 0]} { %>
           <ul class="nav navbar-nav navbar-right">
             <li><a rel="<%= $rssFeedRel %>" type="application/rss+xml" href="<%= $rssFeedUrl %>">RSS</a></li>
           </ul>

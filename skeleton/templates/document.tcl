@@ -72,7 +72,7 @@ proc rss-feed-link {} {
             set rel home
         }
         set url "[ website-setting url ][ website-setting \
-                rssFeedFilename rss.xml ]"
+                {rss feedFilename} rss.xml ]"
     }
     return [list $rel $url]
 }
