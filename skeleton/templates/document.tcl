@@ -61,7 +61,7 @@ proc format-document-title {} {
 proc rss-feed-link {} {
     global currentPageId
     set tagPageTag [setting tagPageTag]
-    if {$tagPageTag ne ""} {
+    if {($tagPageTag ne "") && ([website-setting {rss tagFeeds}])} {
         set rel alternate
         set pageId [get-tag-page $tagPageTag 0]
         set url [regsub {.html$} [absolute-link $pageId] .xml]

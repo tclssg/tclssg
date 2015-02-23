@@ -9,3 +9,5 @@ mclocale [setting locale en_US]
 #mcset en_US {page %1$s} {page %1$s}
 #mcset en_US {Published %1$s} {Published %1$s}
 #mcset en_US {Published %1$s, updated %2$s} {Published %1$s,updated %2$s}
+#mcset en_US {Tag RSS} {Tag RSS}
+#mcset en_US {RSS} {RSS}
