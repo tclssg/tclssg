@@ -255,18 +255,16 @@ namespace eval tclssg {
             foreach tag [tclssg pages get-tag-list] {
                 set taggedPages [tclssg pages with-tag $tag]
                 set tempPageId [tclssg pages copy $tagPageId 1]
-                set toReplace [file rootname \
-                        [lindex [file split [tclssg pages get-data \
-                                $tempPageId inputFile ""]] end]]
-                set replaceWith "tag-[::tclssg::utils::slugify $tag]"
+                set replacementRootname "[::tclssg::utils::slugify $tag]"
                 foreach varName {inputFile outputFile} {
+                    set value [tclssg pages get-data $tempPageId $varName ""]
+                    set newValue [file join \
+                            {*}[lrange [file split $value] 0 end-1] \
+                            "$replacementRootname[file extension $value]"]
                     tclssg pages set-data \
                             $tempPageId \
                             $varName \
-                            [string map \
-                                    [list $toReplace $replaceWith] \
-                                    [tclssg pages get-data \
-                                            $tempPageId $varName ""]]
+                            $newValue
                 }
                 set resultIds [add-article-collection $taggedPages $tempPageId]
                 tclssg pages delete $tempPageId
