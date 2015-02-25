@@ -97,7 +97,7 @@ namespace eval ::tclssg::pages {
         }
         return [tclssg-db last_insert_rowid]
     }
-    # Make a copy of page $id in table pages return the id of the copy.
+    # Make a copy of page $id in table pages and return the id of the copy.
     proc copy {id copySettings} {
         tclssg-db eval {
             INSERT INTO pages(

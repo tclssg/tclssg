@@ -49,9 +49,16 @@ namespace eval ::tclssg::command {
     }
 
     proc clean {inputDir outputDir {debugDir {}} {options {}}} {
+        # Do not use -force to avoid deleting read-only files.
         foreach file [::fileutil::find $outputDir {file isfile}] {
             puts "deleting $file"
             file delete $file
+        }
+        # A hack to remove nested subdirectories first.
+        foreach directory [lsort -decr [::fileutil::find \
+                $outputDir {file isdirectory}]] {
+            puts "removing empty directory $directory"
+            file delete $directory
         }
     }
 
