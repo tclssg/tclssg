@@ -373,6 +373,7 @@ namespace eval tclssg {
 
         validate-config $inputDir $contentDir
 
+        set prettyUrls [tclssg pages get-website-config-setting prettyUrls 0]
         # A callback to determine outputFile from inputFile.
         proc ::tclssg::detOutputFile {inputFile} [list \
             apply {{contentDir outputDir prettyUrls} {
@@ -392,8 +393,7 @@ namespace eval tclssg {
             }} \
             $contentDir \
             $outputDir \
-            [tclssg pages get-website-config-setting \
-                    prettyUrls 0]]
+            $prettyUrls]
         set ::tclssg::pages::outputFileCallback ::tclssg::detOutputFile
 
         variable settingSynonyms
@@ -536,7 +536,7 @@ namespace eval tclssg {
 
             # Use the previous list of relative links if the current file is
             # in the same directory as the previous one.
-            if {[templating cache retrieve! $outputFile pageLinks]} {
+            if {[templating cache fresh? $outputFile]} {
                 tclssg pages copy-links \
                         [tclssg pages output-file-to-id \
                                 [templating cache filename]] $id
@@ -555,14 +555,14 @@ namespace eval tclssg {
                 }
                 # Store links to other pages and website root path relative to
                 # the current page
-                set prettyUrls [tclssg pages \
-                        get-website-config-setting prettyUrls 0]
                 foreach {targetId link} $pageLinks {
                     if {$prettyUrls} {
                         set link [regsub {index.html$} $link {}]
                     }
                     tclssg pages add-link $id $targetId $link
                 }
+
+                templating cache set $outputFile pageLinks 1
             }
 
             # Relative path to the root directory of the output.

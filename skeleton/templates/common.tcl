@@ -64,10 +64,7 @@ proc relative-link {id} {
         set fromId $currentPageId
     }
     set link [get-page-link $fromId $id]
-    #if {($link eq "") && ($id ne $fromId)} {
-    #    error "cannot find relative link from [get-page-data \
-    #            $fromId inputFile] to [get-page-data $id inputFile]"
-    #}
+
     return $link
 }
 

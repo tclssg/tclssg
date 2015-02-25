@@ -109,14 +109,14 @@ namespace eval ::tclssg::templating::interpreter {
     }
 
     # Run $script and cache the result. Return that result immediately
-    # if the script has already been run for $outputFile.
-    proc with-cache {outputFile script} {
-        set result {}
-        if {![[namespace parent]::cache::retrieve-key! \
-                    $outputFile $script result]} {
+    # if the script has already been run for $filename.
+    proc with-cache {filename script} {
+        set ns [namespace parent]::cache
+        if {[$ns exists $filename $script]} {
+            set result [$ns get $filename $script]
+        } else {
             set result [interp eval templateInterp $script]
-            [namespace parent]::cache::update-key \
-                    $outputFile $script result
+            $ns set $filename $script $result
         }
         return $result
     }

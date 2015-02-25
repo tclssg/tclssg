@@ -17,12 +17,12 @@ namespace eval ::tclssg::templating::cache {
     # directory (because relative link paths for the sidebar and the tag
     # cloud are the same for such files, and that is what the cache is
     # used for).
-    proc fresh? {newFile} {
+    proc fresh? {filename} {
         variable cachedFile
         variable data
 
-        set result [expr {
-            [file dirname $cachedFile] eq [file dirname $newFile]
+        ::set result [expr {
+            [file dirname $cachedFile] eq [file dirname $filename]
         }]
         return $result
     }
@@ -34,42 +34,33 @@ namespace eval ::tclssg::templating::cache {
 
     # Update cache item $key. If the rest of the cache is no longer
     # fresh discard it.
-    proc update-key {newFile key varName} {
+    proc set {filename key value} {
         variable cachedFile
         variable data
 
-        upvar 1 $varName var
-
-        if {![fresh? $newFile]} {
-            set data {}
-            set cachedFile $newFile
+        if {![fresh? $filename]} {
+            ::set data {}
+            ::set cachedFile $filename
         }
-        dict set data $key $var
+        dict set data $key $value
     }
 
-    # Use varName as the key in update-key.
-    proc update {newFile varName} {
-        upvar 1 $varName localVar
-        update-key $newFile $varName localVar
-    }
-
-    # If fresh for newFile retrieve the cached value under key and put
-    # it in variable varName.
-    proc retrieve-key! {newFile key varName} {
-        upvar 1 $varName var
-
+    proc get {filename key} {
+        variable cachedFile
         variable data
 
-        if {![fresh? $newFile] || ![dict exists $data $key]} {
-            return 0
+        if {[fresh? $filename]} {
+            return [dict get $data $key]
+        } else {
+            error "trying to retrieve stale cache"
         }
-        set var [dict get $data $key]
-        return 1
     }
 
-    # Use varName as key for retrieve-key!.
-    proc retrieve! {newFile varName} {
-        upvar 1 $varName localVar
-        retrieve-key! $newFile $varName localVar
+    proc exists {filename key} {
+        variable data
+
+        return [expr {
+            [fresh? $filename] && [dict exists $data $key]
+        }]
     }
  } ;# namespace cache
