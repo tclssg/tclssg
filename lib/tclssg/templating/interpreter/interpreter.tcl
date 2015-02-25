@@ -46,6 +46,7 @@ namespace eval ::tclssg::templating::interpreter {
             ::tclssg::pages::get-link           get-page-link
             ::tclssg::pages::get-tags           get-page-tags
             ::tclssg::pages::get-tag-page       get-tag-page
+            ::tclssg::pages::get-output-file    get-output-file
             ::msgcat::mc                        mc
             ::msgcat::mcset                     mcset
             ::msgcat::mclocale                  mclocale

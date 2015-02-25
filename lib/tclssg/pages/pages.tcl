@@ -10,6 +10,8 @@ namespace eval ::tclssg::pages {
     namespace export *
     namespace ensemble create
 
+    variable outputFileCallback
+
     # Create tables necessary for various procs called by Tclssg's build
     # command.
     #
@@ -175,6 +177,28 @@ namespace eval ::tclssg::pages {
         } else {
             return $default
         }
+    }
+    proc get-output-file {id} {
+        tclssg-db eval {
+            SELECT
+                outputFile as outputFileStored,
+                inputFile
+            FROM pages WHERE id = $id;
+        } arr {}
+        if {$arr(outputFileStored) eq ""} {
+            if {$arr(inputFile) eq ""} {
+                set result ""
+            } else {
+                variable outputFileCallback
+                set result [$outputFileCallback $arr(inputFile)]
+                # Cache outputFile value.
+                set-data $id outputFile $result
+            }
+        } else {
+            # Retrieve stored value for outputFile.
+            set result $arr(outputFileStored)
+        }
+        return $result
     }
     # Returns the list of ids of all pages sorted by their sortingDate, if
     # any.

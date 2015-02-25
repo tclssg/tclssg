@@ -191,7 +191,6 @@ namespace eval tclssg {
         }]
 
         set prevIndexPageId {}
-        set topPageOutputFile [tclssg pages get-data $topPageId outputFile]
 
         foreach id $pageIds {
             lappend currentPageArticles $id
@@ -203,10 +202,6 @@ namespace eval tclssg {
                         [::tclssg::utils::add-number-before-extension \
                                 [tclssg pages get-data $topPageId inputFile] \
                                 [expr {$pageNumber + 1}] {-%d} 1]
-                set newOutputFile \
-                        [::tclssg::utils::add-number-before-extension \
-                                [tclssg pages get-data $topPageId outputFile] \
-                                [expr {$pageNumber + 1}] {-%d} 1]
                 set newId [tclssg pages copy $topPageId 1]
 
                 puts -nonewline "adding article collection $newInputFile"
@@ -214,10 +209,6 @@ namespace eval tclssg {
                         $newId \
                         inputFile \
                         $newInputFile
-                tclssg pages set-data \
-                        $newId \
-                        outputFile \
-                        $newOutputFile
                 tclssg pages set-data \
                         $newId \
                         articlesToAppend \
@@ -256,16 +247,17 @@ namespace eval tclssg {
                 set taggedPages [tclssg pages with-tag $tag]
                 set tempPageId [tclssg pages copy $tagPageId 1]
                 set replacementRootname "[::tclssg::utils::slugify $tag]"
-                foreach varName {inputFile outputFile} {
-                    set value [tclssg pages get-data $tempPageId $varName ""]
-                    set newValue [file join \
-                            {*}[lrange [file split $value] 0 end-1] \
-                            "$replacementRootname[file extension $value]"]
-                    tclssg pages set-data \
-                            $tempPageId \
-                            $varName \
-                            $newValue
-                }
+
+                # Update inputFile.
+                set value [tclssg pages get-data $tempPageId inputFile ""]
+                set newValue [file join \
+                        {*}[lrange [file split $value] 0 end-1] \
+                        "$replacementRootname[file extension $value]"]
+                tclssg pages set-data \
+                        $tempPageId \
+                        inputFile \
+                        $newValue
+
                 set resultIds [add-article-collection $taggedPages $tempPageId]
                 tclssg pages delete $tempPageId
                 for {set i 0} {$i < [llength $resultIds]} {incr i} {
@@ -350,7 +342,7 @@ namespace eval tclssg {
                 }
                 append result [format $entry \
                         $url[::fileutil::relative $outputDir \
-                                [tclssg pages get-data $id outputFile]] \
+                                [tclssg pages get-output-file $id]] \
                         $lastmod]\n
             }
         }
@@ -363,6 +355,7 @@ namespace eval tclssg {
         blogPost blog modifiedDate modified
     }]
 
+
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
     proc compile-website {inputDir outputDir debugDir websiteConfig} {
@@ -374,10 +367,34 @@ namespace eval tclssg {
 
         tclssg pages set-website-config-setting inputDir $inputDir
         set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
-        tclssg page set-website-config-setting dataDir \
+        tclssg pages set-website-config-setting contentDir $contentDir
+        tclssg pages set-website-config-setting dataDir \
                 [file join $inputDir $::tclssg::config(dataDirName)]
 
         validate-config $inputDir $contentDir
+
+        # A callback to determine outputFile from inputFile.
+        proc ::tclssg::detOutputFile {inputFile} [list \
+            apply {{contentDir outputDir prettyUrls} {
+                upvar 1 inputFile inputFile
+                if {$prettyUrls && ([file tail $inputFile] ne "index.md")} {
+                    set result [file join \
+                            [file rootname \
+                                    [::tclssg::utils::replace-path-root \
+                                        $inputFile $contentDir $outputDir]] \
+                            index.html]
+                } else {
+                    set result [file rootname \
+                            [::tclssg::utils::replace-path-root \
+                                   $inputFile $contentDir $outputDir]].html
+                }
+                return $result
+            }} \
+            $contentDir \
+            $outputDir \
+            [tclssg pages get-website-config-setting \
+                    prettyUrls 0]]
+        set ::tclssg::pages::outputFileCallback ::tclssg::detOutputFile
 
         variable settingSynonyms
 
@@ -427,11 +444,10 @@ namespace eval tclssg {
 
             # Add the current page to the page database with an appropriate
             # output filename.
+
             set id_ [tclssg pages add \
                             $file \
-                            [file rootname \
-                                    [::tclssg::utils::replace-path-root \
-                                            $file $contentDir $outputDir]].html\
+                            "" \
                             $rawContent \
                             "" \
                             [lindex $dateScanned 0]]
@@ -503,12 +519,12 @@ namespace eval tclssg {
             set id [tclssg pages get-website-config-setting $varName {}]
             if {$id ne ""} {
                 if {$varName ne "tagPageId"} {
-                    set outputFile [tclssg pages get-data $id outputFile ""]
+                    set inputFile [tclssg pages get-data $id inputFile ""]
                 }
                 tclssg pages delete $id
                 tclssg pages delete-links-to $id
                 if {$varName ne "tagPageId"} {
-                    set newId [tclssg pages output-file-to-id $outputFile]
+                    set newId [tclssg pages input-file-to-id $inputFile]
                     tclssg pages set-website-config-setting $varName $newId
                 }
             }
@@ -516,7 +532,7 @@ namespace eval tclssg {
 
         # Process page data into HTML output.
         foreach id [tclssg pages sorted-by-date] {
-            set outputFile [tclssg pages get-data $id outputFile]
+            set outputFile [tclssg pages get-output-file $id]
 
             # Use the previous list of relative links if the current file is
             # in the same directory as the previous one.
@@ -535,16 +551,20 @@ namespace eval tclssg {
                     lappend pageLinks $otherFileId \
                             [::fileutil::relative \
                                     [file dirname $outputFile] \
-                                    [tclssg pages get-data \
-                                            $otherFileId outputFile]]
+                                    [tclssg pages get-output-file $otherFileId]]
                 }
-                templating cache update $outputFile pageLinks
                 # Store links to other pages and website root path relative to
-                # the current page.
+                # the current page
+                set prettyUrls [tclssg pages \
+                        get-website-config-setting prettyUrls 0]
                 foreach {targetId link} $pageLinks {
+                    if {$prettyUrls} {
+                        set link [regsub {index.html$} $link {}]
+                    }
                     tclssg pages add-link $id $targetId $link
                 }
             }
+
             # Relative path to the root directory of the output.
             tclssg pages set-data $id rootDirPath \
                     [::fileutil::relative \
@@ -561,7 +581,7 @@ namespace eval tclssg {
             ]
 
             generate-html-file \
-                    [tclssg pages get-data $id outputFile] \
+                    [tclssg pages get-output-file $id] \
                     $id \
                     $articleTemplate \
                     $documentTemplate
@@ -584,7 +604,7 @@ namespace eval tclssg {
 
         # Generate an RSS feed.
         if {[tclssg page get-website-config-setting {rss enable} 0]} {
-            # Set the default filename if not present.
+            # Set the default filename for the main feed if not present.
             set feedFilename [tclssg page get-website-config-setting \
                     {rss feedFilename} rss.xml]
             tclssg pages set-website-config-setting \
@@ -608,8 +628,9 @@ namespace eval tclssg {
             if {[tclssg page get-website-config-setting {rss tagFeeds} 0]} {
                 foreach pageId [tclssg page get-tag-pages 0] {
                     lappend rssFeeds $pageId
-                    lappend rssFeeds [file rootname \
-                            [tclssg page get-data $pageId outputFile]].xml
+                    set rssFile [file rootname \
+                            [tclssg page get-output-file $pageId]].xml
+                    lappend rssFeeds $rssFile
                 }
             }
 

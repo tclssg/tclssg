@@ -52,12 +52,23 @@ proc absolute-link {id} {
         error "using absolute-link requires that url be set in website config"
     }
     set outputDir [get-website-config-setting outputDir ""]
-    return $url[replace-path-root [get-page-data $id outputFile] $outputDir ""]
+    return $url[replace-path-root [get-output-file $id] $outputDir ""]
 }
 
 proc relative-link {id} {
     global currentPageId
-    return [get-page-link $currentPageId $id]
+    global collectionPageId
+    if {[info exists collectionPageId]} {
+        set fromId $collectionPageId
+    } else {
+        set fromId $currentPageId
+    }
+    set link [get-page-link $fromId $id]
+    #if {($link eq "") && ($id ne $fromId)} {
+    #    error "cannot find relative link from [get-page-data \
+    #            $fromId inputFile] to [get-page-data $id inputFile]"
+    #}
+    return $link
 }
 
 proc link-or-nothing {websiteVarName} {
@@ -75,7 +86,7 @@ set blogIndexLink [link-or-nothing blogIndexPageId]
 
 proc with-cache script {
     global currentPageId
-    with-cache-for-filename [get-page-data $currentPageId outputFile] $script
+    with-cache-for-filename [get-output-file $currentPageId] $script
 }
 
 proc blog-post? {} {
