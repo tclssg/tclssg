@@ -102,10 +102,10 @@ namespace eval tclssg {
         templating apply-template $documentTemplate $content $id
     }
 
-    # Generate an HTML document out of the pages listed in pageIds and
+    # Generate an output document out of the pages listed in pageIds and
     # store it as $outputFile. The page data corresponding to the ids in
     # pageIds must be present in pages database table.
-    proc generate-html-file {outputFile topPageId articleTemplate
+    proc write-output-file {outputFile topPageId articleTemplate
             documentTemplate {extraVariables {}} {silent 0}} {
         set inputFiles {}
         set gen {} ;# article content accumulator
@@ -355,6 +355,175 @@ namespace eval tclssg {
         blogPost blog modifiedDate modified
     }]
 
+    # Load the content of the file $file into the page database.
+    proc load-page {file} {
+        variable settingSynonyms
+
+        # May want to change the rawContent preloading behavior for very
+        # large (larger than memory) websites.
+        set rawContent [read-file $file]
+        lassign [::tclssg::utils::get-page-settings $rawContent] \
+            settings baseContent
+
+        # Skip pages marked as drafts.
+        if {[::tclssg::utils::dict-default-get 0 $settings draft]} {
+            continue
+        }
+
+        tclssg debugger save-intermediate \
+                $file frontmatter-0-raw.tcl $settings
+        tclssg debugger save-intermediate \
+                $file content-0-raw $baseContent
+
+        # Set the values for empty keys to those of their synonym keys, if
+        # present.
+        foreach {varName synonym} $settingSynonyms {
+            if {![dict exists $settings $varName] &&
+                    [dict exists $settings $synonym]} {
+                dict set settings $varName [dict get $settings $synonym]
+            }
+        }
+
+        # Parse date and modifiedDate into a Unix timestamp plus a format
+        # string.
+        set clockOptions {}
+        set timezone [tclssg pages get-website-config-setting timezone ""]
+        if {$timezone ne ""} {
+            set clockOptions [list -timezone $timezone]
+        }
+        set dateScanned [::tclssg::utils::incremental-clock-scan \
+                [::tclssg::utils::dict-default-get {} $settings date] \
+                $clockOptions]
+        dict set settings dateScanned $dateScanned
+        set modifiedDateScanned [::tclssg::utils::incremental-clock-scan \
+                [::tclssg::utils::dict-default-get {} \
+                        $settings modifiedDate] \
+                $clockOptions]
+        dict set settings modifiedDateScanned $modifiedDateScanned
+
+        # Add the current page to the page database with an appropriate
+        # output filename.
+
+        set id_ [tclssg pages add \
+                        $file \
+                        "" \
+                        $rawContent \
+                        "" \
+                        [lindex $dateScanned 0]]
+
+        tclssg pages add-tags $id_ \
+                [::tclssg::utils::dict-default-get {} $settings tags]
+        dict unset settings tags
+
+        tclssg debugger save-intermediate \
+                $file frontmatter-1-final.tcl $settings
+        foreach {var value} $settings {
+            tclssg pages set-setting $id_ $var $value
+        }
+    }
+
+    # Produce an output file for page $id.
+    proc compile-page {id prettyUrls outputDir
+            articleTemplate documentTemplate} {
+        set outputFile [tclssg pages get-output-file $id]
+
+        # Use the previous list of relative links if the current file is
+        # in the same directory as the previous one.
+        if {[tclssg templating cache fresh? $outputFile]} {
+            tclssg pages copy-links \
+                    [tclssg pages output-file-to-id \
+                            [tclssg templating cache filename]] $id
+        } else {
+            # Compute new pageLinks for the current page. Beware: in the
+            # worst case scenario (each page is in its own directory) this
+            # gives us n^2 operations for n pages.
+            set pageLinks {}
+            foreach otherFileId [tclssg pages sorted-by-date] {
+                # pageLinks maps page id (= input FN relative to
+                # $contentDir) to relative link to it.
+                lappend pageLinks $otherFileId \
+                        [::fileutil::relative \
+                                [file dirname $outputFile] \
+                                [tclssg pages get-output-file $otherFileId]]
+            }
+            # Store links to other pages and website root path relative to
+            # the current page
+            foreach {targetId link} $pageLinks {
+                if {$prettyUrls} {
+                    set link [regsub {index.html$} $link {}]
+                }
+                tclssg pages add-link $id $targetId $link
+            }
+
+            tclssg templating cache set $outputFile pageLinks 1
+        }
+
+        # Relative path to the root directory of the output.
+        tclssg pages set-data $id rootDirPath \
+                [::fileutil::relative \
+                        [file dirname $outputFile] \
+                        $outputDir]
+
+        # Expand templates, first for the article then for the HTML
+        # document.
+
+        tclssg pages set-data $id cookedContent [
+            tclssg templating prepare-content \
+                    [tclssg pages get-data $id rawContent] \
+                    $id \
+        ]
+
+        tclssg write-output-file \
+                  [tclssg pages get-output-file $id] \
+                    $id \
+                    $articleTemplate \
+                    $documentTemplate]
+    }
+
+    # Generate RSS feeds.
+    proc make-rss-feeds {inputDir outputDir} {
+        # Set the default filename for the main feed if not present.
+        set feedFilename [tclssg page get-website-config-setting \
+                {rss feedFilename} rss.xml]
+        tclssg pages set-website-config-setting \
+                {rss feedFilename} $feedFilename
+
+        # Read RSS templates.
+        set rssArticleTemplate \
+                [read-template-file $inputDir \
+                        {rss articleTemplateFilename} \
+                        rssArticleTemplateFilename]
+        set rssDocumentTemplate \
+                [read-template-file $inputDir \
+                        {rss documentTemplateFilename} \
+                        rssDocumentTemplateFilename]
+
+        set rssFeeds [list \
+                [tclssg pages \
+                        get-website-config-setting blogIndexPageId ""] \
+                [file join $outputDir $feedFilename]]
+
+        if {[tclssg page get-website-config-setting {rss tagFeeds} 0]} {
+            foreach pageId [tclssg page get-tag-pages 0] {
+                lappend rssFeeds $pageId
+                set rssFile [file rootname \
+                        [tclssg page get-output-file $pageId]].xml
+                lappend rssFeeds $rssFile
+            }
+        }
+
+        foreach {pageId rssFile} $rssFeeds {
+            puts "writing RSS feed for page [tclssg page get-data \
+                    $pageId inputFile] to $rssFile"
+            write-output-file \
+                    $rssFile \
+                    $pageId \
+                    $rssArticleTemplate \
+                    $rssDocumentTemplate \
+                    {} \
+                    1
+        }
+    }
 
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
@@ -400,67 +569,7 @@ namespace eval tclssg {
 
         # Load the page files into the page database.
         foreach file [::fileutil::findByPattern $contentDir -glob *.md] {
-            # May want to change the rawContent preloading behavior for very
-            # large (larger than memory) websites.
-            set rawContent [read-file $file]
-            lassign [::tclssg::utils::get-page-settings $rawContent] \
-                settings baseContent
-
-            # Skip pages marked as drafts.
-            if {[::tclssg::utils::dict-default-get 0 $settings draft]} {
-                continue
-            }
-
-            tclssg debugger save-intermediate \
-                    $file frontmatter-0-raw.tcl $settings
-            tclssg debugger save-intermediate \
-                    $file content-0-raw $baseContent
-
-            # Set the values for empty keys to those of their synonym keys, if
-            # present.
-            foreach {varName synonym} $settingSynonyms {
-                if {![dict exists $settings $varName] &&
-                        [dict exists $settings $synonym]} {
-                    dict set settings $varName [dict get $settings $synonym]
-                }
-            }
-
-            # Parse date and modifiedDate into a Unix timestamp plus a format
-            # string.
-            set clockOptions {}
-            set timezone [tclssg pages get-website-config-setting timezone ""]
-            if {$timezone ne ""} {
-                set clockOptions [list -timezone $timezone]
-            }
-            set dateScanned [::tclssg::utils::incremental-clock-scan \
-                    [::tclssg::utils::dict-default-get {} $settings date] \
-                    $clockOptions]
-            dict set settings dateScanned $dateScanned
-            set modifiedDateScanned [::tclssg::utils::incremental-clock-scan \
-                    [::tclssg::utils::dict-default-get {} \
-                            $settings modifiedDate] \
-                    $clockOptions]
-            dict set settings modifiedDateScanned $modifiedDateScanned
-
-            # Add the current page to the page database with an appropriate
-            # output filename.
-
-            set id_ [tclssg pages add \
-                            $file \
-                            "" \
-                            $rawContent \
-                            "" \
-                            [lindex $dateScanned 0]]
-
-            tclssg pages add-tags $id_ \
-                    [::tclssg::utils::dict-default-get {} $settings tags]
-            dict unset settings tags
-
-            tclssg debugger save-intermediate \
-                    $file frontmatter-1-final.tcl $settings
-            foreach {var value} $settings {
-                tclssg pages set-setting $id_ $var $value
-            }
+            load-page $file
         }
 
         # Read template files.
@@ -532,59 +641,8 @@ namespace eval tclssg {
 
         # Process page data into HTML output.
         foreach id [tclssg pages sorted-by-date] {
-            set outputFile [tclssg pages get-output-file $id]
-
-            # Use the previous list of relative links if the current file is
-            # in the same directory as the previous one.
-            if {[templating cache fresh? $outputFile]} {
-                tclssg pages copy-links \
-                        [tclssg pages output-file-to-id \
-                                [templating cache filename]] $id
-            } else {
-                # Compute new pageLinks for the current page. Beware: in the
-                # worst case scenario (each page is in its own directory) this
-                # gives us n^2 operations for n pages.
-                set pageLinks {}
-                foreach otherFileId [tclssg pages sorted-by-date] {
-                    # pageLinks maps page id (= input FN relative to
-                    # $contentDir) to relative link to it.
-                    lappend pageLinks $otherFileId \
-                            [::fileutil::relative \
-                                    [file dirname $outputFile] \
-                                    [tclssg pages get-output-file $otherFileId]]
-                }
-                # Store links to other pages and website root path relative to
-                # the current page
-                foreach {targetId link} $pageLinks {
-                    if {$prettyUrls} {
-                        set link [regsub {index.html$} $link {}]
-                    }
-                    tclssg pages add-link $id $targetId $link
-                }
-
-                templating cache set $outputFile pageLinks 1
-            }
-
-            # Relative path to the root directory of the output.
-            tclssg pages set-data $id rootDirPath \
-                    [::fileutil::relative \
-                            [file dirname $outputFile] \
-                            $outputDir]
-
-            # Expand templates, first for the article then for the HTML
-            # document.
-
-            tclssg pages set-data $id cookedContent [
-                templating prepare-content \
-                        [tclssg pages get-data $id rawContent] \
-                        $id \
-            ]
-
-            generate-html-file \
-                    [tclssg pages get-output-file $id] \
-                    $id \
-                    $articleTemplate \
-                    $documentTemplate
+            compile-page $id $prettyUrls $outputDir \
+                    $articleTemplate $documentTemplate
         }
 
         # Copy static files verbatim.
@@ -602,49 +660,8 @@ namespace eval tclssg {
 
         tclssg pages set-website-config-setting buildDate [clock seconds]
 
-        # Generate an RSS feed.
         if {[tclssg page get-website-config-setting {rss enable} 0]} {
-            # Set the default filename for the main feed if not present.
-            set feedFilename [tclssg page get-website-config-setting \
-                    {rss feedFilename} rss.xml]
-            tclssg pages set-website-config-setting \
-                    {rss feedFilename} $feedFilename
-
-            # Read RSS templates.
-            set rssArticleTemplate \
-                    [read-template-file $inputDir \
-                            {rss articleTemplateFilename} \
-                            rssArticleTemplateFilename]
-            set rssDocumentTemplate \
-                    [read-template-file $inputDir \
-                            {rss documentTemplateFilename} \
-                            rssDocumentTemplateFilename]
-
-            set rssFeeds [list \
-                    [tclssg pages \
-                            get-website-config-setting blogIndexPageId ""] \
-                    [file join $outputDir $feedFilename]]
-
-            if {[tclssg page get-website-config-setting {rss tagFeeds} 0]} {
-                foreach pageId [tclssg page get-tag-pages 0] {
-                    lappend rssFeeds $pageId
-                    set rssFile [file rootname \
-                            [tclssg page get-output-file $pageId]].xml
-                    lappend rssFeeds $rssFile
-                }
-            }
-
-            foreach {pageId rssFile} $rssFeeds {
-                puts "writing RSS feed for page [tclssg page get-data \
-                        $pageId inputFile] to $rssFile"
-                generate-html-file \
-                        $rssFile \
-                        $pageId \
-                        $rssArticleTemplate \
-                        $rssDocumentTemplate \
-                        {} \
-                        1
-            }
+            make-rss-feeds $inputDir $outputDir
         }
     }
 
