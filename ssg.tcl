@@ -79,6 +79,7 @@ namespace eval tclssg {
         set ::tclssg::config(defaultInputDir) [file join "website" "input"]
         set ::tclssg::config(defaultOutputDir) [file join "website" "output"]
         set ::tclssg::config(defaultDebugDir) [file join "website" "debug"]
+        set ::tclssg::config(defaultFeedFilename) rss.xml
 
         set ::tclssg::config(templateBrackets) {<% %>}
 
@@ -184,9 +185,16 @@ namespace eval tclssg {
         set pageNumber 0
         set resultIds {}
 
+        set blogIndexPageId \
+                [tclssg pages get-website-config-setting blogIndexPageId ""]
+        set tagPageId \
+                [tclssg pages get-website-config-setting tagPageId ""]
+
         # Filter out pages to that set hideFromCollections to 1.
         set pageIds [::struct::list filterfor x $pageIds {
             ($x ne $topPageId) &&
+            ($x ne $blogIndexPageId) &&
+            ($x ne $tagPageId) &&
             ![tclssg pages get-setting $x hideFromCollections 0]
         }]
 
@@ -367,7 +375,7 @@ namespace eval tclssg {
 
         # Skip pages marked as drafts.
         if {[::tclssg::utils::dict-default-get 0 $settings draft]} {
-            continue
+            return
         }
 
         tclssg debugger save-intermediate \
@@ -481,10 +489,10 @@ namespace eval tclssg {
     }
 
     # Generate RSS feeds.
-    proc make-rss-feeds {inputDir outputDir} {
-        # Set the default filename for the main feed if not present.
+    proc make-rss-feeds {inputDir outputDir prettyUrls} {
+        # Set the default filename for RSS feeds if not present.
         set feedFilename [tclssg page get-website-config-setting \
-                {rss feedFilename} rss.xml]
+                {rss feedFilename} $::tclssg::config(defaultFeedFilename)]
         tclssg pages set-website-config-setting \
                 {rss feedFilename} $feedFilename
 
@@ -506,8 +514,8 @@ namespace eval tclssg {
         if {[tclssg page get-website-config-setting {rss tagFeeds} 0]} {
             foreach pageId [tclssg page get-tag-pages 0] {
                 lappend rssFeeds $pageId
-                set rssFile [file rootname \
-                        [tclssg page get-output-file $pageId]].xml
+                set rssFile [$::tclssg::pages::rssFileCallback \
+                        [tclssg pages get-data $pageId inputFile]]
                 lappend rssFeeds $rssFile
             }
         }
@@ -544,26 +552,36 @@ namespace eval tclssg {
 
         set prettyUrls [tclssg pages get-website-config-setting prettyUrls 0]
         # A callback to determine outputFile from inputFile.
-        proc ::tclssg::detOutputFile {inputFile} [list \
-            apply {{contentDir outputDir prettyUrls} {
-                upvar 1 inputFile inputFile
-                if {$prettyUrls && ([file tail $inputFile] ne "index.md")} {
-                    set result [file join \
-                            [file rootname \
-                                    [::tclssg::utils::replace-path-root \
-                                        $inputFile $contentDir $outputDir]] \
-                            index.html]
-                } else {
-                    set result [file rootname \
-                            [::tclssg::utils::replace-path-root \
-                                   $inputFile $contentDir $outputDir]].html
-                }
-                return $result
-            }} \
+        set callback {{contentDir outputDir default extension prettyUrls} {
+            upvar 1 inputFile inputFile
+            if {$prettyUrls && ([file tail $inputFile] ne "index.md")} {
+                set result [file join \
+                        [file rootname \
+                                [::tclssg::utils::replace-path-root \
+                                        $inputFile $contentDir $outputDir]]\
+                        $default]
+            } else {
+                set result [file rootname \
+                        [::tclssg::utils::replace-path-root \
+                               $inputFile $contentDir $outputDir]].$extension
+            }
+            return $result
+        }}
+        proc ::tclssg::detOutputFile {inputFile} [list apply $callback \
             $contentDir \
             $outputDir \
+            index.html \
+            html \
+            $prettyUrls]
+        proc ::tclssg::detRssFile {inputFile} [list apply $callback \
+            $contentDir \
+            $outputDir \
+            [tclssg pages get-website-config-setting feedFilename \
+                    $::tclssg::config(defaultFeedFilename)] \
+            xml \
             $prettyUrls]
         set ::tclssg::pages::outputFileCallback ::tclssg::detOutputFile
+        set ::tclssg::pages::rssFileCallback ::tclssg::detRssFile
 
         variable settingSynonyms
 
@@ -661,7 +679,7 @@ namespace eval tclssg {
         tclssg pages set-website-config-setting buildDate [clock seconds]
 
         if {[tclssg page get-website-config-setting {rss enable} 0]} {
-            make-rss-feeds $inputDir $outputDir
+            make-rss-feeds $inputDir $outputDir $prettyUrls
         }
     }
 

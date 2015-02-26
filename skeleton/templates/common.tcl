@@ -47,6 +47,7 @@ proc page-setting {page name {default ""}} {
 # Utility procs.
 
 proc absolute-link {id} {
+    global currentPageId
     set url [get-website-config-setting url ""]
     if {$url eq ""} {
         error "using absolute-link requires that url be set in website config"

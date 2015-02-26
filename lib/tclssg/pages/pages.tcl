@@ -11,6 +11,7 @@ namespace eval ::tclssg::pages {
     namespace ensemble create
 
     variable outputFileCallback
+    variable rssFileCallback
 
     # Create tables necessary for various procs called by Tclssg's build
     # command.
@@ -155,6 +156,12 @@ namespace eval ::tclssg::pages {
             }
             tclssg-db eval {
                 DELETE FROM settings WHERE id = $id;
+            }
+            tclssg-db eval {
+                DELETE FROM tags WHERE id = $id;
+            }
+            tclssg-db eval {
+                DELETE FROM tagPages WHERE id = $id;
             }
         }
     }
