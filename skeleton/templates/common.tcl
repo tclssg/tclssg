@@ -68,7 +68,7 @@ proc relative-link {id} {
     set outputDir [get-website-config-setting outputDir ""]
 
     set err [catch {
-        set link [replace-path-root [get-output-file $id] $outputDir ""]
+        set link [get-page-link $fromId $id]
     }]
     if {$err} {
         return ""

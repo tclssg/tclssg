@@ -205,6 +205,13 @@ namespace eval ::tclssg::pages {
         }
         return $result
     }
+    # Returns a relative links from page $sourceId to page $targetId.
+    proc get-link {sourceId targetId} {
+        set sourceFile [get-output-file $sourceId]
+        set targetFile [get-output-file $targetId]
+        set result [::fileutil::relative [file dirname $sourceFile] $targetFile]
+        return $result
+    }
     # Returns the list of ids of all pages sorted by their sortingDate, if
     # any.
     proc sorted-by-date {} {
