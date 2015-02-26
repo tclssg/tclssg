@@ -166,9 +166,10 @@ namespace eval ::tclssg::pages {
             # Remove $id from articleToAppend. This part of page deletion could
             # be simplified through normalization of the DB but storing a list
             # is more convenient everywhere.
+            set idPattern "%$id%"
             set collections [tclssg-db eval {
                 SELECT id, articlesToAppend FROM pages
-                WHERE instr(articlesToAppend, $id)
+                WHERE articlesToAppend LIKE $idPattern
             }]
             foreach {topPageId articlesToAppend} $collections {
                 set articlesToAppendUpdated \
