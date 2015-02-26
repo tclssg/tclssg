@@ -504,25 +504,20 @@ namespace eval tclssg {
                         {rss documentTemplateFilename} \
                         rssDocumentTemplateFilename]
 
-        set rssFeeds [list \
-                [tclssg pages \
-                        get-website-config-setting blogIndexPageId ""] \
-                [file join $outputDir $feedFilename]]
+        set rssFeedPageIds [tclssg pages \
+                get-website-config-setting blogIndexPageId ""]
 
         if {[tclssg page get-website-config-setting {rss tagFeeds} 0]} {
-            foreach pageId [tclssg page get-tag-pages 0] {
-                lappend rssFeeds $pageId
-                set rssFile [$::tclssg::pages::rssFileCallback \
-                        [tclssg pages get-data $pageId inputFile]]
-                lappend rssFeeds $rssFile
-            }
+            lappend rssFeedPageIds {*}[tclssg page get-tag-pages 0]
         }
 
-        foreach {pageId rssFile} $rssFeeds {
+        foreach pageId $rssFeedPageIds {
+            set filename [$::tclssg::pages::rssFileCallback \
+                    [tclssg pages get-data $pageId inputFile]]
             puts "writing RSS feed for page [tclssg page get-data \
-                    $pageId inputFile] to $rssFile"
+                    $pageId inputFile] to $filename"
             write-output-file \
-                    $rssFile \
+                    $filename \
                     $pageId \
                     $rssArticleTemplate \
                     $rssDocumentTemplate \
@@ -552,12 +547,17 @@ namespace eval tclssg {
         # A callback to determine outputFile from inputFile.
         set callback {{contentDir outputDir default extension prettyUrls} {
             upvar 1 inputFile inputFile
-            if {$prettyUrls && ([file tail $inputFile] ne "index.md")} {
-                set result [file join \
-                        [file rootname \
+            set indexFile [expr {[file tail $inputFile] eq "index.md"}]
+            if {($prettyUrls) || $indexFile} {
+                set path [lrange \
+                        [file split \
                                 [::tclssg::utils::replace-path-root \
-                                        $inputFile $contentDir $outputDir]]\
-                        $default]
+                                        $inputFile $contentDir $outputDir]] \
+                        0 end-1]
+                if {!$indexFile} {
+                    lappend path [file rootname [file tail $inputFile]]
+                }
+                set result [file join {*}$path $default]
             } else {
                 set result [file rootname \
                         [::tclssg::utils::replace-path-root \
