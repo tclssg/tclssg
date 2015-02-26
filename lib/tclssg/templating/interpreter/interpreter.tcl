@@ -60,6 +60,10 @@ namespace eval ::tclssg::templating::interpreter {
             interp alias templateInterp $alias {} {*}$command
         }
 
+        interp alias templateInterp get-rss-file {} apply {{callback id} {
+            return [$callback [tclssg pages get-data $id inputFile]]
+        }} $::tclssg::pages::rssFileCallback
+
         # Expose built-ins.
         foreach builtIn {source} {
             interp expose templateInterp $builtIn

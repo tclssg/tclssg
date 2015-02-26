@@ -193,8 +193,6 @@ namespace eval tclssg {
         # Filter out pages to that set hideFromCollections to 1.
         set pageIds [::struct::list filterfor x $pageIds {
             ($x ne $topPageId) &&
-            ($x ne $blogIndexPageId) &&
-            ($x ne $tagPageId) &&
             ![tclssg pages get-setting $x hideFromCollections 0]
         }]
 

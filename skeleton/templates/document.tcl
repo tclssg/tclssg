@@ -60,19 +60,16 @@ proc format-document-title {} {
 
 proc rss-feed-link {} {
     global currentPageId
+    set outputDir [website-setting outputDir]
     set tagPageTag [setting tagPageTag]
-    if {($tagPageTag ne "") && ([website-setting {rss tagFeeds} 0])} {
+    set url "[ website-setting url ][replace-path-root \
+            [get-rss-file $currentPageId] $outputDir ""]"
+
+    if {(($tagPageTag ne "") && ([website-setting {rss tagFeeds} 0])) ||
+            ($currentPageId eq [website-setting blogIndexPageId])} {
         set rel alternate
-        set pageId [get-tag-page $tagPageTag 0]
-        set url [regsub {.html$} [absolute-link $pageId] .xml]
     } else {
-        if {$currentPageId eq [website-setting blogIndexPageId]} {
-            set rel alternate
-        } else {
-            set rel home
-        }
-        set url "[ website-setting url ][ website-setting \
-                {rss feedFilename} rss.xml ]"
+        set rel home
     }
     return [list $rel $url]
 }

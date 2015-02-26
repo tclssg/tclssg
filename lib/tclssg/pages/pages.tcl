@@ -163,6 +163,22 @@ namespace eval ::tclssg::pages {
             tclssg-db eval {
                 DELETE FROM tagPages WHERE id = $id;
             }
+            # Remove $id from articleToAppend. This part of page deletion could
+            # be simplified through normalization of the DB but storing a list
+            # is more convenient everywhere.
+            set collections [tclssg-db eval {
+                SELECT id, articlesToAppend FROM pages
+                WHERE instr(articlesToAppend, $id)
+            }]
+            foreach {topPageId articlesToAppend} $collections {
+                set articlesToAppendUpdated \
+                        [lsearch -all -inline -not -exact \
+                                $articlesToAppend $id]
+                tclssg-db eval {
+                    UPDATE pages SET articlesToAppend=$articlesToAppendUpdated
+                    WHERE id = $topPageId;
+                }
+            }
         }
     }
     proc set-data {id field value} {
