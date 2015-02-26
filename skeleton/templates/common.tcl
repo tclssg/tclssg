@@ -64,7 +64,18 @@ proc relative-link {id} {
     } else {
         set fromId $currentPageId
     }
-    set link [get-page-link $fromId $id]
+
+    set outputDir [get-website-config-setting outputDir ""]
+
+    set err [catch {
+        set link [replace-path-root [get-output-file $id] $outputDir ""]
+    }]
+    if {$err} {
+        return ""
+    }
+    if {[website-setting prettyUrls 0]} {
+        set link [regsub {index.html$} $link {}]
+    }
 
     return $link
 }

@@ -22,8 +22,6 @@ namespace eval ::tclssg::pages {
     # pages -- page data for every page. Page data is the information about
     # the page that is *not* set by the user directly in preamble
     # (settings) section of the page file.
-    # links -- relative hyperlink HREFs to link from page $id to page
-    # $targetId.
     # settings -- page settings for every page.
     # websiteConfig -- website-wide settings.
     # tags -- blog post tags for every blog post.
@@ -40,16 +38,9 @@ namespace eval ::tclssg::pages {
                 outputFile TEXT,
                 rawContent TEXT,
                 cookedContent TEXT,
-                pageLinks TEXT,
                 rootDirPath TEXT,
                 articlesToAppend TEXT,
                 sortingDate INTEGER
-            );
-            CREATE TABLE links(
-                id INTEGER,
-                targetId INTEGER,
-                link TEXT,
-                PRIMARY KEY (id, targetId)
             );
             CREATE TABLE settings(
                 id INTEGER,
@@ -120,17 +111,6 @@ namespace eval ::tclssg::pages {
             FROM pages WHERE id = $id;
         }
         set newPageId [tclssg-db last_insert_rowid]
-        tclssg-db eval {
-            INSERT INTO links(
-                id,
-                targetId,
-                link)
-            SELECT
-                $newPageId,
-                targetId,
-                link
-            FROM links WHERE id = $id;
-        }
         if {$copySettings} {
             tclssg-db eval {
                 INSERT INTO settings(
@@ -152,9 +132,6 @@ namespace eval ::tclssg::pages {
                  DELETE FROM pages WHERE id = $id;
             }
             tclssg-db eval {
-                DELETE FROM links WHERE id = $id;
-            }
-            tclssg-db eval {
                 DELETE FROM settings WHERE id = $id;
             }
             tclssg-db eval {
@@ -165,7 +142,11 @@ namespace eval ::tclssg::pages {
             }
             # Remove $id from articleToAppend. This part of page deletion could
             # be simplified through normalization of the DB but storing a list
-            # is more convenient everywhere.
+            # is more convenient everywhere. Note that the query below will
+            # overselect. E.g., it will select a page with articlesToAppend
+            # containing the value "180" for $id "18". This is, however,
+            # harmless because such a page's articlesToAppend value will be left
+            # unchanged by the lsearch command below.
             set idPattern "%$id%"
             set collections [tclssg-db eval {
                 SELECT id, articlesToAppend FROM pages
@@ -245,39 +226,7 @@ namespace eval ::tclssg::pages {
         return $result
     }
 
-    # Procs for working with the table "links".
-
-
-    proc add-link {sourceId targetId link} {
-        tclssg-db eval {
-            INSERT INTO links(id, targetId, link)
-            VALUES ($sourceId, $targetId, $link);
-        }
-    }
-    proc get-link {sourceId targetId} {
-        set result [lindex [tclssg-db eval {
-            SELECT link FROM links
-            WHERE id = $sourceId AND targetId = $targetId;
-        }] 0]
-        return $result
-    }
-    proc copy-links {oldId newId} {
-        set result [tclssg-db eval {
-            INSERT INTO links(id, targetId, link)
-            SELECT $newId, targetId, link FROM links
-            WHERE id = $oldId;
-        }]
-        return $result
-    }
-    proc delete-links-to {targetId} {
-        tclssg-db eval {
-            DELETE FROM links
-            WHERE targetId = $targetId;
-        }
-    }
-
     # Procs for working with the table "settings".
-
 
     proc set-setting {id name value} {
         tclssg-db eval {

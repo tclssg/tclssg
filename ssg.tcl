@@ -433,37 +433,6 @@ namespace eval tclssg {
             articleTemplate documentTemplate} {
         set outputFile [tclssg pages get-output-file $id]
 
-        # Use the previous list of relative links if the current file is
-        # in the same directory as the previous one.
-        if {[tclssg templating cache fresh? $outputFile]} {
-            tclssg pages copy-links \
-                    [tclssg pages output-file-to-id \
-                            [tclssg templating cache filename]] $id
-        } else {
-            # Compute new pageLinks for the current page. Beware: in the
-            # worst case scenario (each page is in its own directory) this
-            # gives us n^2 operations for n pages.
-            set pageLinks {}
-            foreach otherFileId [tclssg pages sorted-by-date] {
-                # pageLinks maps page id (= input FN relative to
-                # $contentDir) to relative link to it.
-                lappend pageLinks $otherFileId \
-                        [::fileutil::relative \
-                                [file dirname $outputFile] \
-                                [tclssg pages get-output-file $otherFileId]]
-            }
-            # Store links to other pages and website root path relative to
-            # the current page
-            foreach {targetId link} $pageLinks {
-                if {$prettyUrls} {
-                    set link [regsub {index.html$} $link {}]
-                }
-                tclssg pages add-link $id $targetId $link
-            }
-
-            tclssg templating cache set $outputFile pageLinks 1
-        }
-
         # Relative path to the root directory of the output.
         tclssg pages set-data $id rootDirPath \
                 [::fileutil::relative \
@@ -647,7 +616,6 @@ namespace eval tclssg {
                     set inputFile [tclssg pages get-data $id inputFile ""]
                 }
                 tclssg pages delete $id
-                tclssg pages delete-links-to $id
                 if {$varName ne "tagPageId"} {
                     set newId [tclssg pages input-file-to-id $inputFile]
                     tclssg pages set-website-config-setting $varName $newId
