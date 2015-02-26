@@ -62,14 +62,20 @@ proc rss-feed-link {} {
     global currentPageId
     set outputDir [website-setting outputDir]
     set tagPageTag [setting tagPageTag]
-    set url "[ website-setting url ][replace-path-root \
-            [get-rss-file $currentPageId] $outputDir ""]"
 
-    if {(($tagPageTag ne "") && ([website-setting {rss tagFeeds} 0])) ||
-            ($currentPageId eq [website-setting blogIndexPageId])} {
+    if {($tagPageTag ne "") && [website-setting {rss tagFeeds} 0]} {
         set rel alternate
+        set url "[ website-setting url ][replace-path-root \
+            [get-rss-file $currentPageId] $outputDir ""]"
     } else {
-        set rel home
+        set blogIndexPageId [website-setting blogIndexPageId]
+        if {$currentPageId eq $blogIndexPageId} {
+            set rel alternate
+        } else {
+            set rel home
+        }
+        set url "[ website-setting url ][replace-path-root \
+                [get-rss-file $blogIndexPageId] $outputDir ""]"
     }
     return [list $rel $url]
 }

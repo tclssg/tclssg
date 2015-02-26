@@ -56,7 +56,6 @@ namespace eval ::tclssg::templating::interpreter {
             ::csv::iscomplete                   ::csv::iscomplete
             ::csv::split                        ::csv::split
             ::json::json2dict                   ::json::json2dict
-
         } {
             interp alias templateInterp $alias {} {*}$command
         }
