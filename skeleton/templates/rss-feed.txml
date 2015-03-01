@@ -6,11 +6,12 @@ interp-source messages.tcl
 
 set copyright [entities [website-setting copyright {}]]
 set buildDate [website-setting buildDate {}]
+
 %><?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
-<atom:link href="<%! website-setting url {} %><%! website-setting {rss feedFilename} {} %>" rel="self" type="application/rss+xml" />
+<atom:link href="<%! lindex [rss-feed-link] 1 %>" rel="self" type="application/rss+xml" />
 
 <title><%! format-document-title %></title>
 <link><%!

@@ -53,31 +53,47 @@ proc absolute-link {id} {
         error "using absolute-link requires that url be set in website config"
     }
     set outputDir [get-website-config-setting outputDir ""]
-    return $url[replace-path-root [get-output-file $id] $outputDir ""]
-}
-
-proc relative-link {id} {
-    global currentPageId
-    global collectionPageId
-    if {[info exists collectionPageId]} {
-        set fromId $collectionPageId
-    } else {
-        set fromId $currentPageId
-    }
-
-    set outputDir [get-website-config-setting outputDir ""]
-
-    set err [catch {
-        set link [get-page-link $fromId $id]
-    }]
-    if {$err} {
-        return ""
-    }
+    set link $url[replace-path-root [get-output-file $id] $outputDir ""]
     if {[website-setting prettyUrls 0]} {
         set link [regsub {index.html$} $link {}]
     }
-
     return $link
+}
+
+if {[website-setting absoluteLinks 0]} {
+    proc relative-link args {
+        set err [catch {
+            set link [absolute-link {*}$args]
+        }]
+        if {$err} {
+            return ""
+        }
+        return $link
+    }
+} else {
+    proc relative-link {id} {
+        global currentPageId
+        global collectionPageId
+        if {[info exists collectionPageId]} {
+            set fromId $collectionPageId
+        } else {
+            set fromId $currentPageId
+        }
+
+        set outputDir [get-website-config-setting outputDir ""]
+
+        set err [catch {
+            set link [get-page-link $fromId $id]
+        }]
+        if {$err} {
+            return ""
+        }
+        if {[website-setting prettyUrls 0]} {
+            set link [regsub {index.html$} $link {}]
+        }
+
+        return $link
+    }
 }
 
 proc link-or-nothing {websiteVarName} {

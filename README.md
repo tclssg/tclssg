@@ -17,7 +17,7 @@ Features
 * Deployment over FTP;
 * Deployment over SCP or other protocols with a [custom deployment command](https://github.com/tclssg/tclssg/wiki/Using-deployCustom);
 * Support for external comment engines (currently: Disqus);
-* Relative links in the HTML output that make it suitable for viewing over *file://*;
+* Relative links in the HTML output by default that make it suitable for viewing over *file://*;
 * [Reasonably fast](https://github.com/tclssg/tclssg/wiki/Performance);
 * Few dependencies. Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Windows and Mac.
 

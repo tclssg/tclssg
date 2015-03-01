@@ -11,6 +11,7 @@ namespace eval ::tclssg::templating::cache {
 
     variable cachedFile {}
     variable data {}
+    variable alwaysFresh 0
 
     # Check if the cache is fresh for file newFile. Fresh in our case
     # means it is either the same file or a file located in the same
@@ -20,9 +21,10 @@ namespace eval ::tclssg::templating::cache {
     proc fresh? {filename} {
         variable cachedFile
         variable data
+        variable alwaysFresh
 
         ::set result [expr {
-            [file dirname $cachedFile] eq [file dirname $filename]
+            $alwaysFresh || ([file dirname $cachedFile] eq [file dirname $filename])
         }]
         return $result
     }

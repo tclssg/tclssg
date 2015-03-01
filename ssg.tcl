@@ -138,9 +138,7 @@ namespace eval tclssg {
             puts "processing page file [lindex $inputFiles 0] into $outputFile"
         }
         # Take page settings form the first page.
-        set output [
-            format-document $gen $topPageId $documentTemplate
-        ]
+        set output [format-document $gen $topPageId $documentTemplate]
         ::fileutil::writeFile $outputFile $output
     }
 
@@ -452,7 +450,7 @@ namespace eval tclssg {
                   [tclssg pages get-output-file $id] \
                     $id \
                     $articleTemplate \
-                    $documentTemplate]
+                    $documentTemplate
     }
 
     # Generate RSS feeds.
@@ -510,6 +508,12 @@ namespace eval tclssg {
         tclssg pages set-website-config-setting dataDir \
                 [file join $inputDir $::tclssg::config(dataDirName)]
 
+        # Cache things globally, rather than per-directory, when using absolute
+        # links.
+        if {[tclssg pages get-website-config-setting absoluteLinks 0]} {
+            set ::tclssg::templating::cache::alwaysFresh 1
+        }
+
         validate-config $inputDir $contentDir
 
         set prettyUrls [tclssg pages get-website-config-setting prettyUrls 0]
@@ -561,13 +565,11 @@ namespace eval tclssg {
         set articleTemplate [
             read-template-file $inputDir \
                     articleTemplateFilename \
-                    articleTemplateFilename
-        ]
+                    articleTemplateFilename]
         set documentTemplate [
             read-template-file $inputDir \
                     documentTemplateFilename \
-                    documentTemplateFilename
-        ]
+                    documentTemplateFilename]
 
         # Create a list of pages that are blog posts and a list of blog posts
         # that should be linked to in the blog sidebar.
