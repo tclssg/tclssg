@@ -17,7 +17,7 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
     <% } %>
 
     <% if {[website-setting url] ne ""} { %>
-      <link ref="canonical" href="<%! absolute-link $currentPageId %>">
+      <link rel="canonical" href="<%! absolute-link $currentPageId %>">
     <% } %>
     <% if {[setting prevPage] ne ""} { %>
       <link rel="prev" href="<%! relative-link [setting prevPage] %>">

@@ -120,8 +120,9 @@ proc format-article-tag-list {} {
                     [get-tag-page $tag 0] 0 $tag]</li>"
         }
 
-        set tagListHtml "<nav class=\"container-fluid tags\"><ul>[format \
-                [mc {Tagged: %1$s}] [join $tagLinks]]</ul></nav><!-- tags -->"
+        set tagListHtml "<nav class=\"container-fluid tags\">[format \
+                [mc {Tagged: <ul>%1$s</ul>}] [join \
+                $tagLinks]]</nav><!-- tags -->"
     }
 
     return $tagListHtml

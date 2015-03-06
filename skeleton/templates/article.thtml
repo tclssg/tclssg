@@ -9,7 +9,7 @@ interp-source article.tcl
     if {($content ne "") || ($title ne "") || ($headerBlock ne "")} { %>
     <% if {$collection && !$collectionTopArticle} { %><article><% } %>
         <header>
-            <%= $title %><%= $headerBlock ne "" ? "<span class=\"page_info\">$headerBlock</span>" : "" %>
+            <%= $title %><%= $headerBlock ne "" ? "<div class=\"page-info\">$headerBlock</div>" : "" %>
         </header>
         <%! abbreviate-article $content $abbreviate %>
         <%! format-article-tag-list %>
