@@ -356,7 +356,7 @@ namespace eval tclssg {
 
     # Synonymous setting names in the page frontmatter.
     variable settingSynonyms [dict create {*}{
-        blogPost blog modifiedDate modified
+        blogPost blog modifiedDate modified hideFromCollections hide
     }]
 
     # Load the content of the file $file into the page database.
