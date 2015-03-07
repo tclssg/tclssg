@@ -43,3 +43,19 @@ li.tag:after {
 li.tag:last-child:after {
     content: '.';
 }
+
+ol.footnotes {
+    counter-reset: footnote-counter;
+    list-style-type: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+li.footnote:before {
+    counter-increment: footnote-counter;
+    content: "[" counter(footnote-counter) "] ";
+}
+
+li.footnote {
+    margin-bottom: 10px;
+}
