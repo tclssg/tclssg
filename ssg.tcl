@@ -356,7 +356,9 @@ namespace eval tclssg {
 
     # Synonymous setting names in the page frontmatter.
     variable settingSynonyms [dict create {*}{
-        blogPost blog modifiedDate modified hideFromCollections hide
+        blog        blogPost
+        modified    modifiedDate
+        hide        hideFromCollections
     }]
 
     # Load the content of the file $file into the page database.
@@ -381,7 +383,7 @@ namespace eval tclssg {
 
         # Set the values for empty keys to those of their synonym keys, if
         # present.
-        foreach {varName synonym} $settingSynonyms {
+        foreach {synonym varName} $settingSynonyms {
             if {![dict exists $settings $varName] &&
                     [dict exists $settings $synonym]} {
                 dict set settings $varName [dict get $settings $synonym]

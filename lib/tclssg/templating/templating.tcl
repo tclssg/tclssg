@@ -27,7 +27,7 @@ namespace eval ::tclssg::templating {
     }
 
     # Make HTML out of rawContent (remove frontmatter, if any; expand macros
-    # if expandMacrosInPages is enabled in websiteConfig; convert Markdown
+    # if enableMacrosInPages is enabled in websiteConfig; convert Markdown
     # to HTML).
     proc prepare-content {rawContent id {extraVariables {}}} {
         set choppedContent \
@@ -35,7 +35,7 @@ namespace eval ::tclssg::templating {
         # Macroexpand content if needed then convert it from Markdown to
         # HTML.
         if {[tclssg pages get-website-config-setting \
-                    expandMacrosInPages 0]} {
+                    enableMacrosInPages 0]} {
             set choppedContent [join [list \
                     [::tclssg::utils::trim-indentation \
                             [tclssg pages get-setting $id pagePrelude ""]] \

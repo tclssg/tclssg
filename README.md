@@ -30,7 +30,7 @@ Page screenshot
 Getting started
 ---------------
 
-Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, OS X and Windows XP/7/8.x.
+Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, OS X and Windows 2000/XP/7/8.x.
 
 To use it you will need Tcl 8.5 or newer, Tcllib and SQLite version 3 bindings for Tcl installed.
 

@@ -20,10 +20,10 @@ header > h1 {
 }
 
 .footer {
-  padding-top: 19px;
-  color: #777;
-  border-top: 1px solid #e5e5e5;
-  text-align: center;
+    padding-top: 19px;
+    color: #777;
+    border-top: 1px solid #e5e5e5;
+    text-align: center;
 }
 
 nav.tags > ul {
