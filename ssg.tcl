@@ -142,25 +142,38 @@ namespace eval tclssg {
         ::fileutil::writeFile $outputFile $output
     }
 
-    # Read a template file from $inputDir or (if it is not found in $inputDir)
-    # from ::tclssg::config(skeletonDir). The template filename is read from
+    # Return the path to a template file in $inputDir or (if it is not found in
+    # $inputDir) in the project skeleton (::tclssg::config(skeletonDir)).  Name
+    # resolution can later be made metadata-based.
+    proc resolve-template-file-path {inputDir filename} {
+        ::tclssg::utils::choose-dir $filename [
+            list \
+                [file join \
+                        $inputDir \
+                        $::tclssg::config(templateDirName)] \
+                [file join \
+                        $::tclssg::config(skeletonDir) \
+                        $::tclssg::config(templateDirName)]
+        ]
+    }
+
+    # Read the template file $filename from the appropriate directory.
+    proc read-template-file-literal {inputDir filename} {
+        set templateFile [resolve-template-file-path $inputDir $filename]
+        return [read-file $templateFile]
+    }
+
+    # Read a template file. The template filename is read from
     # $websiteConfigKey, or, if it is not set, from
-    # ::tclssg::config($defaultTclssgConfigIndex). Name resolution can later be
-    # made metadata-based.
+    # ::tclssg::config($defaultTclssgConfigIndex).
     proc read-template-file {inputDir websiteConfigKey
             defaultTclssgConfigIndex} {
-        set templateFile [
-            ::tclssg::utils::choose-dir [
-                tclssg pages get-website-config-setting \
-                        $websiteConfigKey \
-                        $::tclssg::config($defaultTclssgConfigIndex)
-            ] [
-                list [file join $inputDir $::tclssg::config(templateDirName)] \
-                        [file join $::tclssg::config(skeletonDir) \
-                              $::tclssg::config(templateDirName)]
-            ]
+        set filename [
+            tclssg pages get-website-config-setting \
+                    $websiteConfigKey \
+                    $::tclssg::config($defaultTclssgConfigIndex)
         ]
-        return [read-file $templateFile]
+        return [read-template-file-literal $inputDir $filename]
     }
 
     # Returns the contents of the file $filename in the data file subdirectory

@@ -32,7 +32,6 @@ namespace eval ::tclssg::templating::interpreter {
             ::tclssg::utils::dict-default-get   dict-default-get
             ::textutil::indent                  ::textutil::indent
             ::tclssg::utils::slugify            slugify
-            ::tclssg::utils::choose-dir         choose-dir
             puts                                puts
             ::tclssg::templating::inline-markdown-to-html
                                                 markdown-to-html
@@ -53,6 +52,7 @@ namespace eval ::tclssg::templating::interpreter {
             ::html::html_entities               entities
             ::tclssg::templating::parse         parse-template
             ::tclssg::read-data-file            read-data-file
+
             ::csv::iscomplete                   ::csv::iscomplete
             ::csv::split                        ::csv::split
             ::json::json2dict                   ::json::json2dict
@@ -64,41 +64,32 @@ namespace eval ::tclssg::templating::interpreter {
             return [$callback [tclssg pages get-data $id inputFile]]
         }} $::tclssg::pages::rssFileCallback
 
+        # Allow templates to read and source files from the templates
+        # subdirectory with path failover.
+        interp alias templateInterp read-template-file \
+                {} ::tclssg::read-template-file-literal $inputDir
+        interp alias templateInterp resolve-template-file-path \
+                {} ::tclssg::resolve-template-file-path $inputDir
+
+        interp eval templateInterp {
+            proc interp-source {filename} {
+                uplevel #0 [list source [resolve-template-file-path $filename]]
+            }
+            proc include {filename} {
+                uplevel #0 [list eval \
+                        [parse-template [read-template-file $filename]]]
+            }
+        }
+
         # Expose built-ins.
         foreach builtIn {source} {
             interp expose templateInterp $builtIn
         }
-
-        # Allow templates to source Tcl files with directory failover
-        # with the command interp-source.
-        interp alias templateInterp interp-source {} \
-                ::tclssg::templating::interpreter::source-dirs [
-                    list [
-                        file join $inputDir \
-                                  $::tclssg::config(templateDirName)
-                    ] [
-                        file join $::tclssg::config(skeletonDir) \
-                                  $::tclssg::config(templateDirName)
-                    ]
-                ]
     }
 
     # Tear down the template interpreter.
     proc down {} {
         interp delete templateInterp
-    }
-
-    # Source file $filename into templateInterp from the first directory
-    # where it exists out of those in dirs.
-    proc source-dirs {dirs filename} {
-        set command [
-            subst -nocommands {
-                source [
-                    choose-dir $filename {$dirs}
-                ]
-            }
-        ]
-        interp eval templateInterp $command
     }
 
     # Expand template for page pageData.
