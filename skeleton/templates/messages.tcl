@@ -4,6 +4,8 @@
 # LICENSE for details.
 
 mclocale [setting locale en_US]
+#mcset en_US {Posts} {Posts}
+#mcset en_US {Tags} {Tags}
 #mcset en_US {Tagged: %1$s} {Tagged: %1$s}
 #mcset en_US {Posts tagged "%1$s"} {Posts tagged "%1$s"}
 #mcset en_US {page %1$s} {page %1$s}

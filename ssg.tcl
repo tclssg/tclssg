@@ -275,7 +275,17 @@ namespace eval tclssg {
                         inputFile \
                         $newValue
 
-                set resultIds [add-article-collection $taggedPages $tempPageId]
+                set taggedPagesFiltered {}
+                foreach id $taggedPages {
+                    if {![tclssg pages get-setting $id hideFromCollections 0]} {
+                        lappend taggedPagesFiltered $id
+                    }
+                }
+                if {[llength $taggedPagesFiltered] == 0} {
+                    continue
+                }
+                set resultIds [add-article-collection \
+                        $taggedPagesFiltered $tempPageId]
                 tclssg pages delete $tempPageId
                 for {set i 0} {$i < [llength $resultIds]} {incr i} {
                     set id [lindex $resultIds $i]
@@ -593,7 +603,10 @@ namespace eval tclssg {
                 {[tclssg pages get-setting $id blogPost 0]}]
         set sidebarPostIds [::struct::list filterfor id \
                 $blogPostIds \
-                {![tclssg pages get-setting $id hideFromSidebarLinks 0]}]
+                {
+                    ![tclssg pages get-setting $id hideFromSidebarLinks 0] &&
+                    ![tclssg pages get-setting $id hideFromCollections 0]
+                }]
         tclssg pages set-website-config-setting sidebarPostIds $sidebarPostIds
 
         # Add numerical ids that correspond to the special pages' input

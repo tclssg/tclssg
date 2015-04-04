@@ -95,7 +95,7 @@ proc format-sidebar-links {} {
     # Blog sidebar.
     set sidebar {}
     if {[sidebar-links?]} {
-        append sidebar {<nav class="sidebar-links"><h3>Posts</h3><ul>}
+        append sidebar "<nav class=\"sidebar-links\"><h3>[mc Posts]</h3><ul>"
 
         # Limit the number of posts linked to according to maxSidebarLinks.
         set sidebarPostIds [website-setting sidebarPostIds {}]
@@ -148,10 +148,13 @@ proc format-tag-cloud {} {
     set tags [get-tag-list \
             [website-setting sortTagsBy "name"] $maxTagCloudTags]
 
-    append tagCloud {<nav class="tag-cloud"><h3>Tags</h3><ul>}
+    append tagCloud "<nav class=\"tag-cloud\"><h3>[mc Tags]</h3><ul>"
 
     foreach tag $tags {
-        append tagCloud [format-link [get-tag-page $tag 0] 1 $tag]
+        set tagPage [get-tag-page $tag 0]
+        if {$tagPage ne ""} { ;# Skip tags for which no tag pages can be found.
+            append tagCloud [format-link $tagPage 1 $tag]
+        }
     }
     append tagCloud {</ul></nav><!-- tag-cloud -->}
 
