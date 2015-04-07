@@ -197,6 +197,13 @@ namespace eval ::tclssg::command {
         ].html
     }
 
+    proc serve {inputDir outputDir {debugDir {}} {options {}}} {
+        if {"verbose" in $options} {
+            set ::tclssg::webserver::verbose 1
+        }
+        ::tclssg::webserver::serve $outputDir
+    }
+
     proc version {inputDir outputDir {debugDir {}} {options {}}} {
         puts $::tclssg::config(version)
     }
@@ -231,7 +238,11 @@ namespace eval ::tclssg::command {
                     the config file on the output} {}
             deploy-ftp  {upload the output to the FTP server set in the\
                     config file} {}
-            open {open the index page in the default web browser} {}
+            open {open the index page in the default web browser over\
+                    file://} {}
+            serve {start a local web server serving outputDir} {
+                    --verbose {for every request print its status code and path}
+            }
             version {print the version number and exit} {}
             help {show this message}
         }]
