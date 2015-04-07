@@ -198,10 +198,20 @@ namespace eval ::tclssg::command {
     }
 
     proc serve {inputDir outputDir {debugDir {}} {options {}}} {
+        ::tclssg::webserver::add-handler /bye {
+            socketChannel {
+                puts "shutting down"
+                puts $socketChannel {HTTP/1.0 204 No Content}
+                puts $socketChannel {}
+                close $socketChannel
+                set ::tclssg::webserver::done 1
+            }
+        }
+        ::tclssg::webserver::serve $outputDir
         if {"verbose" in $options} {
             set ::tclssg::webserver::verbose 1
         }
-        ::tclssg::webserver::serve $outputDir
+        vwait ::tclssg::webserver::done
     }
 
     proc version {inputDir outputDir {debugDir {}} {options {}}} {
