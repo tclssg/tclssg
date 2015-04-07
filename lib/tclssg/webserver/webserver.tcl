@@ -1,5 +1,5 @@
-# DustMote HTTP server by Harold Kaplan (wiki.tcl.tk/4333) with changes by
-# Danyil Bohdan.
+# DustMote HTTP server originally developed by Harold Kaplan
+# (http://wiki.tcl.tk/4333). Modified by Danyil Bohdan.
 # This code is in the public domain.
 package require Tcl 8.5
 

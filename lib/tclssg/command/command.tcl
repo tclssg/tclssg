@@ -41,7 +41,7 @@ namespace eval ::tclssg::command {
         }
 
         if {"local" in $options} {
-            dict set websiteConfig url "http://localhost:8080/"
+            dict set websiteConfig url [dict get $websiteConfig urlLocal]
         }
 
         if {[file isdir $inputDir]} {
@@ -235,8 +235,8 @@ namespace eval ::tclssg::command {
             build {build the static website} {
                 --debug {dump the results of intermediate stages of content\
                     processing to disk}
-                --local {build with the website setting "url" set to\
-                    "http://localhost:8080/"}
+                --local {build with the value of the website setting "url"\
+                    replaced with that of "urlLocal"}
             }
             clean {delete all files in outputDir} {}
             update {update the inputDir for a new version of Tclssg by\
