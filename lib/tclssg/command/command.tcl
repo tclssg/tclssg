@@ -40,6 +40,10 @@ namespace eval ::tclssg::command {
             tclssg debugger enable
         }
 
+        if {"local" in $options} {
+            dict set websiteConfig url "http://localhost:8080/"
+        }
+
         if {[file isdir $inputDir]} {
             ::tclssg::compile-website $inputDir $outputDir $debugDir \
                     $websiteConfig
@@ -231,6 +235,8 @@ namespace eval ::tclssg::command {
             build {build the static website} {
                 --debug {dump the results of intermediate stages of content\
                     processing to disk}
+                --local {build with the website setting "url" set to\
+                    "http://localhost:8080/"}
             }
             clean {delete all files in outputDir} {}
             update {update the inputDir for a new version of Tclssg by\
@@ -251,7 +257,7 @@ namespace eval ::tclssg::command {
             open {open the index page in the default web browser over\
                     file://} {}
             serve {start a local web server serving outputDir} {
-                    --verbose {for every request print its status code and path}
+                    --verbose {log every request to standard output}
             }
             version {print the version number and exit} {}
             help {show this message}

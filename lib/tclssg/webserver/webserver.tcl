@@ -11,6 +11,42 @@ namespace eval ::tclssg::webserver {
     variable verbose
 
     variable handlers {}
+
+    variable mimeTypeByExtension {
+        .c      text/plain
+        .conf   text/plain
+        .css    text/css
+        .csv    text/csv
+        .gif    image/gif
+        .gz     application/gzip
+        .h      text/plain
+        .htm    text/html
+        .html   text/html
+        .jpg    image/jpeg
+        .jpeg   image/jpeg
+        .js     application/javascript
+        .json   application/json
+        .pdf    application/pdf
+        .png    image/png
+        .ps     application/postscript
+        .sh     text/plain
+        .tcl    text/plain
+        .txt    text/plain
+        .xhtml  application/xhtml+xml
+        .xml    application/xml
+        .zip    application/zip
+    }
+}
+
+# Detect MIME type by file extension. Needed, e.g., to serve RSS feeds.
+proc ::tclssg::webserver::mime-type {filename} {
+    variable mimeTypeByExtension
+    set ext [file extension $filename]
+    if {[dict exists $mimeTypeByExtension $ext]} {
+        return [dict get $mimeTypeByExtension $ext]
+    } else {
+        return application/octet-stream
+    }
 }
 
 # Handles a new connection.
@@ -19,7 +55,7 @@ proc ::tclssg::webserver::answer {socketChannel host2 port2} {
             [list ::tclssg::webserver::read-request $socketChannel]
 }
 
-# Print output if logging is enabled.
+# Print $message to standard output if logging is enabled.
 proc ::tclssg::webserver::log {message} {
     variable verbose
     if {$verbose} {
@@ -58,6 +94,7 @@ proc ::tclssg::webserver::read-request {socketChannel} {
     } elseif {[ catch { set fileChannel [open $wholeName RDONLY] } ]} {
         ::tclssg::webserver::log "404 $shortName"
         puts $socketChannel "HTTP/1.0 404 Not found"
+        puts $socketChannel "Content-Type: text/html"
         puts $socketChannel ""
         puts $socketChannel "<!DOCTYPE html>"
         puts $socketChannel "<html><head><title>No such URL</title></head>"
@@ -70,6 +107,8 @@ proc ::tclssg::webserver::read-request {socketChannel} {
         fconfigure $fileChannel -translation binary
         fconfigure $socketChannel -translation binary -buffering full
         puts $socketChannel "HTTP/1.0 200 OK"
+        puts $socketChannel "Content-Type: [::tclssg::webserver::mime-type \
+                $wholeName]"
         puts $socketChannel ""
         fcopy $fileChannel $socketChannel \
                 -command [list ::tclssg::webserver::close-channels \
