@@ -41,7 +41,11 @@ namespace eval ::tclssg::command {
         }
 
         if {"local" in $options} {
-            dict set websiteConfig url [dict get $websiteConfig urlLocal]
+            set host [::tclssg::utils::dict-default-get localhost \
+                    $websiteConfig server host]
+            set port [::tclssg::utils::dict-default-get 8080 \
+                    $websiteConfig server port]
+            dict set websiteConfig url "http://$host:$port/"
         }
 
         if {[file isdir $inputDir]} {
@@ -202,6 +206,12 @@ namespace eval ::tclssg::command {
     }
 
     proc serve {inputDir outputDir {debugDir {}} {options {}}} {
+        set websiteConfig [::tclssg::load-config $inputDir]
+        set host [::tclssg::utils::dict-default-get localhost \
+                $websiteConfig server host]
+        set port [::tclssg::utils::dict-default-get 8080 \
+                $websiteConfig server port]
+
         ::tclssg::webserver::add-handler /bye {
             socketChannel {
                 puts "shutting down"
@@ -211,7 +221,7 @@ namespace eval ::tclssg::command {
                 set ::tclssg::webserver::done 1
             }
         }
-        ::tclssg::webserver::serve $outputDir
+        ::tclssg::webserver::serve $outputDir $port $host
         if {"verbose" in $options} {
             set ::tclssg::webserver::verbose 1
         }
@@ -236,7 +246,7 @@ namespace eval ::tclssg::command {
                 --debug {dump the results of intermediate stages of content\
                     processing to disk}
                 --local {build with the value of the website setting "url"\
-                    replaced with that of "urlLocal"}
+                    replaced with a URL derived from the "server" settings.}
             }
             clean {delete all files in outputDir} {}
             update {update the inputDir for a new version of Tclssg by\

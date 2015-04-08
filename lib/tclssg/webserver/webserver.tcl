@@ -26,6 +26,7 @@ namespace eval ::tclssg::webserver {
         .jpeg   image/jpeg
         .js     application/javascript
         .json   application/json
+        .log    text/plain
         .pdf    application/pdf
         .png    image/png
         .ps     application/postscript
