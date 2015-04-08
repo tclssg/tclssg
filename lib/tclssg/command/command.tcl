@@ -225,6 +225,10 @@ namespace eval ::tclssg::command {
         if {"verbose" in $options} {
             set ::tclssg::webserver::verbose 1
         }
+        if {"browse" in $options} {
+            package require browse
+            ::browse::url "http://$host:$port/"
+        }
         vwait ::tclssg::webserver::done
     }
 
@@ -246,7 +250,7 @@ namespace eval ::tclssg::command {
                 --debug {dump the results of intermediate stages of content\
                     processing to disk}
                 --local {build with the value of the website setting "url"\
-                    replaced with a URL derived from the "server" settings.}
+                    replaced with a URL derived from the "server" settings}
             }
             clean {delete all files in outputDir} {}
             update {update the inputDir for a new version of Tclssg by\
@@ -267,9 +271,10 @@ namespace eval ::tclssg::command {
             open {open the index page in the default web browser over\
                     file://} {}
             serve {start a local web server serving outputDir} {
-                    --verbose {log every request to standard output}
+                --browse {open the website in the default web browser}
+                --verbose {log every request to standard output}
             }
-            version {print the version number and exit} {}
+            version {print the version number} {}
             help {show this message}
         }]
 

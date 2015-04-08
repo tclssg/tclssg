@@ -46,6 +46,7 @@ On **Fedora**, **RHEL** or **CentOS**:
 On **Windows** the easiest option is to install ActiveTcl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) does not include Tcllib or an SQLite 3 module, so it will not run Tclssg out of the box. After installing ActiveTcl run
 
     c:\Tcl\bin\teacup.exe install html
+    c:\Tcl\bin\teacup.exe install json
 
 On **OS X** use [MacPorts](https://www.macports.org/) or install ActiveTcl for Mac. With MacPorts:
 
@@ -55,14 +56,14 @@ Once you have the dependencies installed clone this repository, `cd` into it the
 
     chmod +x ssg.tcl
     ./ssg.tcl init
-    ./ssg.tcl build
-    ./ssg.tcl open
+    ./ssg.tcl build --local
+    ./ssg.tcl serve --browse
 
 or on Windows
 
     ssg.cmd init
-    ssg.cmd build
-    ssg.cmd open
+    ssg.cmd build --local
+    ssg.cmd serve --browse
 
 This will create a new website project in the directory `website/input` based on the default project skeleton, build the website in `website/output` and open the result in your web browser.
 
