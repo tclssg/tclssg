@@ -4,192 +4,212 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-package require control
-package require struct
 package require fileutil
+package require struct
+package require tcltest
 
-control::control assert enabled 1
+namespace eval ::tclssg::tests {
+    variable path [file dirname [file dirname [file normalize $argv0/___]]]
+    variable setup [list apply {{path} {
+        lappend ::auto_path [file join $path lib]
+        package require tclssg-lib
+        namespace import ::tclssg::utils::*
+        cd $path
+        set result {}
+        set correct {}
+    }} $path]
 
-proc assert-all-equal args {
-    if {[lindex $args 0] == "-listmode"} {
-        set prevArg [lindex $args 1]
-        foreach arg [lrange $args 2 end] {
-            control::assert [struct::list equal $arg $prevArg]
-            set prevArg $arg
-        }
-    } else {
-        set prevArg [lindex $args 0]
-        foreach arg [lrange $args 1 end] {
-            control::assert [list \"$arg\" eq \"$prevArg\"]
-            set prevArg $arg
-        }
-    }
-}
-
-proc main {argv0 argv} {
-    puts "running procedure tests..."
-
-    set scriptLocation [file dirname $argv0]
-
-    # Import utility functions.
-    source [file join $scriptLocation lib tclssg utils utils.tcl]
-    namespace import ::tclssg::utils::*
-
-    # incremental-clock-scan
-    assert-all-equal [
-        incremental-clock-scan {2014-06-26 20:10}
-    ] [
-        incremental-clock-scan {2014-06-26T20:10}
-    ] [
-        incremental-clock-scan {2014 06 26 20 10}
-    ] [
-        incremental-clock-scan {2014/06/26 20:10}
-    ] [
-        list [clock scan {2014-06-26-20-10} -format {%Y-%m-%d-%H-%M}] \
-                {%Y-%m-%dT%H:%M}
-    ]
-
-    assert-all-equal [
-        lindex [incremental-clock-scan {2014}] 0
-    ] [
-        lindex [incremental-clock-scan {2014-01}] 0
-    ] [
-        lindex [incremental-clock-scan {2014-01-01 00:00:00}] 0
-    ] [
-        clock scan {2014-01-01} -format {%Y-%m-%d}
-    ]
-
-    # slugify
-    assert-all-equal [
-        slugify "Hello, World!"
-    ] [
-        slugify "hello world"
-    ] "hello-world"
-
-    # replace-path-root
-    assert-all-equal [
-        replace-path-root ./a/b/c/d/e/f ./a ./x
-    ] [
-        replace-path-root ./a/b/c/d/e/f ./a/b/c ./x/b/c
-    ] "x/b/c/d/e/f"
-
-    assert-all-equal [
-        replace-path-root a/b/c/d/e/f a x
-    ] [
-        replace-path-root a/b/./c/d/e/f a/b/c x/b/c
-    ] "x/b/c/d/e/f"
-
-    assert-all-equal [
-        replace-path-root /././././././././b / /a
-    ] "/a/b"
-
-    # dict-default-get
-    assert-all-equal [
-        dict-default-get testValue {} someKey
-    ] [
-        dict-default-get -1 {someKey testValue} someKey
-    ] [
-        dict-default-get -1 {someKey {anotherKey testValue}} \
-                         someKey anotherKey
-    ] "testValue"
-
-    # add-number-before-extension
-    assert-all-equal [
-        add-number-before-extension "filename.ext" 0
-    ] "filename.ext"
-
-    assert-all-equal [
-        add-number-before-extension "filename.ext" 0 "-%d" 1
-    ] "filename-0.ext"
-
-    for {set i 1} {$i < 11} {incr i} {
-        assert-all-equal [
-            add-number-before-extension "filename.ext" $i
-        ] "filename-$i.ext"
-        assert-all-equal [
-            add-number-before-extension "filename.ext" $i "%03d"
-        ] [
-            add-number-before-extension "filename.ext" $i "%03d" -1
-        ] [
-            format "filename%03d.ext" $i
-        ]
+    proc diff-available? {} {
+        set testPath [::fileutil::tempfile]
+        file delete $testPath
+        file mkdir $testPath
+        set error [catch {
+            exec diff -r $testPath $testPath
+        }]
+        file delete -force $testPath
+        return [expr { !$error }]
     }
 
-    # get-page-settings
-    assert-all-equal -listmode [
-        get-page-settings "{hello world} Hello, world!"
-    ] [
-        get-page-settings "{ hello world } Hello, world!"
-    ] [
-        get-page-settings "{hello world}
+    tcltest::testConstraint diffAvailable [diff-available?]
 
-            Hello, world!"
-    ] [
-        get-page-settings "{
+    tcltest::test test1 {incremental-clock-scan} \
+                -setup $setup \
+                -body {
+        set result {}
+        lappend result [incremental-clock-scan {2014-06-26 20:10}]
+        lappend result [incremental-clock-scan {2014-06-26T20:10}]
+        lappend result [incremental-clock-scan {2014 06 26 20 10}]
+        lappend result [incremental-clock-scan {2014/06/26 20:10}]
+        lappend result [incremental-clock-scan {2014/06/26 20:10}]
+
+        lappend result [lindex [incremental-clock-scan {2014}] 0]
+        lappend result [lindex [incremental-clock-scan {2014-01}] 0]
+        lappend result [lindex [incremental-clock-scan {2014-01-01 00:00:00}] 0]
+
+        return [lsort -unique $result]
+    } -result [list \
+        [clock scan {2014-01-01} -format {%Y-%m-%d}] \
+        [list [clock scan {2014-06-26-20-10} -format {%Y-%m-%d-%H-%M}] \
+            {%Y-%m-%dT%H:%M}] \
+    ]
+
+    tcltest::test test2 {slugify} \
+                -setup $setup \
+                -body {
+        set result {}
+        lappend result [slugify {Hello, World!}]
+        lappend result [slugify {hello world}]
+
+        return [lsort -unique $result]
+    } -result hello-world
+
+    tcltest::test test3 {replace-path-root} \
+                -setup $setup \
+                -body {
+        set result {}
+        lappend result [replace-path-root ./a/b/c/d/e/f ./a ./x]
+        lappend result [replace-path-root ./a/b/c/d/e/f ./a/b/c ./x/b/c]
+        lappend result [replace-path-root a/b/c/d/e/f a x]
+        lappend result [replace-path-root a/b/./c/d/e/f a/b/c x/b/c]
+
+        lappend result [replace-path-root /././././././././b / /a]
+
+        return [lsort -unique $result]
+    } -result [list /a/b x/b/c/d/e/f]
+
+    tcltest::test test4 {dict-default-get} \
+                -setup $setup \
+                -body {
+        set result {}
+        lappend result [dict-default-get testValue {} someKey]
+        lappend result [dict-default-get -1 {someKey testValue} someKey]
+        lappend result [dict-default-get -1 {someKey {anotherKey testValue}} \
+                         someKey anotherKey]
+
+        return [lsort -unique $result]
+    } -result testValue
+
+    tcltest::test test5 {add-number-before-extension} \
+                -setup $setup \
+                -body {
+        set result {}
+        set correct {}
+        lappend result [add-number-before-extension "filename.ext" 0]
+        lappend correct filename.ext
+        lappend result [add-number-before-extension "filename.ext" 0 "-%d" 1]
+        lappend correct filename-0.ext
+
+        for {set i 1} {$i < 11} {incr i} {
+            lappend result [add-number-before-extension "filename.ext" $i]
+            lappend correct filename-$i.ext
+
+            lappend result [add-number-before-extension "filename.ext" \
+                    $i "%03d"]
+            lappend correct [format filename%03d.ext $i]
+
+            lappend result [add-number-before-extension "filename.ext" \
+                    $i "%03d" -1]
+            lappend correct [format filename%03d.ext $i]
+        }
+
+        return [expr {$result eq $correct}]
+    } -result 1
+
+    tcltest::test test6 {get-page-settings} \
+                -setup $setup \
+                -body {
+        set prased {}
+        lappend prased [get-page-settings {{hello world} Hello, world!}]
+        lappend prased [get-page-settings {{ hello world } Hello, world!}]
+        lappend prased [get-page-settings {{hello world} Hello, world!}]
+        lappend prased [get-page-settings {{hello world}
+
+            Hello, world!}]
+        lappend prased [get-page-settings {{
                 hello world
             }
-            Hello, world!"
-    ] [list [list hello world] "Hello, world!"]
 
-    # Tclssg init, build.
-    puts "running build tests..."
-    set tempProjectDir [::fileutil::tempfile]
-    # Remove the temporary file so that Tclssg can replace it with
-    # a temporary project directory.
-    file delete $tempProjectDir
+            Hello, world!}]
 
-    proc project-subdir {subdir} {
-        upvar 1 tempProjectDir tempProjectDir
-        return [file join $tempProjectDir $subdir]
-    }
-
-    set tclssgArguments [
-        list [project-subdir input] [project-subdir output]
-    ]
-    exec tclsh ssg.tcl version
-    exec tclsh ssg.tcl help
-    exec tclsh ssg.tcl init {*}$tclssgArguments
-
-    # Set deployment options in the website config.
-    set configFile [file join [project-subdir input] website.conf]
-    set config [::fileutil::cat $configFile]
-    dict set config deployCopy path [project-subdir deploy-copy-test]
-    dict set config deployCustom [list \
-        start "cp -r \"\$outputDir\" [project-subdir deploy-custom-test]" \
-        file {} \
-        end {} \
-    ]
-    ::fileutil::writeFile $configFile $config
-
-    exec tclsh ssg.tcl build {*}$tclssgArguments
-    exec tclsh ssg.tcl update --templates --yes {*}$tclssgArguments
-    exec tclsh ssg.tcl build {*}$tclssgArguments
-    exec tclsh ssg.tcl deploy-copy {*}$tclssgArguments
-    exec tclsh ssg.tcl deploy-custom {*}$tclssgArguments
-    exec tclsh ssg.tcl clean {*}$tclssgArguments
-
-    # Compare the results of deploy-custom and deploy-copy if diff -r is
-    # available.
-    if {![catch {exec diff -r [project-subdir input] [project-subdir input]}]} {
-        exec diff -r [project-subdir deploy-copy-test] \
-                [project-subdir deploy-custom-test]
-    }
-
-    # Tclssg as a library.
-    puts "running tclssg library tests..."
-    set file [file join $tempProjectDir libtest.tcl]
-    fileutil::writeFile $file [
-        subst {
-            source [file join $scriptLocation ssg.tcl]
-            tclssg configure
-            tclssg command build {*}$tclssgArguments
+        set result {}
+        set first [lindex $prased 0]
+        foreach elem [lrange $prased 1 end] {
+            lappend result [::struct::list equal $first $elem]
         }
-    ]
-    exec tclsh $file
 
-    file delete -force $tempProjectDir
+        return [lsort -unique $result]
+    } -result 1
 
-    puts "done."
+    proc with-temporary-project {dirVarName script} {
+        upvar 1 $dirVarName tempProjectDir
+
+        set tempProjectDir [::fileutil::tempfile]
+        # Remove the temporary file so that Tclssg can replace it with
+        # a temporary project directory.
+        file delete $tempProjectDir
+
+        exec tclsh ssg.tcl init $tempProjectDir/input $tempProjectDir/output
+        uplevel 1 $script
+
+        file delete -force $tempProjectDir
+    }
+
+    tcltest::test test7 {Tclssg command line commands} \
+                -setup $setup \
+                -constraints diffAvailable \
+                -body {
+        with-temporary-project project {
+            set tclssgArguments [list $project/input $project/output]
+
+            exec tclsh ssg.tcl version
+            exec tclsh ssg.tcl help
+
+            # Set deployment options in the website config.
+            set configFile $project/input/website.conf
+            set config [::fileutil::cat $configFile]
+            dict set config deployCopy path $project/deploy-copy-test
+            dict set config deployCustom [list \
+                start "cp -r \"\$outputDir\"\
+                        $project/deploy-custom-test" \
+                file {} \
+                end {} \
+            ]
+            ::fileutil::writeFile $configFile $config
+
+            exec tclsh ssg.tcl build {*}$tclssgArguments
+            exec tclsh ssg.tcl update --templates --yes {*}$tclssgArguments
+            exec tclsh ssg.tcl build {*}$tclssgArguments
+            exec tclsh ssg.tcl deploy-copy {*}$tclssgArguments
+            exec tclsh ssg.tcl deploy-custom {*}$tclssgArguments
+            exec tclsh ssg.tcl clean {*}$tclssgArguments
+
+            set result [exec diff -r \
+                    $project/deploy-copy-test \
+                    $project/deploy-custom-test]
+        }
+        return $result
+    } -result {}
+
+    tcltest::test test8 {Tclssg as a library} \
+                -setup $setup \
+                -body {
+        with-temporary-project project {
+            set file [file join $project libtest.tcl]
+            fileutil::writeFile $file [
+                subst {
+                    source [file join $path ssg.tcl]
+                    tclssg configure
+                    tclssg command build $project/input $project/output
+                    puts done
+                }
+            ]
+            set result [exec [info nameofexecutable] $file]
+        }
+        return [lindex $result end]
+    } -result done
+
+    # Exit with a nonzero status if there are failed tests.
+    if {$::tcltest::numTests(Failed) > 0} {
+        exit 1
+    }
 }
-
-main $argv0 $argv
