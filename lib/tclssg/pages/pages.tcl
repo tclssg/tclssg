@@ -235,40 +235,84 @@ namespace eval ::tclssg::pages {
 
     # Procs for working with the table "settings".
 
+    # Set website page setting $name for page $id to $value. See get-setting
+    # for the semantics of $name when it is a list.
     proc set-setting {id name value} {
+        set nameInTable [lindex $name 0]
+        set dictKey [lrange $name 1 end]
+
+        if {[llength $dictKey] > 0} {
+            set dictionary [get-setting $nameInTable ""]
+            dict set dictionary {*}$dictKey $value
+            set-setting $nameInTable $dictionary
+        } else {
+            tclssg-db eval {
+                INSERT OR REPLACE INTO settings(id, name, value)
+                VALUES ($id, $name, $value);
+            }
+        }
+
         tclssg-db eval {
             INSERT OR REPLACE INTO settings(id, name, value)
             VALUES ($id, $name, $value);
         }
     }
+
+    # Get page setting $name for page $id. If $name is a list the
+    # first item is is used as the name of the value to retrieve from the
+    # table settings. The rest of is then treated as a list of keys in
+    # the dict that the value represents.
     proc get-setting {id name default {pageSettingsFailover 1}} {
+
         if {$pageSettingsFailover} {
-            set default [::tclssg::utils::dict-default-get \
-                    $default \
-                    [get-website-config-setting pageSettings {}] \
-                    $name]
-            # Avoid an infinite loop when recursing by disabling failover.
-            set isBlogPost [get-setting $id blogPost 0 0]
+            set default [get-website-config-setting \
+                    [concat pageSettings $name] $default]
+            set isBlogPost [tclssg-db eval {
+                SELECT ifnull(max(value), 0) FROM settings
+                WHERE id = $id AND name = "blogPost";
+            }]
             if {$isBlogPost} {
-                set default [::tclssg::utils::dict-default-get \
-                        $default \
-                        [get-website-config-setting blogPostSettings {}] \
-                        $name]
+                set default [get-website-config-setting \
+                        [concat blogPostSettings $name] $default]
             }
         }
 
-        set result [lindex [tclssg-db eval {
-            SELECT ifnull(max(value), $default) FROM settings
-            WHERE id = $id AND name = $name;
+        set nameInTable [lindex $name 0]
+        set dictKey [lrange $name 1 end]
+
+        set exists [lindex [tclssg-db eval {
+            SELECT exists(
+                SELECT 1 FROM settings
+                WHERE id = $id AND name = $nameInTable
+            );
         }] 0]
+
+        if {$exists} {
+            set databaseResult [lindex [tclssg-db eval {
+                SELECT value FROM settings
+                WHERE id = $id AND name = $nameInTable;
+            }] 0]
+            if {[llength $dictKey] > 0} {
+                if {[dict exists $databaseResult {*}$dictKey]} {
+                    set result [dict get $databaseResult {*}$dictKey]
+                } else {
+                    set result $default
+                }
+            } else {
+                set result $databaseResult
+            }
+        } else {
+            set result $default
+        }
+
         return $result
     }
 
 
     # Procs for working with the table "websiteConfig".
 
-    # Set website config setting $name to $value. See get-website-config-setting
-    # for the semantics of $name when it is a list.
+    # Set website config setting $name to $value. Like with set-setting $name
+    # can be a list.
     proc set-website-config-setting {name value} {
         set nameInTable [lindex $name 0]
         set dictKey [lrange $name 1 end]
@@ -285,10 +329,8 @@ namespace eval ::tclssg::pages {
         }
 
     }
-    # Get website config setting $name. If $name is a list the first item is
-    # is used as the name of the value to retrieve from the table websiteConfig.
-    # The rest of is then treated as a list of keys in the dict that the value
-    # represents.
+    # Get website config setting $name. Like with get-setting $name can be a
+    # list.
     proc get-website-config-setting {name default} {
         set nameInTable [lindex $name 0]
         set dictKey [lrange $name 1 end]
@@ -306,7 +348,7 @@ namespace eval ::tclssg::pages {
                 WHERE name = $nameInTable;
             }] 0]
             if {[llength $dictKey] > 0} {
-                if {[dict exists $databaseResult $dictKey]} {
+                if {[dict exists $databaseResult {*}$dictKey]} {
                     set result [dict get $databaseResult {*}$dictKey]
                 } else {
                     set result $default

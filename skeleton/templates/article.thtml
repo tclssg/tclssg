@@ -8,11 +8,12 @@ interp-source article.tcl
     set headerBlock "[format-article-author][format-article-date]"
     if {($content ne "") || ($title ne "") || ($headerBlock ne "")} { %>
     <% if {$collection && !$collectionTopArticle} { %><article><% } %>
+        <%! setting {article top} {} %>
         <header>
             <%= $title %><%= $headerBlock ne "" ? "<div class=\"page-info\">$headerBlock</div>" : "" %>
         </header>
         <%! abbreviate-article $content $abbreviate %>
         <%! format-article-tag-list %>
-        <%! setting articleExtra "" %>
+        <%! setting {article bottom} {} %>
     <% if {$collection && !$collectionTopArticle} { %></article><% } %>
 <% } %>

@@ -9,6 +9,7 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
 %><!DOCTYPE html>
 <html>
   <head>
+    <%! setting {head top} %>
     <meta charset="<%! website-setting charset UTF-8 %>">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,10 +50,11 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
     <% foreach cssLink [setting customCss] { %>
       <link href="<%! string map [list \$rootDirPath $rootDirPath] $cssLink %>" rel="stylesheet">
     <% } %>
-    <%! setting headExtra %>
+    <%! setting {head bottom} %>
   </head>
 
   <body>
+    <%! setting {body top} %>
     <div class="navbar navbar-default">
       <div class="container">
         <div class="navbar-header">
@@ -136,5 +138,5 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="<%= $rootDirPath %>/external/bootstrap-3.3.1-dist/js/bootstrap.min.js"></script>
-    <%! setting bodyExtra "" %>
+    <%! setting {body bottom} {} %>
 </html>

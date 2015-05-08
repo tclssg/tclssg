@@ -322,7 +322,8 @@ namespace eval ::tclssg::utils {
                 set widths [dict values $args]
         }]
         if {$error} {
-            error {wrong # args: should be "columns {content width ...}"}
+            return -code error \
+                    {wrong # args: should be "columns {content width ...}"}
         }
 
         # For all columns...

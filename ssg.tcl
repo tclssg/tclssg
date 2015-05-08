@@ -306,12 +306,23 @@ namespace eval tclssg {
 
         # Check for obsolete settings.
         if {([tclssg pages get-website-config-setting \
-                pageVariables {}] ne "")  ||
+                pageVariables {}] ne {})  ||
                 ([tclssg pages get-website-config-setting \
-                        blogPostVariables {}] ne "")} {
+                        blogPostVariables {}] ne {})} {
             error "website config settings 'pageVariables' and\
                     'blogPostVariables' have been renamed\
                     'pageSettings' and 'blogPostSettings' respectively."
+        }
+
+        foreach settingContainer {pageSettings blogPostSettings} {
+            foreach pageSetting {articleExtra bodyExtra headExtra} {
+                if {([tclssg pages get-website-config-setting \
+                [list $settingContainer $pageSetting] {}] ne {})} {
+                    error "page settings 'articleExtra', 'bodyExtra' and\
+                            'headExtra' have been renamed. See the\
+                            documentation for details."
+                }
+            }
         }
 
         # Check that collection top pages actually exist.
@@ -380,6 +391,7 @@ namespace eval tclssg {
     # Synonymous setting names in the page frontmatter.
     variable settingSynonyms [dict create {*}{
         blog        blogPost
+        updated     modifiedDate
         modified    modifiedDate
         hide        hideFromCollections
     }]
