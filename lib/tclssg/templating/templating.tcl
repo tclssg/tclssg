@@ -43,7 +43,7 @@ namespace eval ::tclssg::templating {
 
             tclssg debugger save-intermediate-id \
                     $id content-1-toexpand $choppedContent
-            set choppedContent [interpreter expand \
+            set choppedContent [interpreter render \
                     $choppedContent \
                     $id \
                     $extraVariables]
@@ -59,11 +59,11 @@ namespace eval ::tclssg::templating {
         return $cookedContent
     }
 
-    # Expand template substituting in (already HTMLized) content from
+    # Render template substituting in (already HTMLized) content from
     # cookedContent according to the settings in pageData. This is just
-    # a wrapper for [interpreter expand] for now.
+    # a wrapper for [interpreter render] for now.
     proc apply-template {template cookedContent id {extraVariables {}}} {
-        set result [interpreter expand \
+        set result [interpreter render \
                 $template \
                 $id \
                 [list content $cookedContent {*}$extraVariables]]

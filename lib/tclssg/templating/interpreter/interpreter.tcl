@@ -93,8 +93,8 @@ namespace eval ::tclssg::templating::interpreter {
         interp delete templateInterp
     }
 
-    # Expand template for page pageData.
-    proc expand {template id {extraVariables {}}} {
+    # Render template for page pageData.
+    proc render {template id {extraVariables {}}} {
         up [tclssg pages get-website-config-setting inputDir ""]
         var-set currentPageId $id
         inject $extraVariables

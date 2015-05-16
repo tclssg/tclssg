@@ -474,7 +474,7 @@ namespace eval tclssg {
                         [file dirname $outputFile] \
                         $outputDir]
 
-        # Expand templates, first for the article then for the HTML
+        # Render templates, first for the article then for the HTML
         # document.
 
         tclssg pages set-data $id cookedContent [
