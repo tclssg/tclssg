@@ -18,9 +18,15 @@ namespace eval ::tclssg::templating::interpreter {
 
     # Set up the template interpreter.
     proc up {inputDir} {
-        # Create a safe interpreter to use for expanding templates (the
+        # Create a safe interpreter to use for rendering templates (the
         # template interpreter).
-        interp create -safe templateInterp
+        ::safe::interpCreate templateInterp
+        ::safe::interpAddToAccessPath templateInterp [file join \
+                $inputDir \
+                $::tclssg::config(templateDirName)]
+        ::safe::interpAddToAccessPath templateInterp [file join \
+                $::tclssg::config(skeletonDir) \
+                $::tclssg::config(templateDirName)]
         # A command to set variable $name to $value in the template
         # interpreter.
         interp alias {} [namespace current]::var-set templateInterp set
@@ -79,11 +85,6 @@ namespace eval ::tclssg::templating::interpreter {
                 uplevel #0 [list eval \
                         [parse-template [read-template-file $filename]]]
             }
-        }
-
-        # Expose built-ins.
-        foreach builtIn {source} {
-            interp expose templateInterp $builtIn
         }
     }
 

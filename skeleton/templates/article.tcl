@@ -105,7 +105,6 @@ proc abbreviate-article {content {abbreviate 0} {absoluteLink 0}} {
     return $content
 }
 
-
 proc format-article-tag-list {} {
     # Page tag list.
     global currentPageId

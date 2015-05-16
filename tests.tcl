@@ -15,8 +15,6 @@ namespace eval ::tclssg::tests {
         package require tclssg-lib
         namespace import ::tclssg::utils::*
         cd $path
-        set result {}
-        set correct {}
     }} $path]
 
     proc diff-available? {} {
