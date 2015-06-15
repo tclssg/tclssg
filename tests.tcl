@@ -17,6 +17,10 @@ namespace eval ::tclssg::tests {
         cd $path
     }} $path]
 
+    proc tcl args {
+        exec [info nameofexecutable] {*}$args
+    }
+
     proc diff-available? {} {
         set testPath [::fileutil::tempfile]
         file delete $testPath
@@ -146,7 +150,7 @@ namespace eval ::tclssg::tests {
         # a temporary project directory.
         file delete $tempProjectDir
 
-        exec tclsh ssg.tcl init $tempProjectDir/input $tempProjectDir/output
+        tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
         uplevel 1 $script
 
         file delete -force $tempProjectDir
@@ -159,8 +163,8 @@ namespace eval ::tclssg::tests {
         with-temporary-project project {
             set tclssgArguments [list $project/input $project/output]
 
-            exec tclsh ssg.tcl version
-            exec tclsh ssg.tcl help
+            tcl ssg.tcl version
+            tcl ssg.tcl help
 
             # Set deployment options in the website config.
             set configFile $project/input/website.conf
@@ -174,12 +178,12 @@ namespace eval ::tclssg::tests {
             ]
             ::fileutil::writeFile $configFile $config
 
-            exec tclsh ssg.tcl build {*}$tclssgArguments
-            exec tclsh ssg.tcl update --templates --yes {*}$tclssgArguments
-            exec tclsh ssg.tcl build {*}$tclssgArguments
-            exec tclsh ssg.tcl deploy-copy {*}$tclssgArguments
-            exec tclsh ssg.tcl deploy-custom {*}$tclssgArguments
-            exec tclsh ssg.tcl clean {*}$tclssgArguments
+            tcl ssg.tcl build {*}$tclssgArguments
+            tcl ssg.tcl update --templates --yes {*}$tclssgArguments
+            tcl ssg.tcl build {*}$tclssgArguments
+            tcl ssg.tcl deploy-copy {*}$tclssgArguments
+            tcl ssg.tcl deploy-custom {*}$tclssgArguments
+            tcl ssg.tcl clean {*}$tclssgArguments
 
             set result [exec diff -r \
                     $project/deploy-copy-test \
