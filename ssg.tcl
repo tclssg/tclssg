@@ -69,17 +69,20 @@ namespace eval tclssg {
         set ::tclssg::config(templateDirName) templates
         set ::tclssg::config(staticDirName) static
         set ::tclssg::config(dataDirName) data
+
         set ::tclssg::config(articleTemplateFilename) article.thtml
         set ::tclssg::config(documentTemplateFilename) bootstrap.thtml
         set ::tclssg::config(rssArticleTemplateFilename) rss-article.txml
         set ::tclssg::config(rssDocumentTemplateFilename) rss-feed.txml
+
+        set ::tclssg::config(defaultFeedFilename) rss.xml ;# RSS output file.
         set ::tclssg::config(websiteConfigFilename) website.conf
+
         set ::tclssg::config(skeletonDir) \
                 [file join $::tclssg::config(scriptLocation) skeleton]
-        set ::tclssg::config(defaultInputDir) [file join "website" "input"]
-        set ::tclssg::config(defaultOutputDir) [file join "website" "output"]
-        set ::tclssg::config(defaultDebugDir) [file join "website" "debug"]
-        set ::tclssg::config(defaultFeedFilename) rss.xml
+        set ::tclssg::config(defaultInputDir) [file join website input]
+        set ::tclssg::config(defaultOutputDir) [file join website output]
+        set ::tclssg::config(defaultDebugDir) [file join website debug]
 
         set ::tclssg::config(templateBrackets) {<% %>}
 
@@ -163,15 +166,13 @@ namespace eval tclssg {
         return [read-file $templateFile]
     }
 
-    # Read a template file. The template filename is read from
-    # $websiteConfigKey, or, if it is not set, from
-    # ::tclssg::config($defaultTclssgConfigIndex).
-    proc read-template-file {inputDir websiteConfigKey
-            defaultTclssgConfigIndex} {
+    # Read a template file. The template filename is set to
+    # $websiteConfigKey, or, if that key is not present, $default.
+    proc read-template-file {inputDir websiteConfigKey default} {
         set filename [
             tclssg pages get-website-config-setting \
                     $websiteConfigKey \
-                    $::tclssg::config($defaultTclssgConfigIndex)
+                    $default
         ]
         return [read-template-file-literal $inputDir $filename]
     }
@@ -501,12 +502,12 @@ namespace eval tclssg {
         # Read RSS templates.
         set rssArticleTemplate \
                 [read-template-file $inputDir \
-                        {rss articleTemplateFilename} \
-                        rssArticleTemplateFilename]
+                        {rss template article} \
+                        $::tclssg::config(rssArticleTemplateFilename)]
         set rssDocumentTemplate \
                 [read-template-file $inputDir \
-                        {rss documentTemplateFilename} \
-                        rssDocumentTemplateFilename]
+                        {rss template document} \
+                        $::tclssg::config(rssDocumentTemplateFilename)]
 
         set rssFeedPageIds [tclssg pages \
                 get-website-config-setting blogIndexPageId ""]
@@ -601,12 +602,12 @@ namespace eval tclssg {
         # Read template files.
         set articleTemplate [
             read-template-file $inputDir \
-                    articleTemplateFilename \
-                    articleTemplateFilename]
+                    {template article} \
+                    $::tclssg::config(articleTemplateFilename)]
         set documentTemplate [
             read-template-file $inputDir \
-                    documentTemplateFilename \
-                    documentTemplateFilename]
+                    {template document} \
+                    $::tclssg::config(documentTemplateFilename)]
 
         # Create a list of pages that are blog posts and a list of blog posts
         # that should be linked to in the blog sidebar.
