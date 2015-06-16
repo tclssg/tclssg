@@ -20,7 +20,7 @@ namespace eval ::tclssg::pages {
     # respective contents in the format of "<table name> -- <contents>":
     #
     # pages -- page data for every page. Page data is the information about
-    # the page that is *not* set by the user directly in preamble
+    # the page that is *not* set by the user directly in the preamble
     # (settings) section of the page file.
     # settings -- page settings for every page.
     # websiteConfig -- website-wide settings.

@@ -205,7 +205,7 @@ namespace eval ::tclssg::tests {
                     puts done
                 }
             ]
-            set result [exec [info nameofexecutable] $file]
+            set result [tcl $file]
         }
         return [lindex $result end]
     } -result done
