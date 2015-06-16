@@ -785,8 +785,11 @@ namespace eval tclssg {
         set currentPath [pwd]
         catch {
             cd $::tclssg::config(scriptLocation)
-            append ::tclssg::config(version) \
-                    " (commit [string range [exec git rev-parse HEAD] 0 9])"
+            if {[file isdir \
+                    [file join $::tclssg::config(scriptLocation) .git]]} {
+                append ::tclssg::config(version) \
+                        " (commit [string range [exec git rev-parse HEAD] 0 9])"
+            }
         }
         cd $currentPath
 
