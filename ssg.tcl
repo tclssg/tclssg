@@ -33,7 +33,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 1.0.0
+    variable version 1.0.1
     variable debugMode 1
 
     proc version {} {
@@ -627,16 +627,14 @@ namespace eval tclssg {
         foreach varName {indexPage blogIndexPage tagPage} {
             set value [file join $contentDir \
                     [tclssg pages get-website-config-setting $varName ""]]
-            tclssg pages set-website-config-setting ${varName}Id \
-                    [tclssg pages input-file-to-id $value]
+            set id [tclssg pages input-file-to-id $value]
+            tclssg pages set-website-config-setting ${varName}Id $id
+            set ${varName}Id $id
         }
         # Replace the config outputDir, which may be relative to inputDir, with
         # the actual value of outputDir, which is not.
         tclssg pages set-website-config-setting outputDir $outputDir
 
-        # Add a chronologically ordered blog index.
-        set blogIndexPageId \
-                [tclssg pages get-website-config-setting blogIndexPageId ""]
         if {$blogIndexPageId ne ""} {
             add-article-collection $blogPostIds $blogIndexPageId
         }
@@ -657,11 +655,19 @@ namespace eval tclssg {
             if {$id ne ""} {
                 if {$varName ne "tagPageId"} {
                     set inputFile [tclssg pages get-data $id inputFile ""]
+                    set indexInputFile \
+                            [tclssg pages get-data $indexPageId inputFile ""]
                 }
                 tclssg pages delete $id
                 if {$varName ne "tagPageId"} {
                     set newId [tclssg pages input-file-to-id $inputFile]
                     tclssg pages set-website-config-setting $varName $newId
+                    # If the website index page is the blog index page update
+                    # the index page id.
+                    if {$inputFile eq $indexInputFile} {
+                        tclssg pages set-website-config-setting \
+                                indexPageId $newId
+                    }
                 }
             }
         }
