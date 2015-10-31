@@ -870,7 +870,7 @@ namespace eval tclssg {
 } ;# namespace tclssg
 
 # Check if we were run as the primary script by the interpreter. Code from
-# http://wiki.tcl.tk/40097.
+# http://tcl.wiki/40097.
 proc main-script? {} {
     global argv0
 
