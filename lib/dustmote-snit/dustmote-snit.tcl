@@ -151,7 +151,7 @@ package provide dmsnit $::dmsnit::version
 
         set contentLength $fileSize
         puts $connectChannel {HTTP/1.1 200 OK}
-        puts $connectChannel "Content-Type: [::mime::type $filename]"
+        puts $connectChannel "Content-Type: [mime::type $filename]"
         puts $connectChannel "Content-Length: $contentLength"
         puts $connectChannel {Accept-Ranges: bytes}
         puts $connectChannel {}
@@ -176,7 +176,7 @@ package provide dmsnit $::dmsnit::version
         set contentLength [expr { $lastByte - $firstByte + 1 }]
 
         puts $connectChannel {HTTP/1.1 206 Partial Content}
-        puts $connectChannel "Content-Type: [::mime::type $filename]"
+        puts $connectChannel "Content-Type: [mime::type $filename]"
         puts $connectChannel "Content-Length: $contentLength"
         puts $connectChannel \
                 "Content-Range: bytes $firstByte-$lastByte/$contentLength"
@@ -357,7 +357,7 @@ package provide dmsnit $::dmsnit::version
     }
 }
 
-namespace eval ::mime {
+namespace eval ::dmsnit::mime {
     variable mimeDataInverted {
         text/plain {
             makefile
@@ -421,7 +421,7 @@ namespace eval ::mime {
     }
     unset mimeDataInverted
 
-    proc ::mime::type {filename} {
+    proc ::dmsnit::mime::type {filename} {
         variable byFilename
         variable byExtension
         set tail [file tail $filename]
