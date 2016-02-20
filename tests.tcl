@@ -239,28 +239,42 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test9 {serve command} \
                 -setup $setup \
-                -cleanup {close $ch; unset ch} \
+                -cleanup {close $ch; unset ch; unset i} \
                 -constraints curl \
                 -body {
         with-temporary-project project {
             tcl ssg.tcl build $project/input $project/output
-            set ch [open [list \
-                    |[info nameofexecutable] ssg.tcl serve -verbose \
+            set ch [open |[list \
+                    [info nameofexecutable] ssg.tcl serve -verbose \
                             $project/input $project/output]]
             set foundServerInfo 0
-            while {[gets $ch line] >= 0} {
-                if {[regexp {serving path .* on ([^ ]+) port ([0-9]+)} $line _ \
-                        host port]} {
-                    set foundServerInfo 1
+            fconfigure $ch -blocking 0
+            set i 0
+            while 1 {
+                if {[gets $ch line] > 0} {
+                    if {[regexp {serving path .* on ([^ ]+) port ([0-9]+)} \
+                            $line _ host port]} {
+                        set foundServerInfo 1
+                        break
+                    }
+                } else {
+                    after 10
+                    incr i
+                }
+                # Give the server approximately one second to start up.
+                if {$i > 100} {
                     break
                 }
             }
             if {!$foundServerInfo} {
-                error {can't determine server host/port}
+                error {can't determine server host/port from its output}
             }
-            set indexPage [exec curl -s http://$host:$port/]
+            if {[eof $ch]} {
+                error {the server has quit}
+            }
+            set indexPage [exec curl -s -m 1 http://$host:$port/]
             set result [string match *Tclssg* $indexPage]
-            exec curl -s http://$host:$port/bye
+            exec curl -s -m 1 http://$host:$port/bye
         }
         return $result
     } -result 1
