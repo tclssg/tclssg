@@ -211,25 +211,33 @@ namespace eval ::tclssg::command {
                 $websiteConfig server host]
         set port [::tclssg::utils::dict-default-get 8080 \
                 $websiteConfig server port]
+        set verbose [expr {"verbose" in $options}]
 
-        ::tclssg::webserver::add-handler /bye {
+        package require dmsnit
+
+        set httpd [::dmsnit::httpd create %AUTO%]
+        $httpd configure \
+                -root $outputDir \
+                -host $host \
+                -port $port \
+                -verbose $verbose
+
+        $httpd add-handler /bye {
             socketChannel {
+                upvar 1 self self
                 puts "shutting down"
                 puts $socketChannel {HTTP/1.0 204 No Content}
                 puts $socketChannel {}
-                close $socketChannel
-                set ::tclssg::webserver::done 1
+                $self clean-up $socketChannel
+                set [$self wait-var-name] 1
             }
         }
-        ::tclssg::webserver::serve $outputDir $port $host
-        if {"verbose" in $options} {
-            set ::tclssg::webserver::verbose 1
-        }
+        $httpd serve
         if {"browse" in $options} {
             package require browse
             ::browse::url "http://$host:$port/"
         }
-        vwait ::tclssg::webserver::done
+        vwait [$httpd wait-var-name]
     }
 
     proc version {inputDir outputDir {debugDir {}} {options {}}} {

@@ -30,7 +30,6 @@ proc import {dir} {
             interpreter {}
         }
         utils {}
-        webserver {}
     }
 
     import-recursive $dir {} $imports
