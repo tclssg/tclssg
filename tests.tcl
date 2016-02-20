@@ -44,6 +44,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test1 {incremental-clock-scan} \
                 -setup $setup \
+                -cleanup {unset result} \
                 -body {
         set result {}
         lappend result [incremental-clock-scan {2014-06-26 20:10}]
@@ -65,6 +66,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test2 {slugify} \
                 -setup $setup \
+                -cleanup {unset result} \
                 -body {
         set result {}
         lappend result [slugify {Hello, World!}]
@@ -75,6 +77,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test3 {replace-path-root} \
                 -setup $setup \
+                -cleanup {unset result} \
                 -body {
         set result {}
         lappend result [replace-path-root ./a/b/c/d/e/f ./a ./x]
@@ -89,6 +92,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test4 {dict-default-get} \
                 -setup $setup \
+                -cleanup {unset result} \
                 -body {
         set result {}
         lappend result [dict-default-get testValue {} someKey]
@@ -101,6 +105,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test5 {add-number-before-extension} \
                 -setup $setup \
+                -cleanup {unset result correct} \
                 -body {
         set result {}
         set correct {}
@@ -127,6 +132,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test test6 {get-page-settings} \
                 -setup $setup \
+                -cleanup {unset result first elem} \
                 -body {
         set prased {}
         lappend prased [get-page-settings {{hello world} Hello, world!}]
@@ -150,135 +156,113 @@ namespace eval ::tclssg::tests {
         return [lsort -unique $result]
     } -result 1
 
-    if {[info tclversion] eq {8.6}} {
-        proc with-temporary-project {dirVarName script} {
-            upvar 1 $dirVarName tempProjectDir
+    proc make-temporary-project {} {
+        set tempProjectDir [::fileutil::tempfile]
+        # Remove the temporary file so that Tclssg can replace it with
+        # a temporary project directory.
+        file delete $tempProjectDir
+        tcltest::makeDirectory $tempProjectDir
 
-            set tempProjectDir [::fileutil::tempfile]
-            # Remove the temporary file so that Tclssg can replace it with
-            # a temporary project directory.
-            file delete $tempProjectDir
-
-            try {
-                tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
-                uplevel 1 $script
-            } finally {
-                file delete -force $tempProjectDir
-            }
-        }
-    } else {
-        # Legacy version with no clean-up guarantee.
-        proc with-temporary-project {dirVarName script} {
-            upvar 1 $dirVarName tempProjectDir
-
-            set tempProjectDir [::fileutil::tempfile]
-            # Remove the temporary file so that Tclssg can replace it with
-            # a temporary project directory.
-            file delete $tempProjectDir
-
-            tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
-            uplevel 1 $script
-
-            file delete -force $tempProjectDir
-        }
+        tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
+        return $tempProjectDir
     }
 
     tcltest::test test7 {Tclssg command line commands} \
                 -setup $setup \
+                -cleanup {unset result configFile config} \
                 -constraints diff \
                 -body {
-        with-temporary-project project {
-            set tclssgArguments [list $project/input $project/output]
+        set project [make-temporary-project]
+        set tclssgArguments [list $project/input $project/output]
 
-            tcl ssg.tcl version
-            tcl ssg.tcl help
+        tcl ssg.tcl version
+        tcl ssg.tcl help
 
-            # Set deployment options in the website config.
-            set configFile $project/input/website.conf
-            set config [::fileutil::cat $configFile]
-            dict set config deployCopy path $project/deploy-copy-test
-            dict set config deployCustom [list \
-                start "cp -r \"\$outputDir\"\
-                        $project/deploy-custom-test" \
-                file {} \
-                end {} \
-            ]
-            ::fileutil::writeFile $configFile $config
+        # Set deployment options in the website config.
+        set configFile $project/input/website.conf
+        set config [::fileutil::cat $configFile]
+        dict set config deployCopy path $project/deploy-copy-test
+        dict set config deployCustom [list \
+            start "cp -r \"\$outputDir\"\
+                    $project/deploy-custom-test" \
+            file {} \
+            end {} \
+        ]
+        ::fileutil::writeFile $configFile $config
 
-            tcl ssg.tcl build {*}$tclssgArguments
-            tcl ssg.tcl update --templates --yes {*}$tclssgArguments
-            tcl ssg.tcl build {*}$tclssgArguments
-            tcl ssg.tcl deploy-copy {*}$tclssgArguments
-            tcl ssg.tcl deploy-custom {*}$tclssgArguments
-            tcl ssg.tcl clean {*}$tclssgArguments
+        tcl ssg.tcl build {*}$tclssgArguments
+        tcl ssg.tcl update --templates --yes {*}$tclssgArguments
+        tcl ssg.tcl build {*}$tclssgArguments
+        tcl ssg.tcl deploy-copy {*}$tclssgArguments
+        tcl ssg.tcl deploy-custom {*}$tclssgArguments
+        tcl ssg.tcl clean {*}$tclssgArguments
 
-            set result [exec diff -r \
-                    $project/deploy-copy-test \
-                    $project/deploy-custom-test]
-        }
+        set result [exec diff -r \
+                $project/deploy-copy-test \
+                $project/deploy-custom-test]
         return $result
     } -result {}
 
     tcltest::test test8 {Tclssg as a library} \
                 -setup $setup \
+                -cleanup {unset result file} \
                 -body {
-        with-temporary-project project {
-            set file [file join $project libtest.tcl]
-            fileutil::writeFile $file [
-                subst {
-                    source [file join $path ssg.tcl]
-                    tclssg configure
-                    tclssg command build $project/input $project/output
-                    puts done
-                }
-            ]
-            set result [tcl $file]
-        }
+        set project [make-temporary-project]
+        set file [file join $project libtest.tcl]
+        fileutil::writeFile $file [
+            subst {
+                source [file join $path ssg.tcl]
+                tclssg configure
+                tclssg command build $project/input $project/output
+                puts done
+            }
+        ]
+        set result [tcl $file]
         return [lindex $result end]
     } -result done
 
     tcltest::test test9 {serve command} \
                 -setup $setup \
-                -cleanup {close $ch; unset ch; unset i} \
+                -cleanup {close $ch; unset ch i foundServerInfo indexPage} \
                 -constraints curl \
                 -body {
-        with-temporary-project project {
-            tcl ssg.tcl build $project/input $project/output
-            set ch [open |[list \
-                    [info nameofexecutable] ssg.tcl serve -verbose \
-                            $project/input $project/output]]
-            set foundServerInfo 0
-            fconfigure $ch -blocking 0
-            set i 0
-            while 1 {
-                if {[gets $ch line] > 0} {
-                    if {[regexp {serving path .* on ([^ ]+) port ([0-9]+)} \
-                            $line _ host port]} {
-                        set foundServerInfo 1
-                        break
-                    }
-                } else {
-                    after 10
-                    incr i
-                }
-                # Give the server approximately one second to start up.
-                if {$i > 100} {
+        set project [make-temporary-project]
+        tcl ssg.tcl build $project/input $project/output
+        set ch [open |[list \
+                [info nameofexecutable] ssg.tcl serve -verbose \
+                        $project/input $project/output]]
+        set foundServerInfo 0
+        fconfigure $ch -blocking 0
+        set i 0
+        while 1 {
+            if {[gets $ch line] > 0} {
+                if {[regexp {serving path .* on ([^ ]+) port ([0-9]+)} \
+                        $line _ host port]} {
+                    set foundServerInfo 1
                     break
                 }
+            } else {
+                after 10
+                incr i
             }
-            if {!$foundServerInfo} {
-                error {can't determine server host/port from its output}
+            # Give the server approximately one second to start up.
+            if {$i > 100} {
+                break
             }
-            if {[eof $ch]} {
-                error {the server has quit}
-            }
-            set indexPage [exec curl -s -m 1 http://$host:$port/]
-            set result [string match *Tclssg* $indexPage]
-            exec curl -s -m 1 http://$host:$port/bye
         }
+        if {!$foundServerInfo} {
+            error {can't determine the server host/port from its output}
+        }
+        if {[eof $ch]} {
+            error {the server has quit}
+        }
+        set indexPage [exec curl -s -m 1 http://$host:$port/]
+        set result [string match *Tclssg* $indexPage]
+        exec curl -s -m 1 http://$host:$port/bye
         return $result
     } -result 1
 
+    tcltest::cleanupTests
     # Exit with a nonzero status if there are failed tests.
     if {$::tcltest::numTests(Failed) > 0} {
         exit 1
