@@ -17,6 +17,10 @@ namespace eval ::tclssg::tests {
         cd $path
     }} $path]
 
+    if {[llength $argv] > 0} {
+        tcltest::configure -match $argv
+    }
+
     proc tcl args {
         exec [info nameofexecutable] {*}$args
     }
