@@ -21,6 +21,13 @@ namespace eval ::tclssg::tests {
         exec [info nameofexecutable] {*}$args
     }
 
+    proc curl-available? {} {
+        set error [catch {
+            exec curl --version
+        }]
+        return [expr { !$error }]
+    }
+
     proc diff-available? {} {
         set testPath [::fileutil::tempfile]
         file delete $testPath
@@ -32,7 +39,8 @@ namespace eval ::tclssg::tests {
         return [expr { !$error }]
     }
 
-    tcltest::testConstraint diffAvailable [diff-available?]
+    tcltest::testConstraint curl [curl-available?]
+    tcltest::testConstraint diff [diff-available?]
 
     tcltest::test test1 {incremental-clock-scan} \
                 -setup $setup \
@@ -142,23 +150,42 @@ namespace eval ::tclssg::tests {
         return [lsort -unique $result]
     } -result 1
 
-    proc with-temporary-project {dirVarName script} {
-        upvar 1 $dirVarName tempProjectDir
+    if {[info tclversion] eq {8.6}} {
+        proc with-temporary-project {dirVarName script} {
+            upvar 1 $dirVarName tempProjectDir
 
-        set tempProjectDir [::fileutil::tempfile]
-        # Remove the temporary file so that Tclssg can replace it with
-        # a temporary project directory.
-        file delete $tempProjectDir
+            set tempProjectDir [::fileutil::tempfile]
+            # Remove the temporary file so that Tclssg can replace it with
+            # a temporary project directory.
+            file delete $tempProjectDir
 
-        tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
-        uplevel 1 $script
+            try {
+                tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
+                uplevel 1 $script
+            } finally {
+                file delete -force $tempProjectDir
+            }
+        }
+    } else {
+        # Legacy version with no clean-up guarantee.
+        proc with-temporary-project {dirVarName script} {
+            upvar 1 $dirVarName tempProjectDir
 
-        file delete -force $tempProjectDir
+            set tempProjectDir [::fileutil::tempfile]
+            # Remove the temporary file so that Tclssg can replace it with
+            # a temporary project directory.
+            file delete $tempProjectDir
+
+            tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
+            uplevel 1 $script
+
+            file delete -force $tempProjectDir
+        }
     }
 
     tcltest::test test7 {Tclssg command line commands} \
                 -setup $setup \
-                -constraints diffAvailable \
+                -constraints diff \
                 -body {
         with-temporary-project project {
             set tclssgArguments [list $project/input $project/output]
@@ -209,6 +236,34 @@ namespace eval ::tclssg::tests {
         }
         return [lindex $result end]
     } -result done
+
+    tcltest::test test9 {serve command} \
+                -setup $setup \
+                -cleanup {close $ch; unset ch} \
+                -constraints curl \
+                -body {
+        with-temporary-project project {
+            tcl ssg.tcl build $project/input $project/output
+            set ch [open [list \
+                    |[info nameofexecutable] ssg.tcl serve -verbose \
+                            $project/input $project/output]]
+            set foundServerInfo 0
+            while {[gets $ch line] >= 0} {
+                if {[regexp {serving path .* on ([^ ]+) port ([0-9]+)} $line _ \
+                        host port]} {
+                    set foundServerInfo 1
+                    break
+                }
+            }
+            if {!$foundServerInfo} {
+                error {can't determine server host/port}
+            }
+            set indexPage [exec curl -s http://$host:$port/]
+            set result [string match *Tclssg* $indexPage]
+            exec curl -s http://$host:$port/bye
+        }
+        return $result
+    } -result 1
 
     # Exit with a nonzero status if there are failed tests.
     if {$::tcltest::numTests(Failed) > 0} {
