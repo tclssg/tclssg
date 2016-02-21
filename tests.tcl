@@ -266,9 +266,11 @@ namespace eval ::tclssg::tests {
         return $result
     } -result 1
 
-    tcltest::cleanupTests
     # Exit with a nonzero status if there are failed tests.
-    if {$::tcltest::numTests(Failed) > 0} {
+    set failed [expr {$tcltest::numTests(Failed) > 0}]
+
+    tcltest::cleanupTests
+    if {$failed} {
         exit 1
     }
 }
