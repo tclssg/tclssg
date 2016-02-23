@@ -8,28 +8,50 @@ namespace eval ::tclssg::templating::interpreter {
     namespace export *
     namespace ensemble create
 
-    # Set variable $key to $value in the template interpreter for each
+    ::safe::interpCreate cleanInterp
+    set defaultVars [interp eval cleanInterp {info vars}]
+    variable defaultVarValues {}
+    variable defaultArrayValues {}
+    foreach varName $defaultVars {
+        if {[catch {dict set defaultVarValues $varName \
+                [interp eval cleanInterp [list set $varName]]}]} {
+            dict set defaultArrayValues $varName \
+                    [interp eval cleanInterp [list array get $varName]]
+        }
+    }
+    unset defaultVars
+    variable defaultNamespaces [interp eval cleanInterp {namespace children ::}]
+
+    # Set variable $key to $value in the template interpreter $interp for each
     # key-value pair in a dictionary.
-    proc inject {dictionary} {
+    proc inject {interp dictionary} {
         dict for {key value} $dictionary {
-            var-set $key $value
+            interp eval $interp [list set $key $value]
         }
     }
 
-    # Set up the template interpreter.
-    proc up {inputDir} {
+    # Create and set up a new template interpreter $interp or reset an 
+    # existing one.
+    proc up {interp inputDir} {
         # Create a safe interpreter to use for rendering templates (the
         # template interpreter).
-        ::safe::interpCreate templateInterp
-        ::safe::interpAddToAccessPath templateInterp [file join \
+        if {![interp exists $interp]} {
+            ::safe::interpCreate $interp
+        } else {
+            # Reset global variables.
+            variable defaultVarValues
+            inject $interp $defaultVarValues
+            variable defaultArrayValues
+            foreach {varName value} $defaultArrayValues {
+                interp eval $interp [list array set $varName $value]
+            }
+        }
+        ::safe::interpAddToAccessPath $interp [file join \
                 $inputDir \
                 $::tclssg::config(templateDirName)]
-        ::safe::interpAddToAccessPath templateInterp [file join \
+        ::safe::interpAddToAccessPath $interp [file join \
                 $::tclssg::config(skeletonDir) \
                 $::tclssg::config(templateDirName)]
-        # A command to set variable $name to $value in the template
-        # interpreter.
-        interp alias {} [namespace current]::var-set templateInterp set
 
         # Alias commands to be used in templates.
         foreach {command alias} {
@@ -41,8 +63,6 @@ namespace eval ::tclssg::templating::interpreter {
             puts                                puts
             ::tclssg::templating::inline-markdown-to-html
                                                 markdown-to-html
-            ::tclssg::templating::interpreter::with-cache
-                                                with-cache-for-filename
             ::tclssg::pages::get-setting        get-page-setting
             ::tclssg::pages::get-data           get-page-data
             ::tclssg::pages::get-website-config-setting
@@ -63,21 +83,25 @@ namespace eval ::tclssg::templating::interpreter {
             ::csv::split                        ::csv::split
             ::json::json2dict                   ::json::json2dict
         } {
-            interp alias templateInterp $alias {} {*}$command
+            interp alias $interp $alias {} {*}$command
         }
 
-        interp alias templateInterp get-rss-file {} apply {{callback id} {
+        interp alias \
+                $interp with-cache-for-filename \
+                {} ::tclssg::templating::interpreter::with-cache $interp
+
+        interp alias $interp get-rss-file {} apply {{callback id} {
             return [$callback [tclssg pages get-data $id inputFile]]
         }} $::tclssg::pages::rssFileCallback
 
         # Allow templates to read and source files from the templates
         # subdirectory with path failover.
-        interp alias templateInterp read-template-file \
+        interp alias $interp read-template-file \
                 {} ::tclssg::read-template-file-literal $inputDir
-        interp alias templateInterp resolve-template-file-path \
+        interp alias $interp resolve-template-file-path \
                 {} ::tclssg::resolve-template-file-path $inputDir
 
-        interp eval templateInterp {
+        interp eval $interp {
             proc interp-source {filename} {
                 uplevel #0 [list source [resolve-template-file-path $filename]]
             }
@@ -86,32 +110,29 @@ namespace eval ::tclssg::templating::interpreter {
                         [parse-template [read-template-file $filename]]]
             }
         }
-    }
-
-    # Tear down the template interpreter.
-    proc down {} {
-        interp delete templateInterp
+        return $interp
     }
 
     # Render template for page pageData.
     proc render {template id {extraVariables {}}} {
-        up [tclssg pages get-website-config-setting inputDir ""]
-        var-set currentPageId $id
-        inject $extraVariables
+        up templateInterp [tclssg pages get-website-config-setting inputDir ""]]
+        interp eval templateInterp [list set currentPageId $id]
+        inject templateInterp $extraVariables
         set listing [tclssg templating parse $template]
         set result [interp eval templateInterp $listing]
-        down
+        #interp delete templateInterp
+
         return $result
     }
 
     # Run $script and cache the result. Return that result immediately
     # if the script has already been run for $filename.
-    proc with-cache {filename script} {
+    proc with-cache {interp filename script} {
         set cache [namespace parent]::cache
         if {[$cache exists $filename $script]} {
             set result [$cache get $filename $script]
         } else {
-            set result [interp eval templateInterp $script]
+            set result [interp eval $interp $script]
             $cache set $filename $script $result
         }
         return $result
