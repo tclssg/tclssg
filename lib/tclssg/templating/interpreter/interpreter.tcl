@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (C) 2013, 2014, 2015 Danyil Bohdan.
+# Copyright (C) 2013, 2014, 2015, 2016, 2017 dbohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
@@ -120,7 +120,10 @@ namespace eval ::tclssg::templating::interpreter {
         inject templateInterp $extraVariables
         set listing [tclssg templating parse $template]
         set result [interp eval templateInterp $listing]
-        #interp delete templateInterp
+        if {![tclssg pages get-website-config-setting \
+                reuseTemplateInterpreter 0]} {
+            interp delete templateInterp
+        }
 
         return $result
     }
