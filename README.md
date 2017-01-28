@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tclssg/tclssg.svg)](https://travis-ci.org/tclssg/tclssg)
 
-Tclssg is a static site generator with template support written in Tcl for danyilbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+Tclssg is a static site generator with template support written in Tcl for dbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 Features
 --------
@@ -100,7 +100,7 @@ License
 
 MIT. See the file `LICENSE` for details.
 
-The Tclssg logo images are copyright (c) 2014 Danyil Bohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The Tclssg logo images are copyright (c) 2014 dbohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 The [stackato-cli](https://github.com/ActiveState/stackato-cli) browse package is copyright (c) 2011-2012 ActiveState Software Inc. and is distributed under the Apache License, Version 2.0. See `external/browse/license.txt`.
 
