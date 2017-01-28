@@ -298,10 +298,10 @@ package provide dmsnit $::dmsnit::version
                 _ firstByte lastByte]
         set wholeName [::fileutil::jail \
                 [$self cget -root] [::dmsnit::url::decode $shortName]]
-        if {[string match */ $shortName] && ![string match */ $wholeName]} {
+        if { [string match */ $shortName] && ![string match */ $wholeName] } {
             append wholeName /
         }
-        if {![string match /* $shortName]} {
+        if { ![string match /* $shortName] } {
             set shortName /$shortName
         }
         # Return data.
@@ -428,7 +428,7 @@ namespace eval ::dmsnit::mime {
         set ext [file extension $filename]
         if { [dict exists $byFilename $tail] } {
             return [dict get $byFilename $tail]
-        } elseif {[dict exists $byExtension $ext]} {
+        } elseif { [dict exists $byExtension $ext] } {
             return [dict get $byExtension $ext]
         } else {
             return application/octet-stream
@@ -525,7 +525,8 @@ proc ::dmsnit::main {argv0 argv} {
 }
 
 # If this is the main script...
-if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+if { [info exists argv0] &&
+        ([file tail [info script]] eq [file tail $argv0]) } {
     # If this is not a reload...
     if { ![info exists ::dmsnit::reload] || !$::dmsnit::reload } {
         ::dmsnit::main $argv0 $argv
