@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # DustMote HTTP server originally developed by Harold Kaplan
-# (https://tcl.wiki/4333). Modified by Danyil Bohdan.
+# (https://tcl.wiki/4333). Modified by dbohdan.
 # This code is in the public domain.
 package require Tcl 8.5
 package require fileutil
@@ -9,7 +9,7 @@ package require snit 2
 package require textutil
 
 namespace eval ::dmsnit {
-    variable version 0.9.6
+    variable version 0.9.7
 }
 package provide dmsnit $::dmsnit::version
 
@@ -454,7 +454,7 @@ proc ::dmsnit::main {argv0 argv} {
     set httpd [::dmsnit::httpd create %AUTO%]
 
     # Process command line arguments.
-    if { $argv eq {} } {
+    if { ($argv eq {}) || ([lsearch -regexp $argv {^-(h|-?help)$}] > -1) } {
         set usageString "usage: $argv0"
         foreach option [$httpd info options] {
             set defaultValue [$httpd cget $option]
