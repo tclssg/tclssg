@@ -9,7 +9,7 @@ package require snit 2
 package require textutil
 
 namespace eval ::dmsnit {
-    variable version 0.9.7
+    variable version 0.9.8
 }
 package provide dmsnit $::dmsnit::version
 
@@ -223,7 +223,7 @@ package provide dmsnit $::dmsnit::version
 
         # Redirect the client to "$path/" if necessary to ensure relative links
         # work correctly.
-        if {![string match */ $path]} {
+        if { ($titlePath ne {/}) && ![string match */ $path] } {
             puts -nonewline $connectChannel [template::expand {
                 HTTP/1.1 302 Found
                 Location: %1$s/
