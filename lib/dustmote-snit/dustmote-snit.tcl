@@ -9,7 +9,7 @@ package require snit 2
 package require textutil
 
 namespace eval ::dmsnit {
-    variable version 0.11.0
+    variable version 0.12.0
 }
 package provide dmsnit $::dmsnit::version
 
@@ -360,16 +360,16 @@ package provide dmsnit $::dmsnit::version
 namespace eval ::dmsnit::mime {
     variable mimeDataInverted {
         text/plain {
+            copying
+            license
             makefile
-            COPYING
-            LICENSE
-            README
-            Makefile
+            readme
             .c
             .conf
             .h
             .ini
             .log
+            .markdown
             .md
             .pl
             .py
@@ -379,9 +379,9 @@ namespace eval ::dmsnit::mime {
             .tm
             .txt
             .wiki
-            .HOWTO
-            .LICENSE
-            .README
+            .howto
+            .license
+            .readme
         }
         text/css                .css
         text/csv                .csv
@@ -424,8 +424,8 @@ namespace eval ::dmsnit::mime {
     proc ::dmsnit::mime::type {filename} {
         variable byFilename
         variable byExtension
-        set tail [file tail $filename]
-        set ext [file extension $filename]
+        set tail [string tolower [file tail $filename]]
+        set ext [string tolower [file extension $filename]]
         if { [dict exists $byFilename $tail] } {
             return [dict get $byFilename $tail]
         } elseif { [dict exists $byExtension $ext] } {
