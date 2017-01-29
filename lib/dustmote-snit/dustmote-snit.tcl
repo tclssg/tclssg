@@ -9,7 +9,7 @@ package require snit 2
 package require textutil
 
 namespace eval ::dmsnit {
-    variable version 0.10.0
+    variable version 0.11.0
 }
 package provide dmsnit $::dmsnit::version
 
@@ -80,7 +80,7 @@ package provide dmsnit $::dmsnit::version
             error {Set-tls is only for setting the option -tls}
         }
         if { $value } {
-            package require tls
+            package require tls 1.6.7
             ::tls::init \
                     -certfile [$self cget -certfile] \
                     -keyfile  [$self cget -keyfile] \
