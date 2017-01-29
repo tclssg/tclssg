@@ -9,7 +9,7 @@ package require snit 2
 package require textutil
 
 namespace eval ::dmsnit {
-    variable version 0.9.8
+    variable version 0.10.0
 }
 package provide dmsnit $::dmsnit::version
 
@@ -139,7 +139,7 @@ package provide dmsnit $::dmsnit::version
 
     # Handle a new connection.
     method answer {connectChannel host2 port2} {
-        fconfigure $connectChannel -blocking 0
+        fconfigure $connectChannel -blocking 0 -encoding utf-8
         $self wire-channel-reader $connectChannel
     }
 
