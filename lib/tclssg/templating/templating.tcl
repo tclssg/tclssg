@@ -71,7 +71,7 @@ namespace eval ::tclssg::templating {
     }
 
     # Convert a template into Tcl code.
-    # Inspired by tmpl_parser by Kanryu KATO (http://tcl.wiki/20363).
+    # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl-lang.org/20363).
     proc parse {template} {
         set result {}
         lassign $::tclssg::config(templateBrackets) leftBracket rightBracket

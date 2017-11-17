@@ -215,7 +215,7 @@ namespace eval ::tclssg::utils {
                     set scan [clock scan $date -format $formatScan {*}$options]
                 }]} {
                 # Work around unexpected treatment %Y and %Y-%m dates, see
-                # http://tcl.wiki/2525.
+                # http://wiki.tcl-lang.org/2525.
                 set resultTimeVal [clock scan [join [list $date $padding] ""] \
                         -format {%Y-%m-%d-%H-%M-%S} {*}$options]
                 set resultFormat $formatStandard
