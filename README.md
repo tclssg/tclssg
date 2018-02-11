@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tclssg/tclssg.svg)](https://travis-ci.org/tclssg/tclssg)
 
-Tclssg is a static site generator with template support written in Tcl for dbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap](http://getbootstrap.com/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+Tclssg is a static site generator with template support written in Tcl for dbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.3/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
 
 Features
 --------
@@ -106,4 +106,4 @@ The [stackato-cli](https://github.com/ActiveState/stackato-cli) browse package i
 
 The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project and is distributed under the MIT license. See `external/markdown/markdown.tcl`.
 
-Bootstrap 3.3.1 is copyright (c) 2011-2014 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.3.1-dist/LICENSE`.
+Bootstrap 3.3.7 is copyright (c) 2011-2016 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.3.7-dist/LICENSE`.
