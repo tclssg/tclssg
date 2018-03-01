@@ -33,7 +33,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 1.0.3
+    variable version 2.0.0
     variable debugMode 1
 
     proc version {} {
