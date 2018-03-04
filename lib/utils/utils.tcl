@@ -153,9 +153,13 @@ namespace eval ::tclssg::utils {
 
 
     # Copy all files form fromDir to toDir displaying feedback to the user. All
-    # files matching skipRegExp are ignored. If overwrite == 2 prompt
+    # files matching skipRegExp are ignored. If overwrite is "?" prompt
     # user whether to overwrite each file.
-    proc copy-files {fromDir toDir {overwrite 0} {skipRegExp ""}} {
+    proc copy-files {fromDir toDir {overwrite never} {skipRegExp ""}} {
+        if {$overwrite ni {never always ask}} {
+            error "unknown overwrite value \"$overwrite\";\
+                   must be \"never\", \"always\" or \"ask\""
+        }
         set files [
             struct::list filterfor x [
                 fileutil::find $fromDir {file isfile}
@@ -168,7 +172,7 @@ namespace eval ::tclssg::utils {
         foreach file $files {
             set destFile [replace-path-root $file $fromDir $toDir]
             if {[file exists $destFile]} {
-                if {$overwrite == 2} {
+                if {$overwrite eq "ask"} {
                     if {$input ne "all"} {
                         set input {}
                         while {$input ni {y n all}} {
@@ -178,8 +182,8 @@ namespace eval ::tclssg::utils {
                     }
                 }
 
-                if {$overwrite == 1 ||
-                    ($overwrite == 2 && $input in {y all})} {
+                if {$overwrite eq "always" ||
+                    ($overwrite eq "ask" && $input in {y all})} {
                     puts "overwriting $destFile with $file"
                     file copy -force $file $destFile
                 } else {

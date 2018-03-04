@@ -649,7 +649,7 @@ namespace eval tclssg {
         # Copy static files verbatim.
         ::tclssg::utils::copy-files [file join $inputDir static] \
                                     $outputDir \
-                                    1
+                                    always
 
         # Generate a sitemap.
         if {[tclssg page get-website-config-setting {sitemap enable} 0]} {

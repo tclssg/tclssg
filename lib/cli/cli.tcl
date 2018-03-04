@@ -26,7 +26,7 @@ namespace eval ::tclssg::command {
         ]
         ::tclssg::utils::copy-files skeleton \
                                     $inputDir \
-                                    0 \
+                                    never \
                                     $skipRegExp
     }
 
@@ -75,9 +75,9 @@ namespace eval ::tclssg::command {
             lappend updateSourceDirs templates templates
         }
         if {"yes" in $options} {
-            set overwriteMode 1
+            set overwriteMode always
         } else {
-            set overwriteMode 2
+            set overwriteMode ask
         }
         foreach {dir descr} $updateSourceDirs {
             puts "updating $descr"
@@ -94,7 +94,7 @@ namespace eval ::tclssg::command {
 
         set deployDest [dict get $websiteConfig deployCopy path]
 
-        ::tclssg::utils::copy-files $outputDir $deployDest 1
+        ::tclssg::utils::copy-files $outputDir $deployDest always
     }
 
     proc deploy-custom {inputDir outputDir {debugDir {}} {options {}}} {
