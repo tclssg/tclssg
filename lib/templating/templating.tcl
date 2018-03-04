@@ -103,3 +103,5 @@ namespace eval ::tclssg::templating {
         return $listing
     }
 } ;# namespace templating
+
+package provide tclssg::templating 0

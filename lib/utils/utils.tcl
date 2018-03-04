@@ -343,3 +343,5 @@ namespace eval ::tclssg::utils {
         return $result
     }
 }
+
+package provide tclssg::utils 0

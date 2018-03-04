@@ -64,3 +64,5 @@ namespace eval ::tclssg::debugger {
                 $data]
     }
 } ;# debugger
+
+package provide tclssg::debugger 0

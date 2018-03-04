@@ -433,3 +433,5 @@ namespace eval ::tclssg::pages {
         return $result
     }
 } ;# namespace pages
+
+package provide tclssg::pages 0

@@ -12,7 +12,11 @@ namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $argv0/___]]]
     variable setup [list apply {{path} {
         lappend ::auto_path [file join $path lib]
-        package require tclssg-lib
+        package require tclssg::cli
+        package require tclssg::debugger
+        package require tclssg::pages
+        package require tclssg::templating
+        package require tclssg::utils
         namespace import ::tclssg::utils::*
         cd $path
     }} $path]

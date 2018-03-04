@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 
-package ifneeded Markdown 1.0 "
-    source \[file join \[list $dir] markdown.tcl]
-    source \[file join \[list $dir] version.tcl ]
-"
+package ifneeded Markdown 1.0 [list apply {dir {
+    uplevel 1 [list source -encoding utf-8 [file join $dir markdown.tcl]]
+    uplevel 1 [list source -encoding utf-8 [file join $dir version.tcl]]
+}} $dir]

@@ -46,12 +46,14 @@ namespace eval tclssg {
         # vary from project to project.
         set ::tclssg::config(scriptLocation) $scriptLocation
 
-        set ::tclssg::config(libDir) \
-                [file join $::tclssg::config(scriptLocation) lib]
-        global auto_path
-        lappend auto_path $::tclssg::config(libDir)
+        set ::tclssg::config(libDir) $::tclssg::config(scriptLocation)
+        lappend ::auto_path $::tclssg::config(libDir)
 
-        package require tclssg-lib
+        package require tclssg::cli
+        package require tclssg::debugger
+        package require tclssg::pages
+        package require tclssg::templating
+        package require tclssg::utils
 
         set ::tclssg::config(version) $::tclssg::version
 

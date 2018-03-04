@@ -323,3 +323,5 @@ namespace eval ::tclssg::command {
         return ::tclssg::command::help
     }
 } ;# namespace command
+
+package provide tclssg::cli 0
