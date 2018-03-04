@@ -5,7 +5,7 @@
     tags {test {a long tag with spaces}}
     date 2014-01-02
     modifiedDate 2015-01-07
-    hideDate 1
+    showDate 0
     moreText {(<a href="$link">read more still</a>)}
 }
 **Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id

@@ -5,19 +5,19 @@
 
 proc sidebar-links? {} {
     return [expr {
-        [blog-post?] && ![setting hideSidebarLinks 0]
+        [blog-post?] && [setting showSidebarLinks 1]
     }]
 }
 
 proc sidebar-note? {} {
     return [expr {
-        ![setting hideSidebarNote 0]
+        [setting showSidebarNote 1]
     }]
 }
 
 proc tag-cloud? {} {
     return [expr {
-        [blog-post?] && ![setting hideSidebarTagCloud 0]
+        [blog-post?] && [setting showSidebarTagCloud 1]
     }]
 }
 
@@ -35,12 +35,12 @@ proc format-document-title {} {
     set sep { | }
 
     set pageTitle [setting title {}]
-    set hideTitle [setting hideTitle 0]
+    set showTitle [setting showTitle 1]
     set pageNumber [setting pageNumber {}]
     set tagPageTag [setting tagPageTag {}]
 
     set result {}
-    if {(!$hideTitle) && ($pageTitle ne "")} {
+    if {($showTitle) && ($pageTitle ne "")} {
         lappend result $pageTitle
     }
 
@@ -171,7 +171,7 @@ proc format-footer {} {
     if {$copyright ne ""} {
         append footer "<div class=\"copyright\">$copyright</div>"
     }
-    if {![setting hideFooter 0]} {
+    if {[setting showFooter 1]} {
         append footer {<div class="powered-by"><small>Powered by <a href="https://github.com/tclssg/tclssg">Tclssg</a> and <a href="http://getbootstrap.com/">Bootstrap</a></small></div>}
     }
     return $footer
@@ -180,7 +180,7 @@ proc format-footer {} {
 proc format-comments {} {
     set engine [website-setting {comments engine} none]
     set result {}
-    if {![setting hideUserComments 0]} {
+    if {[setting showUserComments 1]} {
         switch -nocase -- $engine {
             disqus { set result [format-comments-disqus] }
             none {}

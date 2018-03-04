@@ -1,10 +1,10 @@
 {
     title Blog
     blogPost 1
-    hideFromSidebarLinks 1
-    hideTitle 1
-    hidePostTags 1
-    hideFromCollections 1
-    hideUserComments 1
+    showInSidebarLinks 0
+    showTitle 0
+    showPostTags 0
+    showFromCollections 0
+    showUserComments 0
 }
 This is a tag page.

@@ -167,10 +167,10 @@ namespace eval tclssg {
         set tagPageId \
                 [tclssg pages get-website-config-setting tagPageId ""]
 
-        # Filter out pages to that set hideFromCollections to 1.
+        # Filter out pages to that set showInCollections to 0.
         set pageIds [::struct::list filterfor x $pageIds {
             ($x ne $topPageId) &&
-            ![tclssg pages get-setting $x hideFromCollections 0]
+            [tclssg pages get-setting $x showInCollections 1]
         }]
 
         set prevIndexPageId {}
@@ -243,7 +243,7 @@ namespace eval tclssg {
 
                 set taggedPagesFiltered {}
                 foreach id $taggedPages {
-                    if {![tclssg pages get-setting $id hideFromCollections 0]} {
+                    if {[tclssg pages get-setting $id showInCollections 1]} {
                         lappend taggedPagesFiltered $id
                     }
                 }
@@ -329,7 +329,7 @@ namespace eval tclssg {
         foreach id [tclssg pages sorted-by-date] {
             # Exclude from the site map pages that are hidden from from
             # collections, blog index page beyond the first and tag pages.
-            if {(![tclssg pages get-setting $id hideFromCollections 0]) &&
+            if {[tclssg pages get-setting $id showInCollections 1] &&
                     ([tclssg pages get-setting $id prevPage ""] eq "") &&
                     ([tclssg pages get-setting $id tagPageTag ""] eq "")} {
                 set date [tclssg pages get-setting $id modifiedDateScanned ""]
@@ -360,7 +360,7 @@ namespace eval tclssg {
         blog        blogPost
         updated     modifiedDate
         modified    modifiedDate
-        hide        hideFromCollections
+        show        showInCollections
     }]
 
     # Load the content of the file $file into the page database.
@@ -583,8 +583,8 @@ namespace eval tclssg {
         set sidebarPostIds [::struct::list filterfor id \
                 $blogPostIds \
                 {
-                    ![tclssg pages get-setting $id hideFromSidebarLinks 0] &&
-                    ![tclssg pages get-setting $id hideFromCollections 0]
+                    [tclssg pages get-setting $id showInSidebarLinks 1] &&
+                    [tclssg pages get-setting $id showInCollections 1]
                 }]
         tclssg pages set-website-config-setting sidebarPostIds $sidebarPostIds
 

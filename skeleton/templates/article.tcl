@@ -5,7 +5,7 @@
 
 proc format-article-author {} {
     set author [setting author]
-    if {($author ne "") && ![setting hideAuthor 0]} {
+    if {($author ne "") && [setting showAuthor 1]} {
         return [format {<address class="author">%s</address>} $author]
     } else {
         return ""
@@ -18,8 +18,8 @@ proc format-article-title {} {
     global collection
     global collectionTopArticle
     set title [entities [setting title {}]]
-    if {$title ne "" && !([setting hideTitle 0] ||
-            [setting hideArticleTitle 0])} {
+    if {$title ne "" && !(![setting showTitle 1] ||
+            ![setting showArticleTitle 1])} {
         set result {<h1 class="page-title">}
         if {[blog-post?] && $collection && !$collectionTopArticle} {
             append result [format-link $currentPageId 0 $title]
@@ -64,12 +64,12 @@ proc format-date {dateClass dateVarName scannedDateVarName} {
 proc format-article-date {} {
     # Article creation and modification date.
     set resultList {}
-    if {![setting hideDate 0]} {
+    if {[setting showDate 1]} {
         set dateF [format-date date date dateScanned]
         if {$dateF ne ""} {
             lappend resultList $dateF
         }
-        if {![setting hideModifiedDate 0]} {
+        if {[setting showModifiedDate 1]} {
             set modDateF [format-date modified modifiedDate modifiedDateScanned]
             if {$modDateF ne ""} {
                 lappend resultList $modDateF
