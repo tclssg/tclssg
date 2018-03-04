@@ -35,19 +35,19 @@ namespace eval tclssg {
 
     variable version 2.0.0
     variable debugMode 1
+    variable path
 
     proc version {} {
         variable version
         return $version
     }
 
-    proc configure {{scriptLocation .}} {
+    proc configure newPath {
         # What follows is the configuration that is generally not supposed to
         # vary from project to project.
-        set ::tclssg::config(scriptLocation) $scriptLocation
-
-        set ::tclssg::config(libDir) $::tclssg::config(scriptLocation)
-        lappend ::auto_path $::tclssg::config(libDir)
+        variable path
+        set path $newPath
+        lappend ::auto_path $newPath
 
         package require tclssg::cli
         package require tclssg::debugger
@@ -55,38 +55,7 @@ namespace eval tclssg {
         package require tclssg::templating
         package require tclssg::utils
 
-        set ::tclssg::config(version) $::tclssg::version
-
-        # Change the lines below to replace the Markdown package with, e.g.,
-        # sundown.
-        #set ::tclssg::config(markdownProcessor) /usr/local/bin/sundown
-        set ::tclssg::config(markdownProcessor) :internal:
-
-        # Source Markdown if needed.
-        if {$::tclssg::config(markdownProcessor) eq ":internal:"} {
-            package require Markdown
-        }
-
-        set ::tclssg::config(contentDirName) pages
-        set ::tclssg::config(templateDirName) templates
-        set ::tclssg::config(staticDirName) static
-        set ::tclssg::config(dataDirName) data
-
-        set ::tclssg::config(articleTemplateFilename) article.thtml
-        set ::tclssg::config(documentTemplateFilename) bootstrap.thtml
-        set ::tclssg::config(rssArticleTemplateFilename) rss-article.txml
-        set ::tclssg::config(rssDocumentTemplateFilename) rss-feed.txml
-
-        set ::tclssg::config(defaultFeedFilename) rss.xml ;# RSS output file.
-        set ::tclssg::config(websiteConfigFilename) website.conf
-
-        set ::tclssg::config(skeletonDir) \
-                [file join $::tclssg::config(scriptLocation) skeleton]
-        set ::tclssg::config(defaultInputDir) [file join website input]
-        set ::tclssg::config(defaultOutputDir) [file join website output]
-        set ::tclssg::config(defaultDebugDir) [file join website debug]
-
-        set ::tclssg::config(templateBrackets) {<% %>}
+        package require Markdown
 
         return
     }
@@ -148,17 +117,11 @@ namespace eval tclssg {
     }
 
     # Return the path to a template file in $inputDir or (if it is not found in
-    # $inputDir) in the project skeleton (::tclssg::config(skeletonDir)).  Name
-    # resolution can later be made metadata-based.
+    # $inputDir) in the project skeleton.
     proc resolve-template-file-path {inputDir filename} {
         ::tclssg::utils::choose-dir $filename [
-            list \
-                [file join \
-                        $inputDir \
-                        $::tclssg::config(templateDirName)] \
-                [file join \
-                        $::tclssg::config(skeletonDir) \
-                        $::tclssg::config(templateDirName)]
+            list [file join $inputDir templates] \
+                 [file join skeleton templates]
         ]
     }
 
@@ -376,8 +339,9 @@ namespace eval tclssg {
                     set date [tclssg pages get-setting $id dateScanned ""]
                 }
                 if {[string is integer -strict [lindex $date 0]]} {
-                    set lastmod "\n  <lastmod>[clock format [lindex $date 0] \
-                            -format [lindex $date 1]]</lastmod>"
+                    set lastmodDate [clock format [lindex $date 0] \
+                                                  -format [lindex $date 1]]
+                    set lastmod "\n  <lastmod>$lastmodDate</lastmod>"
                 } else {
                     set lastmod ""
                 }
@@ -497,7 +461,7 @@ namespace eval tclssg {
     proc make-rss-feeds {inputDir outputDir prettyUrls} {
         # Set the default filename for RSS feeds if not present.
         set feedFilename [tclssg page get-website-config-setting \
-                {rss feedFilename} $::tclssg::config(defaultFeedFilename)]
+                {rss feedFilename} rss.xml]
         tclssg pages set-website-config-setting \
                 {rss feedFilename} $feedFilename
 
@@ -505,11 +469,11 @@ namespace eval tclssg {
         set rssArticleTemplate \
                 [read-template-file $inputDir \
                         {rss template article} \
-                        $::tclssg::config(rssArticleTemplateFilename)]
+                        rss-article.txml]
         set rssDocumentTemplate \
                 [read-template-file $inputDir \
                         {rss template document} \
-                        $::tclssg::config(rssDocumentTemplateFilename)]
+                        rss-document.txml]
 
         set rssFeedPageIds [tclssg pages \
                 get-website-config-setting blogIndexPageId ""]
@@ -543,10 +507,10 @@ namespace eval tclssg {
         }
 
         tclssg pages set-website-config-setting inputDir $inputDir
-        set contentDir [file join $inputDir $::tclssg::config(contentDirName)]
+        set contentDir [file join $inputDir pages]
         tclssg pages set-website-config-setting contentDir $contentDir
         tclssg pages set-website-config-setting dataDir \
-                [file join $inputDir $::tclssg::config(dataDirName)]
+                                                [file join $inputDir data]
 
         # Cache things globally, rather than per-directory, when using absolute
         # links.
@@ -588,7 +552,7 @@ namespace eval tclssg {
             $contentDir \
             $outputDir \
             [tclssg pages get-website-config-setting feedFilename \
-                    $::tclssg::config(defaultFeedFilename)] \
+                    rss.xml] \
             xml \
             $prettyUrls]
         set ::tclssg::pages::outputFileCallback ::tclssg::detOutputFile
@@ -605,11 +569,11 @@ namespace eval tclssg {
         set articleTemplate [
             read-template-file $inputDir \
                     {template article} \
-                    $::tclssg::config(articleTemplateFilename)]
+                    article.thtml]
         set documentTemplate [
             read-template-file $inputDir \
                     {template document} \
-                    $::tclssg::config(documentTemplateFilename)]
+                    document.thtml]
 
         # Create a list of pages that are blog posts and a list of blog posts
         # that should be linked to in the blog sidebar.
@@ -683,10 +647,9 @@ namespace eval tclssg {
         }
 
         # Copy static files verbatim.
-        ::tclssg::utils::copy-files \
-                [file join $inputDir $::tclssg::config(staticDirName)] \
-                $outputDir \
-                1
+        ::tclssg::utils::copy-files [file join $inputDir static] \
+                                    $outputDir \
+                                    1
 
         # Generate a sitemap.
         if {[tclssg page get-website-config-setting {sitemap enable} 0]} {
@@ -707,8 +670,7 @@ namespace eval tclssg {
     # print the content.
     proc load-config {inputDir {verbose 1}} {
         set websiteConfig [
-            read-file [file join $inputDir \
-                    $::tclssg::config(websiteConfigFilename)]
+            read-file [file join $inputDir website.conf]
         ]
 
         # Show loaded config to user (without the password values).
@@ -794,11 +756,11 @@ namespace eval tclssg {
         # Version.
         set currentPath [pwd]
         catch {
-            cd $::tclssg::config(scriptLocation)
+            cd $::tclssg::path
             if {[file isdir \
-                    [file join $::tclssg::config(scriptLocation) .git]]} {
-                append ::tclssg::config(version) \
-                        " (commit [string range [exec git rev-parse HEAD] 0 9])"
+                    [file join $::tclssg::path .git]]} {
+                append ::tclssg::version \
+                       " (commit [string range [exec git rev-parse HEAD] 0 9])"
             }
         }
         cd $currentPath
@@ -817,12 +779,12 @@ namespace eval tclssg {
 
         # Defaults for inputDir and outputDir.
         if {($inputDir eq "") && ($outputDir eq "")} {
-            set inputDir $::tclssg::config(defaultInputDir)
+            set inputDir website/input
             catch {
                 set outputDir [read-path-setting $inputDir outputDir]
             }
             if {$outputDir eq ""} {
-                set outputDir $::tclssg::config(defaultOutputDir)
+                set outputDir website/output
             }
         } elseif {$outputDir eq ""} {
             catch {
@@ -845,7 +807,7 @@ namespace eval tclssg {
                 set debugDir [read-path-setting $inputDir debugDir]
             }
             if {$debugDir eq ""} {
-                set debugDir $::tclssg::config(defaultDebugDir)
+                set debugDir website/debug
             }
         }
 

@@ -11,12 +11,7 @@ namespace eval ::tclssg::templating {
 
     # Convert raw Markdown to HTML.
     proc markdown-to-html {markdown} {
-        set markdownProcessor $::tclssg::config(markdownProcessor)
-        if {$markdownProcessor eq ":internal:"} {
-            ::Markdown::convert $markdown
-        } else {
-            exec -- {*}$markdownProcessor << $markdown
-        }
+        ::Markdown::convert $markdown
     }
 
     proc inline-markdown-to-html {text} {
@@ -74,7 +69,7 @@ namespace eval ::tclssg::templating {
     # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl-lang.org/20363).
     proc parse {template} {
         set result {}
-        lassign $::tclssg::config(templateBrackets) leftBracket rightBracket
+        lassign {<% %>} leftBracket rightBracket
         set regExpr [format {^(.*?)%s(.*?)%s(.*)$} $leftBracket $rightBracket]
         set listing "set _output {}\n"
         while {[regexp $regExpr $template \

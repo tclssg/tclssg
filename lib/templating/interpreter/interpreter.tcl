@@ -46,12 +46,10 @@ namespace eval ::tclssg::templating::interpreter {
                 interp eval $interp [list array set $varName $value]
             }
         }
-        ::safe::interpAddToAccessPath $interp [file join \
-                $inputDir \
-                $::tclssg::config(templateDirName)]
-        ::safe::interpAddToAccessPath $interp [file join \
-                $::tclssg::config(skeletonDir) \
-                $::tclssg::config(templateDirName)]
+        ::safe::interpAddToAccessPath $interp [file join $inputDir templates]
+        ::safe::interpAddToAccessPath $interp [file join $::tclssg::path \
+                                                         skeleton \
+                                                         templates]
 
         # Alias commands to be used in templates.
         foreach {command alias} {

@@ -11,12 +11,7 @@ namespace eval ::tclssg::command {
             -unknown ::tclssg::command::unknown
 
     proc init {inputDir outputDir {debugDir {}} {options {}}} {
-        foreach dir [
-            list $::tclssg::config(contentDirName) \
-                 $::tclssg::config(templateDirName) \
-                 $::tclssg::config(staticDirName) \
-                 [file join $::tclssg::config(contentDirName) blog]
-        ] {
+        foreach dir {pages pages/blog templates static} {
             file mkdir [file join $inputDir $dir]
         }
         file mkdir $outputDir
@@ -29,8 +24,10 @@ namespace eval ::tclssg::command {
                 lindex {.*templates.*}
             }
         ]
-        ::tclssg::utils::copy-files \
-                $::tclssg::config(skeletonDir) $inputDir 0 $skipRegExp
+        ::tclssg::utils::copy-files skeleton \
+                                    $inputDir \
+                                    0 \
+                                    $skipRegExp
     }
 
     proc build {inputDir outputDir {debugDir {}} {options {}}} {
@@ -72,12 +69,10 @@ namespace eval ::tclssg::command {
 
     proc update {inputDir outputDir {debugDir {}} {options {}}} {
         set updateSourceDirs [
-            list $::tclssg::config(staticDirName) {static files}
+            list static {static files}
         ]
         if {"templates" in $options} {
-            lappend updateSourceDirs \
-                    $::tclssg::config(templateDirName) \
-                    templates
+            lappend updateSourceDirs templates templates
         }
         if {"yes" in $options} {
             set overwriteMode 1
@@ -87,7 +82,7 @@ namespace eval ::tclssg::command {
         foreach {dir descr} $updateSourceDirs {
             puts "updating $descr"
             ::tclssg::utils::copy-files [
-                file join $::tclssg::config(skeletonDir) $dir
+                file join skeleton $dir
             ] [
                 file join $inputDir $dir
             ] $overwriteMode
@@ -197,10 +192,7 @@ namespace eval ::tclssg::command {
         package require browse
         ::browse::url [
             file rootname [
-                file join $outputDir [
-                    ::tclssg::utils::dict-default-get index.md \
-                            $websiteConfig indexPage
-                ]
+                file join $outputDir index.md
             ]
         ].html
     }
@@ -241,7 +233,7 @@ namespace eval ::tclssg::command {
     }
 
     proc version {inputDir outputDir {debugDir {}} {options {}}} {
-        puts $::tclssg::config(version)
+        puts $::tclssg::version
     }
 
     proc help {{inputDir ""} {outputDir ""} {debugDir ""} {options ""}} {
@@ -315,8 +307,8 @@ namespace eval ::tclssg::command {
             ] \
             $argv0 \
             $commandHelpText \
-            $::tclssg::config(defaultInputDir) \
-            $::tclssg::config(defaultOutputDir)]
+            input \
+            output]
     }
 
     proc unknown args {
