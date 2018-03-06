@@ -350,7 +350,7 @@ namespace eval ::tclssg::tests {
         fileutil::writeFile $file [
             subst {
                 source [file join $path ssg.tcl]
-                tclssg configure
+                tclssg configure $path
                 tclssg command build $project/input $project/output
                 puts done
             }
