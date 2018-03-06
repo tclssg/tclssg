@@ -43,9 +43,9 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
     <title><%! format-document-title %></title>
 
     <!-- Bootstrap core CSS -->
-    <link href="<%= $rootDirPath %>/external/bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <!-- Bootstrap theme -->
-    <link href="<%! string map [list \$rootDirPath $rootDirPath] [setting bootstrapTheme] %>" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <!-- Custom stylesheets, if any -->
     <% foreach cssLink [setting customCss] { %>
       <link href="<%! string map [list \$rootDirPath $rootDirPath] $cssLink %>" rel="stylesheet">
@@ -137,6 +137,6 @@ lassign [rss-feed-link] rssFeedRel rssFeedUrl
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="<%= $rootDirPath %>/external/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <%! setting {body bottom} {} %>
 </html>
