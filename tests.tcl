@@ -14,6 +14,8 @@ namespace eval ::tclssg::tests {
     lappend ::auto_path [file join $path lib]
     namespace eval ::tclssg [list variable path $path]
 
+    package require http
+
     package require tclssg::cli
     package require tclssg::db
     package require tclssg::debugger
@@ -32,11 +34,11 @@ namespace eval ::tclssg::tests {
         exec [info nameofexecutable] {*}$args
     }
 
-    proc curl-available? {} {
-        set error [catch {
-            exec curl --version
-        }]
-        return [expr { !$error }]
+    proc http-get url {
+        set token [::http::geturl $url]
+        set result [::http::data $token]
+        ::http::cleanup $token
+        return $result
     }
 
     proc diff-available? {} {
@@ -50,7 +52,6 @@ namespace eval ::tclssg::tests {
         return [expr { !$error }]
     }
 
-    tcltest::testConstraint curl [curl-available?]
     tcltest::testConstraint diff [diff-available?]
 
     set correctSeconds [clock scan {2014-06-26-20-10} \
@@ -280,7 +281,6 @@ namespace eval ::tclssg::tests {
 
     tcltest::test command-line-1.3 {serve command} \
                 -cleanup {close $ch; unset ch i foundServerInfo indexPage} \
-                -constraints curl \
                 -body {
         variable project
         tcl ssg.tcl build $project $project/output
@@ -311,9 +311,9 @@ namespace eval ::tclssg::tests {
         if {[eof $ch]} {
             error {the server has quit}
         }
-        set indexPage [exec curl -s -m 1 http://$host:$port/]
+        set indexPage [http-get http://$host:$port/]
         set result [string match *Tclssg* $indexPage]
-        exec curl -s -m 1 http://$host:$port/bye
+        http-get http://$host:$port/bye
         return $result
     } -result 1
 
