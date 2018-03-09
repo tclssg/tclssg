@@ -84,51 +84,44 @@ namespace eval ::tclssg::command {
     }
 
     proc deploy-custom {inputDir outputDir {debugDir {}} {options {}}} {
-        proc exec-deploy-command {key} {
-            foreach varName {deployCustom outputDir file fileRel} {
-                upvar 1 $varName $varName
+        proc exec-deploy-command {command substDict} {
+            if {$command eq {}} return
+            set preparedCommand [::struct::list mapfor x $command {
+                expr {
+                    [regexp {^\$(.*)$} $x _ key] ?
+                    [dict get $substDict $key] :
+                    $x
+                }
+            }]
+            log::info "running command [list $preparedCommand]"
+            set exitStatus 0
+            set error [catch {
+                exec -ignorestderr -- {*}$preparedCommand >@ stdout 2>@ stderr
+            } msg options]
+            if {$error} {
+                lassign [dict get $options -errorcode] errorCode _ exitStatus
+                if {$errorCode ne {CHILDSTATUS}} {
+                    return -options $options $msg
+                }
             }
-            if {[dict exists $deployCustom $key] &&
-                ([dict get $deployCustom $key] ne "")} {
-                set preparedCommand [subst -nocommands \
-                        [dict get $deployCustom $key]]
-                set exitStatus 0
-                set error [catch \
-                        {set output \
-                            [exec -ignorestderr -- {*}$preparedCommand]}\
-                        _ \
-                        options]
-                if {$error} {
-                    set details [dict get $options -errorcode]
-                    if {[lindex $details 0] eq "CHILDSTATUS"} {
-                        set exitStatus [lindex $details 2]
-                    } else {
-                        error [dict get $options -errorinfo]
-                    }
-                }
-                if {$exitStatus == 0} {
-                    if {$output ne ""} {
-                        log::info $output
-                    }
-                } else {
-                    log::error "command [list $preparedCommand] returned exit\
-                                code $exitStatus."
-                }
+            if {$exitStatus != 0} {
+                log::error "command [list $preparedCommand] returned exit\
+                            code $exitStatus."
             }
         }
         set websiteConfig [load-config $inputDir]
+        set deployCustom [dict get $websiteConfig deployCustom]
 
-        set deployCustom \
-                [dict get $websiteConfig deployCustom]
-
-        log::info "deploying..."
-        exec-deploy-command start
+        log::info deploying...
+        set vars [dict create outputDir $outputDir]
+        exec-deploy-command [dict get $deployCustom start] $vars
         foreach file [::fileutil::find $outputDir {file isfile}] {
-            set fileRel [::fileutil::relative $outputDir $file]
-            exec-deploy-command file
+            dict set vars file $file
+            dict set vars rel [::fileutil::relative $outputDir $file]
+            exec-deploy-command [dict get $deployCustom file] $vars
         }
-        exec-deploy-command end
-        log::info "done."
+        exec-deploy-command [dict get $deployCustom end] $vars
+        log::info done
     }
 
     proc deploy-ftp {inputDir outputDir {debugDir {}} {options {}}} {
