@@ -234,7 +234,7 @@ namespace eval ::tclssg::tests {
         file delete $tempProjectDir
         tcltest::makeDirectory $tempProjectDir
 
-        tcl ssg.tcl init $tempProjectDir/input $tempProjectDir/output
+        tcl ssg.tcl init $tempProjectDir
         return $tempProjectDir
     }
 
@@ -251,10 +251,10 @@ namespace eval ::tclssg::tests {
                 -constraints diff \
                 -body {
         variable project
-        set tclssgArguments [list $project/input $project/output]
+        set tclssgArguments [list $project]
 
         # Set deployment options in the website config.
-        set configFile $project/input/website.conf
+        set configFile $project/website.conf
         set config [::fileutil::cat $configFile]
         dict set config deployCopy path $project/deploy-copy-test
         dict set config deployCustom [list \
@@ -283,10 +283,9 @@ namespace eval ::tclssg::tests {
                 -constraints curl \
                 -body {
         variable project
-        tcl ssg.tcl build $project/input $project/output
-        set ch [open |[list \
-                [info nameofexecutable] ssg.tcl serve -verbose \
-                        $project/input $project/output]]
+        tcl ssg.tcl build $project $project/output
+        set ch [open |[list [info nameofexecutable] ssg.tcl serve \
+                                                            -verbose $project]]
         set foundServerInfo 0
         fconfigure $ch -blocking 0
         set i 0
@@ -327,7 +326,7 @@ namespace eval ::tclssg::tests {
             subst {
                 source [file join $path ssg.tcl]
                 tclssg configure $path
-                tclssg command build $project/input $project/output
+                tclssg command build $project $project/output
                 puts done
             }
         ]
