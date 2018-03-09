@@ -68,7 +68,7 @@ namespace eval ::tclssg::command {
             set overwriteMode ask
         }
         foreach {dir descr} $updateSourceDirs {
-            log::info "updating [list $descr]"
+            log::info "updating $descr"
             utils::copy-files [file join skeleton $dir] \
                               [file join $inputDir $dir] \
                               $overwriteMode
