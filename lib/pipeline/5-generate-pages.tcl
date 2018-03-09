@@ -92,6 +92,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
             # Pagination.
             if {$inputsProcessed % $blogPostsPerFile == 0 ||
                 $inputsProcessed == $extraInputsCount} {
+                set vars [vars-for-input $topInput 1]
                 add-document $topInput
             }
         }
