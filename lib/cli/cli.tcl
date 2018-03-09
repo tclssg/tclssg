@@ -9,45 +9,36 @@ namespace eval ::tclssg::command {
     namespace ensemble create \
             -prefixes 0 \
             -unknown ::tclssg::command::unknown
+    namespace path ::tclssg
 
     proc init {inputDir outputDir {debugDir {}} {options {}}} {
-        foreach dir {pages pages/blog templates static} {
-            file mkdir [file join $inputDir $dir]
-        }
-        file mkdir $outputDir
-
-        # Copy project skeleton.
-        set skipRegExp [
-            if {"templates" in $options} {
-                lindex {}
-            } else {
-                lindex {.*templates.*}
-            }
-        ]
-        ::tclssg::utils::copy-files skeleton \
-                                    $inputDir \
-                                    never \
-                                    $skipRegExp
+        utils::copy-files skeleton $inputDir ask
     }
 
     proc build {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [::tclssg::load-config $inputDir]
+        set websiteConfig [load-config $inputDir]
 
         if {"debug" in $options} {
-            tclssg debugger enable
+            debugger enable
         }
 
         if {"local" in $options} {
-            set host [::tclssg::utils::dict-default-get localhost \
-                    $websiteConfig server host]
-            set port [::tclssg::utils::dict-default-get 8080 \
-                    $websiteConfig server port]
+            set host [utils::dict-default-get localhost \
+                                              $websiteConfig \
+                                              server \
+                                              host]
+            set port [utils::dict-default-get 8080 \
+                                              $websiteConfig \
+                                              server \
+                                              port]
             dict set websiteConfig url "http://$host:$port/"
         }
 
         if {[file isdir $inputDir]} {
-            ::tclssg::compile-website $inputDir $outputDir $debugDir \
-                    $websiteConfig
+            compile-website $inputDir \
+                            $outputDir \
+                            $debugDir \
+                            $websiteConfig
         } else {
             error "couldn't access directory \"$inputDir\""
         }
@@ -56,13 +47,13 @@ namespace eval ::tclssg::command {
     proc clean {inputDir outputDir {debugDir {}} {options {}}} {
         # Do not use -force to avoid deleting read-only files.
         foreach file [::fileutil::find $outputDir {file isfile}] {
-            puts "deleting $file"
+            log::info "deleting [list $file]"
             file delete $file
         }
         # A hack to remove nested subdirectories first.
         foreach directory [lsort -decr [::fileutil::find \
                 $outputDir {file isdirectory}]] {
-            puts "removing empty directory $directory"
+            log::info "removing empty directory [list $directory]"
             file delete $directory
         }
     }
@@ -71,30 +62,25 @@ namespace eval ::tclssg::command {
         set updateSourceDirs [
             list static {static files}
         ]
-        if {"templates" in $options} {
-            lappend updateSourceDirs templates templates
-        }
         if {"yes" in $options} {
             set overwriteMode always
         } else {
             set overwriteMode ask
         }
         foreach {dir descr} $updateSourceDirs {
-            puts "updating $descr"
-            ::tclssg::utils::copy-files [
-                file join skeleton $dir
-            ] [
-                file join $inputDir $dir
-            ] $overwriteMode
+            log::info "updating [list $descr]"
+            utils::copy-files [file join skeleton $dir] \
+                              [file join $inputDir $dir] \
+                              $overwriteMode
         }
     }
 
     proc deploy-copy {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [::tclssg::load-config $inputDir]
+        set websiteConfig [load-config $inputDir]
 
         set deployDest [dict get $websiteConfig deployCopy path]
 
-        ::tclssg::utils::copy-files $outputDir $deployDest always
+        utils::copy-files $outputDir $deployDest always
     }
 
     proc deploy-custom {inputDir outputDir {debugDir {}} {options {}}} {
@@ -122,31 +108,31 @@ namespace eval ::tclssg::command {
                 }
                 if {$exitStatus == 0} {
                     if {$output ne ""} {
-                        puts $output
+                        log::info $output
                     }
                 } else {
-                    puts "command '$preparedCommand' returned exit code\
-                            $exitStatus."
+                    log::error "command [list $preparedCommand] returned exit\
+                                code $exitStatus."
                 }
             }
         }
-        set websiteConfig [::tclssg::load-config $inputDir]
+        set websiteConfig [load-config $inputDir]
 
         set deployCustom \
                 [dict get $websiteConfig deployCustom]
 
-        puts "deploying..."
+        log::info "deploying..."
         exec-deploy-command start
         foreach file [::fileutil::find $outputDir {file isfile}] {
             set fileRel [::fileutil::relative $outputDir $file]
             exec-deploy-command file
         }
         exec-deploy-command end
-        puts "done."
+        log::info "done."
     }
 
     proc deploy-ftp {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [::tclssg::load-config $inputDir]
+        set websiteConfig [load-config $inputDir]
 
         package require ftp
         global errorInfo
@@ -155,8 +141,10 @@ namespace eval ::tclssg::command {
                     [dict get $websiteConfig deployFtp server] \
                     [dict get $websiteConfig deployFtp user] \
                     [dict get $websiteConfig deployFtp password] \
-                    -port [::tclssg::utils::dict-default-get 21 \
-                            $websiteConfig deployFtp port] \
+                    -port [utils::dict-default-get 21 \
+                                                   $websiteConfig \
+                                                   deployFtp \
+                                                   port] \
                     -mode passive
         ]
         set deployFtpPath [dict get $websiteConfig deployFtp path]
@@ -164,8 +152,9 @@ namespace eval ::tclssg::command {
         ::ftp::Type $conn binary
 
         foreach file [::fileutil::find $outputDir {file isfile}] {
-            set destFile [::tclssg::utils::replace-path-root \
-                    $file $outputDir $deployFtpPath]
+            set destFile [utils::replace-path-root $file \
+                                                   $outputDir \
+                                                   $deployFtpPath]
             set path [file split [file dirname $destFile]]
             set partialPath {}
 
@@ -174,35 +163,35 @@ namespace eval ::tclssg::command {
                 if {[::ftp::Cd $conn $partialPath]} {
                     ::ftp::Cd $conn /
                 } else {
-                    puts "creating directory $partialPath"
+                    log::info "creating directory [list $partialPath]"
                     ::ftp::MkDir $conn $partialPath
                 }
             }
-            puts "uploading $file as $destFile"
+            log::info "uploading [list $file] as [list $destFile]"
             if {![::ftp::Put $conn $file $destFile]} {
-                error "upload error: $errorInfo"
+                error "upload error: [list $errorInfo]"
             }
         }
         ::ftp::Close $conn
     }
 
     proc open {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [::tclssg::load-config $inputDir]
+        set websiteConfig [load-config $inputDir]
 
         package require browse
-        ::browse::url [
-            file rootname [
-                file join $outputDir index.md
-            ]
-        ].html
+        ::browse::url [file rootname [file join $outputDir index.md]].html
     }
 
     proc serve {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [::tclssg::load-config $inputDir]
-        set host [::tclssg::utils::dict-default-get localhost \
-                $websiteConfig server host]
-        set port [::tclssg::utils::dict-default-get 8080 \
-                $websiteConfig server port]
+        set websiteConfig [load-config $inputDir]
+        set host [utils::dict-default-get localhost \
+                                          $websiteConfig \
+                                          server \
+                                          host]
+        set port [utils::dict-default-get 8080 \
+                                          $websiteConfig \
+                                          server \
+                                          port]
         set verbose [expr {"verbose" in $options}]
 
         package require dmsnit
@@ -281,21 +270,19 @@ namespace eval ::tclssg::command {
         set commandHelpText {}
         foreach {command description options} $commandHelp {
             append commandHelpText \
-                    [::tclssg::utils::text-columns \
-                            "" 4 \
-                            $command 15 \
-                            $description 43]
+                   [utils::text-columns "" 4 \
+                                        $command 15 \
+                                        $description 43]
             foreach {option optionDescr} $options {
                 append commandHelpText \
-                        [::tclssg::utils::text-columns \
-                                "" 8 \
-                                $option 12 \
-                                $optionDescr 42]
+                       [utils::text-columns "" 8 \
+                                            $option 12 \
+                                            $optionDescr 42]
             }
         }
 
         puts [format [
-                ::tclssg::utils::trim-indentation {
+                utils::trim-indentation {
                     usage: %s <command> [options] [inputDir [outputDir]]
 
                     Possible commands are:

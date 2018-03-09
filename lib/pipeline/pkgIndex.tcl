@@ -3,12 +3,9 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-package ifneeded tclssg::templating 0 [list apply {dir {
-    foreach path {
-        {cache cache.tcl}
-        {interpreter interpreter.tcl}
-        templating.tcl
-    } {
+package ifneeded tclssg::pipeline 0 [list apply {dir {
+    foreach path [glob -dir $dir {[0-9]*.tcl}] {
         uplevel 1 [list source -encoding utf-8 [file join $dir {*}$path]]
     }
+    package provide tclssg::pipeline 0
 }} $dir]

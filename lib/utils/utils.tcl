@@ -6,22 +6,27 @@
 namespace eval ::tclssg::utils {
     namespace export *
     namespace ensemble create
+    namespace path ::tclssg
 
-    interp alias {} read-file {} fileutil::cat
+    interp alias {} ::tclssg::utils::read-file {} ::fileutil::cat
+    interp alias {} ::tclssg::utils::write-file {} ::fileutil::writeFile
 
-    # Join and normalize paths.
-    proc join-path args {
-        return [::fileutil::lexnormalize [file join {*}$args]]
+    proc normalize-relative-path path {
+        # TODO: Normalize $relPrefix as well.
+        regexp {^(\.[/\.]+\/)(.*)} $path _ relPrefix path
+        set path [::fileutil::lexnormalize $path]
+        if {[info exists relPrefix]} {
+            set path ${relPrefix}$path
+        }
+        return $path
     }
 
     # Transform a path relative to fromDir into the same path relative to toDir.
     proc replace-path-root {path fromDir toDir} {
-        ::fileutil::lexnormalize [
-            file join $toDir [
-                ::fileutil::relative $fromDir [file dirname $path]
-            ] [
-                file tail $path
-            ]
+        normalize-relative-path [
+            file join $toDir \
+                      [::fileutil::relative $fromDir [file dirname $path]] \
+                      [file tail $path] \
         ]
     }
 
@@ -142,12 +147,17 @@ namespace eval ::tclssg::utils {
     # Remove first n elements from varName and return them.
     proc unqueue! {varName {n 1}} {
         upvar 1 $varName var
-        if {$n == 1} {
-            set result [lindex $var 0]
+        if {$n eq {inf}} {
+            set result $var
+            set var {}
         } else {
-            set result [lrange $var 0 [expr $n - 1]]
+            if {$n == 1} {
+                set result [lindex $var 0]
+            } else {
+                set result [lrange $var 0 [expr $n - 1]]
+            }
+            set var [lrange $var $n end]
         }
-        set var [lrange $var $n end]
         return $result
     }
 
@@ -173,10 +183,11 @@ namespace eval ::tclssg::utils {
             set destFile [replace-path-root $file $fromDir $toDir]
             if {[file exists $destFile]} {
                 if {$overwrite eq "ask"} {
-                    if {$input ne "all"} {
+                    if {$input ni {all none}} {
                         set input {}
-                        while {$input ni {y n all}} {
-                            puts "overwrite $destFile with $file? (y/n/all)"
+                        while {$input ni {y n all none}} {
+                            puts "overwrite $destFile with $file?\
+                                  (y/n/all/none)"
                             set input [string tolower [gets stdin]]
                         }
                     }
@@ -184,13 +195,14 @@ namespace eval ::tclssg::utils {
 
                 if {$overwrite eq "always" ||
                     ($overwrite eq "ask" && $input in {y all})} {
-                    puts "overwriting $destFile with $file"
+                    log::info "copying [list $file] over [list $destFile]"
                     file copy -force $file $destFile
                 } else {
-                    puts "skipped copying $file to $destFile: file exists"
+                    log::info "skipped copying [list $file] to\
+                               [list $destFile]: file exists"
                 }
             } else {
-                puts "copying $file to $destFile"
+                log::info "copying [list $file] to [list $destFile]"
                 if {![file isdir [file dirname $destFile]]} {
                     file mkdir [file dirname $destFile]
                 }
@@ -213,7 +225,7 @@ namespace eval ::tclssg::utils {
             {%Y-%m-%d-%H-%M-%S} {%Y-%m-%dT%H:%M:%S} {}
         } {
             if {$debug} {
-                puts "$formatScan $date"
+                log::debug [list $formatScan $date]
             }
             if {![catch {
                     set scan [clock scan $date -format $formatScan {*}$options]
@@ -224,8 +236,8 @@ namespace eval ::tclssg::utils {
                         -format {%Y-%m-%d-%H-%M-%S} {*}$options]
                 set resultFormat $formatStandard
                 if {$debug} {
-                    puts "match"
-                    puts [clock format $scan {*}$options]
+                    log::debug match
+                    log::debug [clock format $scan {*}$options]
                 }
             }
         }
@@ -249,6 +261,24 @@ namespace eval ::tclssg::utils {
         return [catch {::fileutil::relative / $path}]
     }
 
+    # A wrapper for ::sha2::sha256 for safe interps.
+    proc sha256 args {
+        if {[llength $args] ni {1 2}} {
+            error {wrong # args: should be "sha256" ?-bin|-hex? string}
+        }
+        if {[llength $args] == 2} {
+            lassign $args format string
+            if {$format ni {-bin -hex}} {
+                error "unexpected format argument \"$format\";\
+                       must be \"-bin\" or \"-hex\""
+            }
+        } else {
+            set format -hex
+            lassign $args string
+        }
+        return [::sha2::sha256 $format -- $string]
+    }
+
     # Return fileName with the number n inserted before its extension.
     proc add-number-before-extension {fileName n {numberFormat {-%d}}
             {numberToSkip 0}} {
@@ -263,7 +293,7 @@ namespace eval ::tclssg::utils {
 
     # Get variables set in page using Tcl list syntax at the beginning of the
     # post.
-    proc get-page-settings {rawContent} {
+    proc separate-frontmatter {rawContent} {
         global errorInfo
 
         set vars {}
@@ -345,6 +375,18 @@ namespace eval ::tclssg::utils {
             }
         }
         return $result
+    }
+
+    proc inspect args {
+        set data {}
+        set maxLength 0
+        foreach varName $args {
+            upvar 1 $varName v
+            dict set data $varName $v
+            set maxLength [expr {max($maxLength, [string length $varName])}]
+        }
+        incr maxLength
+        puts stderr \{\n[dict-format $data "%-${maxLength}s %s\n"]\}
     }
 }
 

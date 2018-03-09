@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (C) 2013, 2014, 2015, 2016, 2017, 2018 dbohdan.
+# Copyright (C) 2013, 2014, 2015, 2016, 2017 dbohdan.
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
@@ -10,16 +10,19 @@ package require tcltest
 
 namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $argv0/___]]]
-    variable setup [list apply {{path} {
-        lappend ::auto_path [file join $path lib]
-        package require tclssg::cli
-        package require tclssg::debugger
-        package require tclssg::pages
-        package require tclssg::templating
-        package require tclssg::utils
-        namespace import ::tclssg::utils::*
-        cd $path
-    }} $path]
+    
+    lappend ::auto_path [file join $path lib]
+    namespace eval ::tclssg [list variable path $path]
+
+    package require tclssg::cli
+    package require tclssg::db
+    package require tclssg::debugger
+    package require tclssg::interpreter
+    package require tclssg::pipeline
+    package require tclssg::templates
+    package require tclssg::utils
+
+    namespace import ::tclssg::utils::*
 
     if {[llength $argv] > 0} {
         tcltest::configure -match $argv
@@ -58,122 +61,102 @@ namespace eval ::tclssg::tests {
     # Unit tests.
 
     tcltest::test incremental-clock-scan-1.1 {incremental-clock-scan} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014-06-26 20:10}
     } -result [list $correctSeconds %Y-%m-%dT%H:%M]
 
     tcltest::test incremental-clock-scan-1.2 {incremental-clock-scan} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014-06-26T20:10}
     } -result [list $correctSeconds %Y-%m-%dT%H:%M]
 
     tcltest::test incremental-clock-scan-1.3 {incremental-clock-scan} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014 06 26 20 10}
     } -result [list $correctSeconds {%Y-%m-%dT%H:%M}]
 
     tcltest::test incremental-clock-scan-1.4 {incremental-clock-scan} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014/06/26 20:10}
     } -result [list $correctSeconds {%Y-%m-%dT%H:%M}]
 
     tcltest::test incremental-clock-scan-2.1 {incremental-clock-scan 2} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014}
     } -result [list $correctSecondsShort %Y]
 
     tcltest::test incremental-clock-scan-2.2 {incremental-clock-scan 2} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014-01}
     } -result [list $correctSecondsShort %Y-%m]
 
     tcltest::test incremental-clock-scan-2.3 {incremental-clock-scan 2} \
-                -setup $setup \
                 -body {
         incremental-clock-scan {2014-01-01 00:00:00}
     } -result [list $correctSecondsShort {%Y-%m-%dT%H:%M:%S}]
 
     tcltest::test slugify-1.1 {slugify} \
-                -setup $setup \
                 -body {
         slugify {Hello, World!}
     } -result hello-world
 
     tcltest::test slugify-1.2 {slugify} \
-                -setup $setup \
                 -body {
         slugify {hello world}
     } -result hello-world
 
     tcltest::test replace-path-root-1.1 {replace-path-root} \
-                -setup $setup \
                 -body {
         replace-path-root ./a/b/c/d/e/f ./a ./x
     } -result x/b/c/d/e/f
 
     tcltest::test replace-path-root-1.2 {replace-path-root} \
-                -setup $setup \
                 -body {
         replace-path-root ./a/b/c/d/e/f ./a/b/c ./x/b/c
     } -result x/b/c/d/e/f
 
     tcltest::test replace-path-root-1.3 {replace-path-root} \
-                -setup $setup \
                 -body {
         replace-path-root a/b/c/d/e/f a x
     } -result x/b/c/d/e/f
 
     tcltest::test replace-path-root-1.4 {replace-path-root} \
-                -setup $setup \
                 -body {
         replace-path-root a/b/./c/d/e/f a/b/c x/b/c
     } -result x/b/c/d/e/f
 
     tcltest::test replace-path-root-1.5 {replace-path-root} \
-                -setup $setup \
                 -body {
         replace-path-root /././././././././b / /a
     } -result /a/b
 
     tcltest::test dict-default-get-1.1 {dict-default-get} \
-                -setup $setup \
                 -body {
         dict-default-get testValue {} someKey
     } -result testValue
 
     tcltest::test dict-default-get-1.2 {dict-default-get} \
-                -setup $setup \
                 -body {
         dict-default-get -1 {someKey testValue} someKey
     } -result testValue
 
     tcltest::test dict-default-get-1.3 {dict-default-get} \
-                -setup $setup \
                 -body {
         dict-default-get -1 {someKey {anotherKey testValue}} \
                          someKey anotherKey
     } -result testValue
 
     tcltest::test add-number-before-extension-1.1 {add-number-before-extension}\
-                -setup $setup \
                 -body {
         add-number-before-extension "filename.ext" 0
     } -result filename.ext
 
     tcltest::test add-number-before-extension-1.2 {add-number-before-extension}\
-                -setup $setup \
                 -body {
         add-number-before-extension "filename.ext" 0 "-%d" 1
     } -result filename-0.ext
 
     tcltest::test add-number-before-extension-1.3 {add-number-before-extension}\
-                -setup $setup \
                 -cleanup {unset result} \
                 -body {
         set result {}
@@ -188,7 +171,6 @@ namespace eval ::tclssg::tests {
             filename-9.ext filename-10.ext]
 
     tcltest::test add-number-before-extension-1.4 {add-number-before-extension}\
-                -setup $setup \
                 -cleanup {unset result} \
                 -body {
         set result {}
@@ -204,7 +186,6 @@ namespace eval ::tclssg::tests {
             filename008.ext filename009.ext filename010.ext]
 
     tcltest::test add-number-before-extension-1.5 {add-number-before-extension}\
-                -setup $setup \
                 -cleanup {unset result} \
                 -body {
         set result {}
@@ -219,18 +200,17 @@ namespace eval ::tclssg::tests {
             filename004.ext filename005.ext filename006.ext filename007.ext \
             filename008.ext filename009.ext filename010.ext]
 
-    tcltest::test get-page-settings-1.1 {get-page-settings} \
-                -setup $setup \
+    tcltest::test separate-frontmatter-1.1 separate-frontmatter \
                 -cleanup {unset result first elem} \
                 -body {
         set prased {}
-        lappend prased [get-page-settings {{hello world} Hello, world!}]
-        lappend prased [get-page-settings {{ hello world } Hello, world!}]
-        lappend prased [get-page-settings {{hello world} Hello, world!}]
-        lappend prased [get-page-settings {{hello world}
+        lappend prased [separate-frontmatter {{hello world} Hello, world!}]
+        lappend prased [separate-frontmatter {{ hello world } Hello, world!}]
+        lappend prased [separate-frontmatter {{hello world} Hello, world!}]
+        lappend prased [separate-frontmatter {{hello world}
 
             Hello, world!}]
-        lappend prased [get-page-settings {{
+        lappend prased [separate-frontmatter {{
                 hello world
             }
 
@@ -261,14 +241,12 @@ namespace eval ::tclssg::tests {
     variable project [make-temporary-project]
 
     tcltest::test command-line-1.1 {Tclssg command line commands} \
-                -setup $setup \
                 -body {
         tcl ssg.tcl version
         tcl ssg.tcl help
     } -match glob -result {*usage: ssg.tcl*}
 
     tcltest::test command-line-1.2 {Tclssg command line commands} \
-                -setup $setup \
                 -cleanup {unset result configFile config} \
                 -constraints diff \
                 -body {
@@ -301,7 +279,6 @@ namespace eval ::tclssg::tests {
     } -result {}
 
     tcltest::test command-line-1.3 {serve command} \
-                -setup $setup \
                 -cleanup {close $ch; unset ch i foundServerInfo indexPage} \
                 -constraints curl \
                 -body {
@@ -342,7 +319,6 @@ namespace eval ::tclssg::tests {
     } -result 1
 
     tcltest::test tclssg-library-1.1 {Tclssg as a library} \
-                -setup $setup \
                 -cleanup {unset project result file} \
                 -body {
         set project [make-temporary-project]

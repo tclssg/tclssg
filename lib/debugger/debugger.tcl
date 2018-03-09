@@ -7,6 +7,7 @@
 namespace eval ::tclssg::debugger {
     namespace export *
     namespace ensemble create
+    namespace path ::tclssg
 
     # When active intermediate results of processing are saved to $debugDir
     # for analysis. To enable pass the command line option "--debug" to
@@ -41,27 +42,19 @@ namespace eval ::tclssg::debugger {
         variable debugDirSetting
         variable previousFilename
 
-        set dest "[::tclssg::utils::replace-path-root \
-                $filename $inputDirSetting $debugDirSetting].$suffix"
+        set dest [::tclssg::utils::replace-path-root $filename \
+                                                     $inputDirSetting \
+                                                     $debugDirSetting].$suffix
         if {$filename ne $previousFilename} {
-            puts "    saving intermediate stage $suffix of\
-                    $filename to $dest"
+            log::debug "saving intermediate stage [list $suffix] of\
+                        [list $filename] to [list $dest]"
         } else {
-            puts "        saving stage $suffix to $dest"
+            log::debug "        saving stage [list $suffix] to [list $dest]"
         }
 
         fileutil::writeFile $dest $data
         set previousFilename $filename
         return
-    }
-
-    # Same as save-intermediate but gets the filename from the pages
-    # database.
-    proc save-intermediate-id {id suffix data} {
-        return [save-intermediate \
-                [tclssg pages get-data $id inputFile] \
-                $suffix \
-                $data]
     }
 } ;# debugger
 

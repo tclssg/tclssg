@@ -18,12 +18,9 @@ proc footnote-id {label {link 0}} {
     set n [footnote-number $label]
 
     # Generate a unique footnote suffix that cannot be mistaken for a footnote
-    # number by applying a linear bijective map from 0..65535 to 0..65535 to
-    # the page id and then formatting the result as four hex digits.
+    # number.
     if {$::footnoteSuffix eq ""} {
-        set ::footnoteSuffix -[format %04x [expr {
-            ($::currentPageId * 7459 + 23627) % 0x10000
-        }]]
+        set ::footnoteSuffix -[string range [sha256 -hex $::input] end-3 end]
     }
 
     set suffix $::footnoteSuffix
@@ -64,7 +61,7 @@ proc footnote args {
     if {[dict exists $::footnotes $label]} {
         error "footnote \"$label\" already exists"
     }
-    dict set ::footnotes $label [markdown-to-html $markdown]
+    dict set ::footnotes $label [inline-markdown-to-html $markdown]
     return [footnote-link $label]
 }
 

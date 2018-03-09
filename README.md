@@ -102,8 +102,8 @@ MIT. See the file `LICENSE` for details.
 
 The Tclssg logo images are copyright (c) 2014 dbohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-The [stackato-cli](https://github.com/ActiveState/stackato-cli) browse package is copyright (c) 2011-2012 ActiveState Software Inc. and is distributed under the Apache License, Version 2.0. See `external/browse/license.txt`.
+[`skeleton/static/images/placeholder.jpg`](skeleton/static/images/placeholder.jpg) is cropped from a [photo](https://unsplash.com/photos/AsNfzwdcz2I) by Daniel Olah distributed under the [Unsplash license](https://unsplash.com/license).
 
-The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project and is distributed under the MIT license. See `external/markdown/markdown.tcl`.
+The [stackato-cli](https://github.com/ActiveState/stackato-cli) browse package is copyright (c) 2011-2012 ActiveState Software Inc. and is distributed under the Apache License, Version 2.0. See [`vendor/browse/license.txt`](vendor/browse/license.txt).
 
-Bootstrap 3.3.7 is copyright (c) 2011-2016 Twitter, Inc and is distributed under the MIT license. See `skeleton/static/external/bootstrap-3.3.7-dist/LICENSE`.
+The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project and is distributed under the MIT license. See [`vendor/markdown/markdown.tcl`](vendor/markdown/markdown.tcl).
