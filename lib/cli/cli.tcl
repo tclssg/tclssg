@@ -231,34 +231,29 @@ namespace eval ::tclssg::command {
         # Format: {command description {option optionDescription ...} ...}.
         set commandHelp [list {*}{
             init {create a new project by cloning the default project\
-                    skeleton} {
-                --templates {copy template files from the project skeleton\
-                        to inputDir}
-            }
+                  skeleton} {}
             build {build the static website} {
                 --debug {dump the results of intermediate stages of content\
-                    processing to disk}
+                         processing to disk}
                 --local {build with the value of the website setting "url"\
-                    replaced with a URL derived from the "server" settings}
+                         replaced with a URL derived from the "server" settings}
             }
             clean {delete all files in outputDir} {}
             update {update the inputDir for a new version of Tclssg by\
                     copying the static files (e.g., CSS) of the project\
                     skeleton over the static files in inputDir and having\
                     the user confirm replacement} {
-                --templates {*also* copy the templates of the project\
-                        skeleton over the templates in inputDir}
                 --yes       {assume the answer to all questions to be "yes"\
-                        (replace all)}
+                             (replace all)}
             }
             deploy-copy {copy the output to the file system path set\
-                    in the config file} {}
+                         in the config file} {}
             deploy-custom {run the custom deployment commands specified in\
-                    the config file on the output} {}
+                           the config file on the output} {}
             deploy-ftp  {upload the output to the FTP server set in the\
-                    config file} {}
+                         config file} {}
             open {open the index page in the default web browser over\
-                    file://} {}
+                  file://} {}
             serve {start a local web server serving outputDir} {
                 --browse {open the website in the default web browser}
                 --verbose {log every request to standard output}
