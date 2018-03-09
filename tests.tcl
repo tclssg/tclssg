@@ -41,6 +41,20 @@ namespace eval ::tclssg::tests {
         return $result
     }
 
+    # Find a random unused port.
+    proc unused-port {} {
+        for {set i 0} {$i < 5} {incr i} {
+            set port [expr {10000 + int(50000*rand())}]
+            if {![catch {
+                set ch [socket -server {} $port]
+            }]} {
+                close $ch
+                return $port
+            }
+        }
+        error "couldn't find an unused port after $i attempts"
+    }
+
     proc diff-available? {} {
         set testPath [::fileutil::tempfile]
         file delete $testPath
@@ -258,11 +272,16 @@ namespace eval ::tclssg::tests {
         set configFile $project/website.conf
         set config [::fileutil::cat $configFile]
         dict set config deployCopy path $project/deploy-copy-test
-        dict set config deployCustom [list \
+        dict set config deployCustom [dict create \
             start "cp -r \"\$outputDir\"\
-                    $project/deploy-custom-test" \
+                   \"$project/deploy-custom-test\"" \
             file {} \
             end {} \
+        ]
+        set port [unused-port]
+        dict set config server [dict create \
+            host localhost \
+            port $port \
         ]
         ::fileutil::writeFile $configFile $config
 
@@ -292,7 +311,7 @@ namespace eval ::tclssg::tests {
         while 1 {
             if {[gets $ch line] > 0} {
                 if {[regexp {serving path .* on ([^ ]+) port ([0-9]+)} \
-                        $line _ host port]} {
+                            $line _ host port]} {
                     set foundServerInfo 1
                     break
                 }
@@ -312,7 +331,9 @@ namespace eval ::tclssg::tests {
             error {the server has quit}
         }
         set indexPage [http-get http://$host:$port/]
-        set result [string match *Tclssg* $indexPage]
+        set result \
+            [regexp {Powered by <a.*?>Tclssg</a> and <a.*?>Bootstrap</a>} \
+                    $indexPage]
         http-get http://$host:$port/bye
         return $result
     } -result 1
