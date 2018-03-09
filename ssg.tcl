@@ -237,7 +237,7 @@ namespace eval tclssg {
             catch {
                 set outputDir [read-path-setting $inputDir outputDir]
             }
-            if {$outputDir eq ""} {
+            if {$command ne {init} && $outputDir eq ""} {
                 error-message [
                     utils::trim-indentation {
                         error: no outputDir given.
