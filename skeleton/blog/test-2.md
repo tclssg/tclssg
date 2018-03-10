@@ -7,7 +7,7 @@
     modified 2018-03-09
     moreText {(<a href="$link">check out macros</a>)}
 }
-Lorem ipsum quis ullamco nulla anim sunt ex proident qui consequat enim adipisicing do aute irure sit dolore enim adipisicing qui sunt pariatur dolore eiusmod commodo sit laboris. Excepteur sit et magna ex labore tempor nulla.
+Quis ullamco nulla anim sunt ex proident qui consequat enim adipisicing do aute irure sit dolore enim adipisicing qui sunt pariatur dolore eiusmod commodo sit laboris. Excepteur sit et magna ex labore tempor nulla.
 
 <!--more-->
 

@@ -10,7 +10,7 @@
         This page has a different sidebar note!
     }
 }
-Lorem ipsum consequat consectetur elit exercitation. Excepteur consectetur proident elit velit est et laboris ex laboris deserunt consectetur in ex aliquip.
+Consequat consectetur elit exercitation. Excepteur consectetur proident elit velit est et laboris ex laboris deserunt consectetur in ex aliquip.
 
 <!--  more  -->
 
