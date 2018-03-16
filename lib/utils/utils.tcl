@@ -386,7 +386,10 @@ namespace eval ::tclssg::utils {
             set maxLength [expr {max($maxLength, [string length $varName])}]
         }
         incr maxLength
-        puts stderr \{\n[dict-format $data "%-${maxLength}s %s\n"]\}
+        set indented [::textutil::indent [dict-format $data \
+                                                      "%-${maxLength}s %s\n"] \
+                                         {    }]
+        puts stderr \{\n$indented\n\}
     }
 
     proc group-by {n list} {
