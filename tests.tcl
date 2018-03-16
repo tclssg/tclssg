@@ -240,6 +240,45 @@ namespace eval ::tclssg::tests {
         return [lsort -unique $result]
     } -result 1
 
+    tcltest::test group-by-1.1 group-by \
+                -cleanup {unset i result} \
+                -body {
+        set result {}
+        for {set i 1} {$i < 7} {incr i} {
+            lappend result [group-by $i {a b c d e f}]
+        }
+        return $result
+    } -result [list \
+        {a b c d e f} \
+        {{a b} {c d} {e f}} \
+        {{a b c} {d e f}} \
+        {{a b c d} {e f}} \
+        {{a b c d e} f} \
+        {{a b c d e f}} \
+    ]
+
+    tcltest::test group-by-1.2 group-by \
+                -cleanup {unset i result} \
+                -body {
+        set result {}
+        for {set i 1} {$i < 7} {incr i} {
+            lappend result [group-by $i {{} {} {} {} {} {}}]
+        }
+        return $result
+    } -result [list \
+        {{{}} {{}} {{}} {{}} {{}} {{}}} \
+        {{{} {}} {{} {}} {{} {}}} \
+        {{{} {} {}} {{} {} {}}} \
+        {{{} {} {} {}} {{} {}}} \
+        {{{} {} {} {} {}} {{}}} \
+        {{{} {} {} {} {} {}}} \
+    ]
+
+    tcltest::test group-by-2.1 error \
+                -body {
+        group-by 0 {}
+    } -returnCodes error -result {expected an integer >= 1 but got "0"}
+
     # Integration tests.
 
     proc make-temporary-project {} {

@@ -388,6 +388,30 @@ namespace eval ::tclssg::utils {
         incr maxLength
         puts stderr \{\n[dict-format $data "%-${maxLength}s %s\n"]\}
     }
+
+    proc group-by {n list} {
+        if {$n <= 0} {
+            error "expected an integer >= 1 but got \"$n\""
+        }
+        set lol {} ;# A list of lists.
+        set total [llength $list]
+        set current {}
+        set i 0
+
+        foreach el $list {
+            lappend current $el
+            incr i
+            if {$i % $n == 0} {
+                lappend lol $current
+                set current {}
+            }
+        }
+        if {$current ne {}} {
+            lappend lol $current
+        }
+
+        return $lol
+    }
 }
 
 package provide tclssg::utils 0
