@@ -194,7 +194,6 @@ namespace eval ::document {
 
         set pageTitle [setting title {}]
         set showTitle [setting showTitle 1]
-        set pageNumber {}
         set tagPageTag {}
 
         set result {}
@@ -206,8 +205,10 @@ namespace eval ::document {
             lappend result [format [mc {Posts tagged "%1$s"}] $tagPageTag]
         }
 
-        if {[string is integer $pageNumber] && ($pageNumber > 0)} {
-            lappend result [format [mc {page %1$s}] [expr {$pageNumber + 1}]]
+        if {[info exists ::pageNumber]
+            && [string is integer $::pageNumber]
+            && ($::pageNumber > 1)} {
+            lappend result [format [mc {page %1$s}] $::pageNumber]
         }
         if {$websiteTitle ne ""} {
             lappend result $websiteTitle

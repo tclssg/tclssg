@@ -80,20 +80,21 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         lset grouped 0 [concat $input [lindex $grouped 0]]
 
         set groupCount [llength $grouped]
-        set i 0
         interpreter inject $interp [dict create \
             collection [expr {[llength $extraArticles] > 0}] \
             collectionTop 1 \
         ]
+        set pageNumber 1
         foreach group $grouped {
-            set nextOutput [add-page-number $baseOutput [expr {$i + 2}]]
+            set nextOutput [add-page-number $baseOutput \
+                                            [expr {$pageNumber + 1}]]
             set nextRoot [root-path $nextOutput]
 
             set prevPage [expr {
-                $i > 0 ? $prevOutput : {}
+                $pageNumber > 1 ? $prevOutput : {}
             }]
             set nextPage [expr {
-                $i == $groupCount - 1 ? {} : $nextOutput
+                $pageNumber == $groupCount ? {} : $nextOutput
             }]
 
             interpreter inject $interp [dict create \
@@ -103,11 +104,12 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                 output $output \
                 input $input \
                 root $root \
+                pageNumber $pageNumber \
             ]
             db output add $output \
                           $input \
                           [interp eval $interp ::document::render]
-            incr i
+            incr pageNumber
 
             set prevOutput $output
             set output $nextOutput
