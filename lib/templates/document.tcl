@@ -3,7 +3,8 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-template-proc document {} {<!DOCTYPE html><% namespace path document %>
+namespace eval ::document {}
+template-proc ::document::render {} {<!DOCTYPE html>
 <html>
   <head>
     <%! setting {head top} {} %>
@@ -89,7 +90,7 @@ template-proc document {} {<!DOCTYPE html><% namespace path document %>
             lassign [content-and-sidebar-class] content_class sidebar_class
           %>
           <section class="<%= $content_class %>">
-            <%= $::content %>
+            <%! content %>
             <%! prev-next-link {« Newer posts} {Older posts »} %>
           </section>
           <div class="<%= $sidebar_class %> well content">
@@ -99,7 +100,7 @@ template-proc document {} {<!DOCTYPE html><% namespace path document %>
           </div>
          <% } else { %>
           <section class="<%! setting gridClassPrefix col-md- %>12 content">
-            <%= $::content %>
+            <%! content %>
             <%! prev-next-link {« Newer posts} {Older posts »} %>
           </section>
         <%  }
@@ -129,6 +130,26 @@ template-proc document {} {<!DOCTYPE html><% namespace path document %>
 </html>}
 
 namespace eval ::document {
+    proc content {} {
+        set result {}
+        set ::abbreviate [expr {
+            $::collection && [config abbreviate 1]
+        }]
+        foreach ::articleInput $::articles {
+            set ::content [db input get $::articleInput cooked]
+            append result [::article::render]
+            set ::collectionTop 0
+        }        
+        # TODO: Get rid of this hack?
+        namespace path ::document
+
+        return $result
+    }
+
+    proc blog-post? {} {
+        return [setting blogPost 0]
+    }
+
     proc sidebar-links? {} {
         return [expr {
             [blog-post?] && [setting showSidebarLinks 1]

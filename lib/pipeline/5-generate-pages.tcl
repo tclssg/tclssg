@@ -35,12 +35,19 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                           input.file <> :blogIndexInput
                     ORDER BY input.timestamp DESC;
                 }]
-                set shownPosts [::struct::list filterfor post $posts {
-                    [templates file-setting $post showInCollections 1]
-                }]
-                gen $interp $blogIndexOutput $blogIndexInput $shownPosts
+                # Rather than filter for showInCollections in the query, we
+                # use [templates file-setting] to read the showInCollections
+                # setting. This ensures fallback to the appropriate default
+                # values.
+                set filtered {}
+                foreach post $posts {
+                    if {[templates file-setting $post showInCollections 1]} {
+                        lappend filtered $post
+                    }
+                }
+                gen $interp $blogIndexOutput $blogIndexInput $filtered
             } else {
-                gen $interp $output $row(file)
+                gen $interp $output $row(file) {}
             }
         }
 
@@ -64,113 +71,51 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         return $output
     }
 
-    proc gen {interp baseOutput topInput {extraInputs {}}} {
+    proc gen {interp baseOutput input extraArticles} {
         set output $baseOutput
-        set extraInputsCount [expr {[llength $extraInputs]}]
         set root [root-path $output]
 
-        set vars [vars-for-input $topInput 1]
-        interpreter inject $interp $vars
-        set topInputContent [interp eval $interp article]
-        set documentContent $topInputContent
-        set inputsProcessed 0
-        set outputsCreated 0
         set blogPostsPerFile [db settings get config blogPostsPerFile 0xFFFF]
+        set grouped [utils::group-by $blogPostsPerFile $extraArticles]
+        lset grouped 0 [concat $input [lindex $grouped 0]]
 
-        if {$extraInputs eq {}} {
-            add-document $topInput
-            return
-        }
+        set groupCount [llength $grouped]
+        set i 0
+        interpreter inject $interp [dict create \
+            collection [expr {[llength $extraArticles] > 0}] \
+            collectionTop 1 \
+        ]
+        foreach group $grouped {
+            set nextOutput [add-page-number $baseOutput [expr {$i + 2}]]
+            set nextRoot [root-path $nextOutput]
 
-        foreach input $extraInputs {
-            set vars [vars-for-input $input 0]
-            interpreter inject $interp $vars
+            set prevPage [expr {
+                $i > 0 ? $prevOutput : {}
+            }]
+            set nextPage [expr {
+                $i == $groupCount - 1 ? {} : $nextOutput
+            }]
 
-            append documentContent [interp eval $interp article]
-            incr inputsProcessed
+            interpreter inject $interp [dict create \
+                articles $group \
+                prevPage $prevPage \
+                nextPage $nextPage \
+                output $output \
+                input $input \
+                root $root \
+            ]
+            db output add $output \
+                          $input \
+                          [interp eval $interp ::document::render]
+            incr i
 
-            # Pagination.
-            if {$inputsProcessed % $blogPostsPerFile == 0 ||
-                $inputsProcessed == $extraInputsCount} {
-                set vars [vars-for-input $topInput 1]
-                add-document $topInput
-            }
+            set prevOutput $output
+            set output $nextOutput
+            set root $nextRoot
         }
     }
 
     proc root-path output {
         return [::fileutil::relative [file dirname $output] .]
-    }
-
-    proc vars-for-input {input top} {
-        upvar 1 extraInputsCount extraInputsCount \
-                output output \
-                root root
-        set abbreviate [db settings get config abbreviate 1]
-        lassign [db eval {
-            SELECT cooked FROM input WHERE input.file = :input
-        }] content
-        return [dict create abbreviate [expr {!$top && $abbreviate}] \
-                            collection [expr {$extraInputsCount > 0}] \
-                            collectionTop $top \
-                            content $content \
-                            input $input \
-                            output $output \
-                            root $root \
-        ]
-    }
-
-    proc add-document input {
-        # Ugly. To say that this code was "factored out" of [gen] is an
-        # overstatement.
-        foreach varName {
-            baseOutput
-            blogPostsPerFile 
-            documentContent 
-            extraInputsCount 
-            inputsProcessed 
-            interp 
-            nextOutput 
-            output 
-            outputsCreated 
-            prettyURLs
-            prevOutput 
-            nextOutput 
-            nextRoot 
-            root
-            topInput
-            topInputContent
-            vars 
-        } {
-            upvar 1 $varName $varName
-        }
-
-        set nextOutput [add-page-number $baseOutput \
-                                        [expr {$outputsCreated + 2}]]
-        set nextRoot [root-path $nextOutput]
-
-        set prevPage [expr {
-            $outputsCreated > 0 ?
-            $prevOutput : {}
-        }]
-        set nextPage [expr {
-            $extraInputsCount - $inputsProcessed >= 1 ?
-            $nextOutput : {}
-        }]
-
-        set vars [dict replace $vars content $documentContent \
-                                     collectionTop 1 \
-                                     prevPage $prevPage \
-                                     nextPage $nextPage \
-                                     output $output \
-                                     root $root]
-        interpreter inject $interp $vars
-        db output add $output $input [interp eval $interp document]
-        set documentContent $topInputContent
-        incr outputsCreated
-
-        set prevOutput $output
-        set output $nextOutput
-        set root $nextRoot
     }
 }
