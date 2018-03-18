@@ -55,7 +55,7 @@ namespace eval ::tclssg::tests {
         error "couldn't find an unused port after $i attempts"
     }
 
-    proc diff-available? {} {
+    tcltest::testConstraint diff [apply {{} {
         set testPath [::fileutil::tempfile]
         file delete $testPath
         file mkdir $testPath
@@ -64,9 +64,7 @@ namespace eval ::tclssg::tests {
         }]
         file delete -force $testPath
         return [expr { !$error }]
-    }
-
-    tcltest::testConstraint diff [diff-available?]
+    }}]
 
     set correctSeconds [clock scan {2014-06-26-20-10} \
             -format {%Y-%m-%d-%H-%M}]
