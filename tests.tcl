@@ -301,6 +301,15 @@ namespace eval ::tclssg::tests {
         ::tclssg::converters::markdown::markdown-to-html {* hi}
     } -match regexp -result {<ul>.*?<li>hi</li>.*?</ul>}
 
+    tcltest::test markdown-3.1 {Tabs in Markdown} \
+                -cleanup {unset md} \
+                -body {
+        set md "```make\ntarget:\n\tcommand foo bar\n```"
+        list [Markdown::convert $md 0] \
+             [Markdown::convert $md 1]
+    } -result [list "<pre><code>target:\n    command foo bar</code></pre>" \
+                    "<pre><code>target:\n\tcommand foo bar</code></pre>"]
+
     # Integration tests.
 
     proc make-temporary-project {} {

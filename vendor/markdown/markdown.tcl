@@ -38,14 +38,17 @@ namespace eval Markdown {
     #
     # Converts text written in markdown to HTML.
     #
-    # @param markdown  currently takes as a single argument the text in markdown
+    # @param markdown  the text in markdown
+    # @param tabs      whether to preserve tabs in markdown
     #
     # The output of this function is only a fragment, not a complete HTML
     # document. The format of the output is generic XHTML.
     #
-    proc convert {markdown} {
+    proc convert {markdown {tabs 0}} {
         set markdown [regsub {\r\n?} $markdown {\n}]
-        #set markdown [::textutil::untabify2 $markdown 4]
+        if {!$tabs} {
+            set markdown [::textutil::untabify2 $markdown 4]
+        }
         set markdown [string trimright $markdown]
 
         # COLLECT REFERENCES

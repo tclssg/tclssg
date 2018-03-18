@@ -11,6 +11,7 @@ namespace eval ::tclssg::converters::markdown {
     # Convert raw Markdown to HTML.
     proc markdown-to-html {markdown} {
         set converter [db settings get config {markdown converter}]
+        set untabify [db settings get config {markdown tabs} 0]
         if {$converter in {{} {%NULL%}}} {
             return [::Markdown::convert $markdown]
         } else {
