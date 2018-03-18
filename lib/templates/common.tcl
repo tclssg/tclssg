@@ -3,9 +3,6 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-set ::blogDefaults [db settings get config blogDefaults]
-set ::pageDefaults [db settings get config pageDefaults]
-
 proc config {key {default %NULL%}} {
     return [db settings get config $key $default]
 }
