@@ -14,26 +14,37 @@ proc setting {key {default %NULL%}} {
     return [file-setting $::input $key $default]
 }
 
-proc absolute-link path {
-    if {$url eq {%NULL%}} {
-        error "using absolute-link requires that \"url\" be set in website\
-               config"
+proc article-setting {key {default %NULL%}} {
+    return [file-setting $::articleInput $key $default]
+}
+
+proc link-path {path {absolute 0}} {
+    if {[regexp {^/} $path]} {
+        error "not a relative path: \"$path\""
     }
+    if {$absolute} {
+        set url [config url]
+        if {$url eq {%NULL%}} {
+            error "for absolute links \"url\" must be set in\
+                   the website config"
+        }
+        set link [url-join $url $path]
+    } else {
+        set link [url-join $::root $path]
+    }
+    if {[config prettyURLs 0]} {
+        regexp {(.*?/)index.html$} $link _ link
+    }
+    return $link
+}
+
+proc rel-link {path title} {
+    set link [link-path $path 0]
+    return "<a href=\"[entities $link]\">[entities $title]</a>"
 }
 
 proc tag-page-link tag {
     return [rel-link blog/tags/[slugify $tag] $tag]
-}
-
-proc rel-link {path title} {
-    if {[regexp {^/} $path]} {
-        error "not a relative path: \"$path\""
-    }
-    set link [url-join $::root $path]
-    if {[config prettyURLs 0]} {
-        regexp {(.*?/)index.html$} $link _ link
-    }
-    return "<a href=\"[entities $link]\">[entities $title]</a>"
 }
 
 proc blog-post? {} {

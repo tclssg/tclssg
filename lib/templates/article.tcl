@@ -30,10 +30,6 @@ proc ::article::render {} {
 }
 
 namespace eval ::article {    
-    proc article-setting {key {default %NULL%}} {
-        return [file-setting $::articleInput $key $default]
-    }
-
     proc author {} {
         set author [article-setting author]
         if {($author eq {%NULL%}) || ![article-setting showAuthor 1]} {
@@ -110,9 +106,9 @@ namespace eval ::article {
         }
     }
 
-    proc abbreviate-article {content {abbreviate 0}} {
+    proc abbreviate-article {content abbreviate {absoluteLink 0}} {
         if {$abbreviate} {
-            set link [file join $::root [article-output]]
+            set link [link-path [article-output] $absoluteLink]
             set moreText [article-setting moreText \
                                           {(<a href="$link">read more</a>)}]
             if {[regexp {(.*?)<!-- *more *-->} $content _ content]} {

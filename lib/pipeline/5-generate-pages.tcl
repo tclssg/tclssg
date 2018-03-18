@@ -14,40 +14,25 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         set interp 5-generate-pages
         interpreter create $interp
 
-        set blogIndexOutput [templates input-to-output-path blog/index.md]
+        lassign [blog-index] blogIndexInput blogIndexOutput
 
         db eval {
-            SELECT input.file, input.cooked FROM input
+            SELECT input.file FROM input
             JOIN tags ON tags.file = input.file
             WHERE tags.tag = 'type:markdown'
             ORDER BY input.timestamp DESC;
         } row {
-            set output [templates input-to-output-path $row(file)]
-            if {$output eq $blogIndexOutput} {
-                # Collect (normally abbreviated) content from all blog posts in
-                # the timeline.
-                set blogIndexInput $row(file)
-                set posts [db eval {
-                    SELECT input.file FROM input
-                    JOIN settings ON settings.file = input.file
-                    WHERE settings.key = 'blogPost' AND
-                          settings.value = '1' AND
-                          input.file <> :blogIndexInput
-                    ORDER BY input.timestamp DESC;
-                }]
-                # Rather than filter for showInCollections in the query, we
-                # use [templates file-setting] to read the showInCollections
-                # setting. This ensures fallback to the appropriate default
-                # values.
-                set filtered {}
-                foreach post $posts {
-                    if {[templates file-setting $post showInCollections 1]} {
-                        lappend filtered $post
-                    }
-                }
-                gen $interp $blogIndexOutput $blogIndexInput $filtered
+            if {$row(file) eq $blogIndexInput} {
+                gen -interp $interp \
+                    -template ::document::render \
+                    -input $blogIndexInput \
+                    -output $blogIndexOutput \
+                    -extraArticles [collection $blogIndexInput blogPost]
             } else {
-                gen $interp $output $row(file) {}
+                gen -interp $interp \
+                    -template ::document::render \
+                    -input $row(file) \
+                    -output [templates input-to-output-path $row(file)]
             }
         }
 
@@ -71,19 +56,79 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         return $output
     }
 
-    proc gen {interp baseOutput input extraArticles} {
+    proc blog-index {} {
+        # Find the blog index by the output rather than the input to account for
+        # the possible differences in the file extension and to allow the index
+        # to be generated at an earlier stage of the pipeline.
+        set blogIndexInput %NULL%
+        set blogIndexOutput [templates input-to-output-path blog/index.foo]
+        db eval {
+            SELECT input.file FROM input
+        } row {
+            set output [templates input-to-output-path $row(file)]
+            if {$output eq $blogIndexOutput} {
+                set blogIndexInput $row(file)
+                break
+            }
+        }
+        if {$blogIndexInput eq {%NULL%}} {
+            set blogIndexOutput %NULL%
+        }
+        return [list $blogIndexInput $blogIndexOutput]
+    }
+
+    proc collection {index setting {filter 1}}  {
+        set posts [db eval {
+            SELECT input.file FROM input
+            JOIN settings ON settings.file = input.file
+            WHERE settings.key = :setting AND
+                  settings.value = '1' AND
+                  input.file <> :index
+            ORDER BY input.timestamp DESC;
+        }]
+        if {!$filter} {
+            return $posts
+        }
+
+        # Rather than filter for showInCollections in the query, we
+        # use [templates file-setting] to read the showInCollections
+        # setting. This ensures fallback to the appropriate default
+        # values.
+        set filtered {}
+        foreach post $posts {
+            if {[templates file-setting $post showInCollections 1]} {
+                lappend filtered $post
+            }
+        }
+        return $filtered
+    }
+
+    proc gen args {
+        set baseOutput [dict get $args -output]
+        set extraArticles [dict-default-get {} $args -extraArticles]
+        set input [dict get $args -input]
+        set interp [dict get $args -interp]
+        set paginate [dict-default-get 1 $args -paginate]
+        set templateProc [dict get $args -template]
+
         set output $baseOutput
         set root [root-path $output]
 
-        set blogPostsPerFile [db settings get config blogPostsPerFile 0xFFFF]
-        set grouped [utils::group-by $blogPostsPerFile $extraArticles]
-        lset grouped 0 [concat $input [lindex $grouped 0]]
-
+        if {$paginate} {
+            set blogPostsPerFile [db settings get config \
+                                                  blogPostsPerFile \
+                                                  0xFFFF]
+            set grouped [utils::group-by $blogPostsPerFile $extraArticles]
+            lset grouped 0 [list $input {*}[lindex $grouped 0]]
+        } else {
+            set grouped [list [list $input {*}$extraArticles]]
+        }
         set groupCount [llength $grouped]
         interpreter inject $interp [dict create \
             collection [expr {[llength $extraArticles] > 0}] \
             collectionTop 1 \
         ]
+
         set pageNumber 1
         foreach group $grouped {
             set nextOutput [add-page-number $baseOutput \
@@ -91,7 +136,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
             set nextRoot [root-path $nextOutput]
 
             set prevPage [expr {
-                $pageNumber > 1 ? $prevOutput : {}
+                $pageNumber == 1 ? {} : $prevOutput
             }]
             set nextPage [expr {
                 $pageNumber == $groupCount ? {} : $nextOutput
@@ -108,7 +153,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
             ]
             db output add $output \
                           $input \
-                          [interp eval $interp ::document::render]
+                          [interp eval $interp $templateProc]
             incr pageNumber
 
             set prevOutput $output
