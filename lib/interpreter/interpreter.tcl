@@ -17,12 +17,15 @@ namespace eval ::tclssg::interpreter {
             ::csv::iscomplete                   ::csv::iscomplete
             ::csv::split                        ::csv::split
             ::json::json2dict                   ::json::json2dict
-            ::Markdown::convert                 ::Markdown::convert
-
             ::msgcat::mclocale                  mclocale
             ::msgcat::mc                        mc
             ::msgcat::mcset                     mcset
             ::puts                              puts
+
+            ::tclssg::converters::markdown::markdown-to-html
+                                                markdown-to-html
+            ::tclssg::converters::markdown::inline-markdown-to-html
+                                                inline-markdown-to-html
             ::tclssg::db                        db
             ::tclssg::utils::dict-default-get   dict-default-get
             ::tclssg::utils::replace-path-root  replace-path-root

@@ -68,6 +68,7 @@ namespace eval tclssg {
         }
 
         package require tclssg::cli
+        package require tclssg::converters
         package require tclssg::db
         package require tclssg::debugger
         package require tclssg::interpreter

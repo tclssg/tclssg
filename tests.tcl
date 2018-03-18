@@ -11,12 +11,14 @@ package require tcltest
 namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $argv0/___]]]
     
-    lappend ::auto_path [file join $path lib]
+    lappend ::auto_path $path
     namespace eval ::tclssg [list variable path $path]
 
     package require http
+    package require sqlite3
 
     package require tclssg::cli
+    package require tclssg::converters
     package require tclssg::db
     package require tclssg::debugger
     package require tclssg::interpreter
@@ -24,6 +26,9 @@ namespace eval ::tclssg::tests {
     package require tclssg::templates
     package require tclssg::utils
 
+    package require Markdown
+
+    namespace path ::tclssg
     namespace import ::tclssg::utils::*
 
     if {[llength $argv] > 0} {
@@ -65,11 +70,17 @@ namespace eval ::tclssg::tests {
         file delete -force $testPath
         return [expr { !$error }]
     }}]
+    tcltest::testConstraint cmark [expr {
+        ![catch {exec cmark --version}] &&
+        [regexp {CommonMark converter} [exec cmark --version]]
+    }]
 
     set correctSeconds [clock scan {2014-06-26-20-10} \
             -format {%Y-%m-%d-%H-%M}]
     set correctSecondsShort [clock scan {2014-01-01-00-00-00} \
             -format {%Y-%m-%d-%H-%M-%S}]
+
+    tclssg::db::init
 
     # Unit tests.
 
@@ -276,6 +287,19 @@ namespace eval ::tclssg::tests {
                 -body {
         group-by 0 {}
     } -returnCodes error -result {expected an integer >= 1 but got "0"}
+
+    tcltest::test markdown-1.1 {Built-in Markdown converter} \
+                -body {
+        db settings set config {markdown converter} {}
+        ::tclssg::converters::markdown::markdown-to-html {* hi}
+    } -match regexp -result {<ul>.*?<li>hi</li>.*?</ul>}
+
+    tcltest::test markdown-2.1 cmark \
+                -constraints cmark \
+                -body {
+        db settings set config {markdown converter} cmark
+        ::tclssg::converters::markdown::markdown-to-html {* hi}
+    } -match regexp -result {<ul>.*?<li>hi</li>.*?</ul>}
 
     # Integration tests.
 

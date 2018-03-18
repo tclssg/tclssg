@@ -90,8 +90,8 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
         }
     }
 
-    proc prepare-content {file frontmatter content macros {interp ?}
-                          {extraVariables {}}} {
+    proc prepare-content {file frontmatter content macros interp
+                          extraVariables} {
         if {$macros} {
             set content [dict-default-get {} \
                                           $frontmatter \
@@ -107,7 +107,7 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
         debugger save-intermediate $file \
                                           content-2-markdown \
                                           $content
-        set content [templates markdown-to-html $content]
+        set content [converters markdown markdown-to-html $content]
 
         debugger save-intermediate $file \
                                           content-3-html \

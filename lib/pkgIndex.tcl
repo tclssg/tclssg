@@ -10,7 +10,7 @@ foreach subdir {cli db debugger interpreter templates utils} {
 }
 
 if {[info exists dir]} {set prevDir $dir}
-foreach subdir {dustmote-snit pipeline} {
+foreach subdir {converters dustmote-snit pipeline} {
     set dir [file join $prevDir $subdir]
     source -encoding utf-8 [file join $dir pkgIndex.tcl]
 }

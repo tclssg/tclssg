@@ -3,21 +3,8 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
-# Procedures that are used for conversion of templates and Markdown into
-# HTML data.
+# Procedures that are used for conversion of templates into HTML data.
 set procs {
-    # Convert raw Markdown to HTML.
-    proc markdown-to-html {markdown} {
-        ::Markdown::convert $markdown
-    }
-
-    proc inline-markdown-to-html {text} {
-        set html [markdown-to-html $text]
-        # strip paragraph wrapping, we assume to be in an inline context.
-        regexp {<p>(.*)</p>} $html -> html
-        return $html
-    }
-
     # Convert a template into Tcl code.
     # Inspired by tmpl_parser by Kanryu KATO (http://wiki.tcl-lang.org/20363).
     proc parse {template} {
