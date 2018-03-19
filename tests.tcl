@@ -406,7 +406,7 @@ namespace eval ::tclssg::tests {
         ::fileutil::writeFile $configFile $config
 
         tcl ssg.tcl build {*}$tclssgArguments
-        tcl ssg.tcl update --templates --yes {*}$tclssgArguments
+        tcl ssg.tcl update --yes {*}$tclssgArguments
         tcl ssg.tcl build {*}$tclssgArguments
         tcl ssg.tcl deploy-copy {*}$tclssgArguments
         tcl ssg.tcl deploy-custom {*}$tclssgArguments
@@ -467,7 +467,7 @@ namespace eval ::tclssg::tests {
             subst {
                 source [file join $path ssg.tcl]
                 tclssg configure $path
-                tclssg command build $project $project/output
+                tclssg cli command build $project $project/output
                 puts done
             }
         ]

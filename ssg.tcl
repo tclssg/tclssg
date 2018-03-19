@@ -166,14 +166,22 @@ namespace eval tclssg {
         return $config
     }
 
-    # Read the setting $settingName from website config in $inputDir
+    # Read the setting $settingName from the website config file in $inputDir.
     proc read-path-setting {inputDir settingName} {
-        set value [dict-default-get {} \
-                                    [::tclssg::load-config $inputDir 0] \
-                                    $settingName]
+        if {[catch {
+            set config [::tclssg::load-config $inputDir 0]
+        } errorMessage options]} {
+            if {[regexp {^Cannot read file} $errorMessage]} {
+                return {}
+            } else {
+                return -options $errorInfo $errorMessage
+            }
+        }
+        set value [dict-default-get {} $config $settingName]
         # Make a relative path from the config relative to $inputDir.
         if {$value ne {} && [utils::path-is-relative? $value]} {
-            set value [utils::normalize-relative-path [file join $inputDir $value]]
+            set value [utils::normalize-relative-path [file join $inputDir \
+                                                                 $value]]
         }
         return $value
     }
@@ -196,8 +204,7 @@ namespace eval tclssg {
         if {![file exist $inputDir]} {
             error-message "inputDir \"$inputDir\" does not exist"
         } elseif {![file isdirectory $inputDir]} {
-            error-message \
-                    "inputDir \"$inputDir\" exists but is not a directory"
+            error-message "inputDir \"$inputDir\" exists but is not a directory"
         }
     }
 
@@ -228,31 +235,21 @@ namespace eval tclssg {
         }
         cd $currentPath
 
-        # Get command line options, including directories to operate on.
-        set command [utils::unqueue! argv]
-
-        set options {}
-        while {[lindex $argv 0] ne "--" &&
-               [string match -* [lindex $argv 0]]} {
-            lappend options [string trimleft [utils::unqueue! argv] -]
-        }
-        set inputDir [utils::normalize-relative-path [utils::unqueue! argv]]
-        set outputDir [utils::normalize-relative-path [utils::unqueue! argv]]
-        set debugDir {}
+        # Get the command line options, including the directories to operate on.
+        lassign [cli parse-argv $argv] command \
+                                       inputDir \
+                                       outputDir \
+                                       options
 
         # Defaults for inputDir and outputDir.
         if {($inputDir eq "") && ($outputDir eq "")} {
             set inputDir website/
-            catch {
-                set outputDir [read-path-setting $inputDir outputDir]
-            }
+            set outputDir [read-path-setting $inputDir outputDir]
             if {$outputDir eq ""} {
                 set outputDir website/output/
             }
         } elseif {$outputDir eq ""} {
-            catch {
-                set outputDir [read-path-setting $inputDir outputDir]
-            }
+            set outputDir [read-path-setting $inputDir outputDir]
             if {$command ne {init} && $outputDir eq ""} {
                 error-message [
                     utils::trim-indentation {
@@ -265,18 +262,16 @@ namespace eval tclssg {
                 ]
             }
         }
+
+        set debugDir [read-path-setting $inputDir debugDir]
         if {$debugDir eq ""} {
-            catch {
-                set debugDir [read-path-setting $inputDir debugDir]
-            }
-            if {$debugDir eq ""} {
-                set debugDir website/debug
-            }
+            set debugDir website/debug
         }
+
 
         # Check if inputDir exists for commands that require it.
         if {($command in [::struct::list map \
-                    [info commands ::tclssg::command::*] \
+                    [info commands ::tclssg::cli::command::*] \
                     {namespace tail}]) &&
                 ($command ni {help init version})} {
             check-input-directory $inputDir
@@ -284,7 +279,11 @@ namespace eval tclssg {
 
         # Execute command.
         if {[catch {
-                tclssg command $command $inputDir $outputDir $debugDir $options
+                tclssg cli command $command \
+                                   $inputDir \
+                                   $outputDir \
+                                   $debugDir \
+                                   $options
             } errorMessage]} {
             set errorMessage "\n*** error: $errorMessage ***"
             if {$::tclssg::debugMode} {

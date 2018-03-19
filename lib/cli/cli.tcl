@@ -3,26 +3,69 @@
 # This code is released under the terms of the MIT license. See the file
 # LICENSE for details.
 
+# CLI utilities.
+namespace eval ::tclssg::cli {
+    namespace export *
+    namespace ensemble create
+    namespace path ::tclssg
+
+    proc allow-options {allowed options} {
+        if {[llength $allowed] == 0 && [llength $options] > 0} {
+            error "this command accepts no options,\
+                   but got [list $options]"
+        }
+        foreach option $options {
+            if {$option ni $allowed} {
+                error "unknown option [list $option],\
+                       must be one of [list $allowed]"
+            }
+        }
+    }
+
+    proc parse-argv argv {
+        set command [utils::unqueue! argv]
+
+        set options {}
+        while {[lindex $argv 0] ne {--}
+               && [regexp ^--?(.*)$ [lindex $argv 0] _ option]} {
+            utils::unqueue! argv
+            lappend options --$option
+        }
+        set inputDir [utils::normalize-relative-path [utils::unqueue! argv]]
+        set outputDir [utils::normalize-relative-path [utils::unqueue! argv]]
+
+        if {$argv ne {}} {
+            error "unknown extra arguments: [list $argv]"
+        }
+
+        return [list $command $inputDir $outputDir $options]
+    }
+}
+
 # Commands that can be given to Tclssg on the command line.
-namespace eval ::tclssg::command {
+namespace eval ::tclssg::cli::command {
     namespace export *
     namespace ensemble create \
             -prefixes 0 \
-            -unknown ::tclssg::command::unknown
-    namespace path ::tclssg
+            -unknown ::tclssg::cli::command::unknown
+    namespace path {::tclssg ::tclssg::cli}
 
     proc init {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {} $options
+
         utils::copy-files skeleton $inputDir ask
     }
 
     proc build {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {--debug --local --plugins} $options
+
         set websiteConfig [load-config $inputDir]
 
-        if {{debug} in $options} {
+        if {{--debug} in $options} {
             debugger enable
         }
 
-        if {{local} in $options} {
+        if {{--local} in $options} {
             set host [utils::dict-default-get localhost \
                                               $websiteConfig \
                                               server \
@@ -34,7 +77,7 @@ namespace eval ::tclssg::command {
             dict set websiteConfig url http://$host:$port/
         }
 
-        set plugins [expr {{plugins} in $options}]
+        set plugins [expr {{--plugins} in $options}]
 
         if {[file isdir $inputDir]} {
             compile-website -inputDir $inputDir \
@@ -43,11 +86,13 @@ namespace eval ::tclssg::command {
                             -config $websiteConfig \
                             -plugins $plugins
         } else {
-            error "couldn't access directory \"$inputDir\""
+            error "couldn't access directory [list $inputDir]"
         }
     }
 
     proc clean {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {} $options
+
         # Do not use -force to avoid deleting read-only files.
         foreach file [::fileutil::find $outputDir {file isfile}] {
             log::info "deleting [list $file]"
@@ -62,10 +107,12 @@ namespace eval ::tclssg::command {
     }
 
     proc update {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options --yes $options
+
         set updateSourceDirs [
             list static {static files}
         ]
-        if {"yes" in $options} {
+        if {{--yes} in $options} {
             set overwriteMode always
         } else {
             set overwriteMode ask
@@ -79,14 +126,17 @@ namespace eval ::tclssg::command {
     }
 
     proc deploy-copy {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [load-config $inputDir]
+        allow-options {} $options
 
+        set websiteConfig [load-config $inputDir]
         set deployDest [dict get $websiteConfig deployCopy path]
 
         utils::copy-files $outputDir $deployDest always
     }
 
     proc deploy-custom {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {} $options
+
         proc exec-deploy-command {command substDict} {
             if {$command eq {}} return
             set preparedCommand [::struct::list mapfor x $command {
@@ -128,6 +178,8 @@ namespace eval ::tclssg::command {
     }
 
     proc deploy-ftp {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {} $options
+
         set websiteConfig [load-config $inputDir]
 
         package require ftp
@@ -179,6 +231,8 @@ namespace eval ::tclssg::command {
     }
 
     proc serve {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {--browse --verbose} $options
+
         set websiteConfig [load-config $inputDir]
         set host [utils::dict-default-get localhost \
                                           $websiteConfig \
@@ -188,7 +242,7 @@ namespace eval ::tclssg::command {
                                           $websiteConfig \
                                           server \
                                           port]
-        set verbose [expr {"verbose" in $options}]
+        set verbose [expr {{--verbose} in $options}]
 
         package require dmsnit
 
@@ -210,7 +264,7 @@ namespace eval ::tclssg::command {
             }
         }
         $httpd serve
-        if {"browse" in $options} {
+        if {{--browse} in $options} {
             package require browse
             ::browse::url "http://$host:$port/"
         }
@@ -218,10 +272,12 @@ namespace eval ::tclssg::command {
     }
 
     proc version {inputDir outputDir {debugDir {}} {options {}}} {
+        allow-options {} $options
         puts $::tclssg::version
     }
 
     proc help {{inputDir ""} {outputDir ""} {debugDir ""} {options ""}} {
+        allow-options {} $options
         global argv0
 
         # Format: {command description {option optionDescription ...} ...}.
@@ -292,7 +348,7 @@ namespace eval ::tclssg::command {
     }
 
     proc unknown args {
-        return ::tclssg::command::help
+        return ::tclssg::cli::command::help
     }
 } ;# namespace command
 
