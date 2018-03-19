@@ -121,7 +121,12 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                                                   blogPostsPerFile \
                                                   0xFFFF]
             set grouped [utils::group-by $blogPostsPerFile $extraArticles]
-            lset grouped 0 [list $input {*}[lindex $grouped 0]]
+            set topGroup [list $input {*}[lindex $grouped 0]]
+            if {$grouped eq {}} {
+                set grouped [list $topGroup]
+            } else {
+                lset grouped 0 $topGroup
+            }
         } else {
             set grouped [list [list $input {*}$extraArticles]]
         }
