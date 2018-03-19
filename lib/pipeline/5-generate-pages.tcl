@@ -1,7 +1,7 @@
 # Tclssg, a static website generator.
-# Copyright (C) 2013, 2014, 2015, 2016, 2017, 2018 dbohdan.
-# This code is released under the terms of the MIT license. See the file
-# LICENSE for details.
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# dbohdan and contributors listed in AUTHORS. This code is released under
+# the terms of the MIT license. See the file LICENSE for details.
 
 # Generate HTML output from every input in the DB with the "type:markdown" tag.
 namespace eval ::tclssg::pipeline::5-generate-pages {
