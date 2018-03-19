@@ -418,9 +418,15 @@ namespace eval ::tclssg::utils {
 
     proc named-args mapping {
         upvar 1 args args
+
         dict for {key dest} $mapping {
             catch {unset default}
-            lassign $dest varName default
+            switch -exact -- [llength $dest] {
+                1 { set varName $dest }
+                2 { lassign $dest varName default }
+                default { error "expected \"varName ?default?\",\
+                                 but got \"$dest\"" }
+            }
 
             upvar 1 $varName v
             if {[dict exists $args $key]} {

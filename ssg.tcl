@@ -92,9 +92,27 @@ namespace eval tclssg {
         }
     }
 
+    proc run-pipeline-stage {ns files} {
+        if {[info commands ${ns}::load] eq "${ns}::load"} {
+            ${ns}::load $files
+        }
+        if {[info commands ${ns}::transform] eq "${ns}::transform"} {
+            ${ns}::transform
+        }
+    }
+
     # Process input files in $inputDir to produce a static website in
     # $outputDir.
-    proc compile-website {inputDir outputDir debugDir websiteConfig} {
+    proc compile-website args {
+        utils::named-args {
+            -inputDir   inputDir
+            -outputDir  outputDir
+            -debugDir   debugDir
+            -config     websiteConfig
+
+            -plugins    {plugins 0}
+        }
+
         db init
         debugger init $inputDir $debugDir
 
@@ -108,16 +126,16 @@ namespace eval tclssg {
         db settings set config inputDir $inputDir
         db settings set config outputDir $outputDir
         db settings set config buildTimestamp [clock seconds]
+        db settings set security plugins $plugins
         lappend ::tclssg::templates::paths [file join $inputDir templates]
 
         set files [::fileutil::find $inputDir {file isfile}]
+        foreach ns [lsort [namespace children pipeline 0*]] {
+            run-pipeline-stage $ns $files
+        }
         foreach ns [lsort [namespace children pipeline]] {
-            if {[info commands ${ns}::load] eq "${ns}::load"} {
-                ${ns}::load $files
-            }
-            if {[info commands ${ns}::transform] eq "${ns}::transform"} {
-                ${ns}::transform
-            }
+            if {[string match 0* [namespace tail $ns]]} continue
+            run-pipeline-stage $ns $files
         }
     }
 

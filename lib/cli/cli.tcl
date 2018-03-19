@@ -18,11 +18,11 @@ namespace eval ::tclssg::command {
     proc build {inputDir outputDir {debugDir {}} {options {}}} {
         set websiteConfig [load-config $inputDir]
 
-        if {"debug" in $options} {
+        if {{debug} in $options} {
             debugger enable
         }
 
-        if {"local" in $options} {
+        if {{local} in $options} {
             set host [utils::dict-default-get localhost \
                                               $websiteConfig \
                                               server \
@@ -31,14 +31,17 @@ namespace eval ::tclssg::command {
                                               $websiteConfig \
                                               server \
                                               port]
-            dict set websiteConfig url "http://$host:$port/"
+            dict set websiteConfig url http://$host:$port/
         }
 
+        set plugins [expr {{plugins} in $options}]
+
         if {[file isdir $inputDir]} {
-            compile-website $inputDir \
-                            $outputDir \
-                            $debugDir \
-                            $websiteConfig
+            compile-website -inputDir $inputDir \
+                            -outputDir $outputDir \
+                            -debugDir $debugDir \
+                            -config $websiteConfig \
+                            -plugins $plugins
         } else {
             error "couldn't access directory \"$inputDir\""
         }
@@ -230,6 +233,8 @@ namespace eval ::tclssg::command {
                          processing to disk}
                 --local {build with the value of the website setting "url"\
                          replaced with a URL derived from the "server" settings}
+                --plugins {enable Tcl code plugins in the project directory\
+                           (security risk)}
             }
             clean {delete all files in outputDir} {}
             update {update the inputDir for a new version of Tclssg by\
