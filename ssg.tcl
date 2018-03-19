@@ -143,30 +143,27 @@ namespace eval tclssg {
     # the raw content of the file without validating it. If $verbose is true
     # print the content.
     proc load-config {inputDir {verbose 1}} {
-        set websiteConfig [
-            utils::read-file [file join $inputDir website.conf]
-        ]
+        set configRaw [utils::read-file [file join $inputDir website.conf]]
+        set config [utils::remove-comments $configRaw]
 
         # Show loaded config to user (without the password values).
         if {$verbose} {
+            set formatted \
+                [utils::dict-format [utils::obscure-password-values $config] \
+                                    "%s %s\n" \
+                                    {
+                                        websiteTitle
+                                        headExtra
+                                        bodyExtra
+                                        start
+                                        moreText
+                                        sidebarNote
+                                    }]
             log::info {loaded config file}
-            log::info [::textutil::indent \
-                    [utils::dict-format \
-                            [utils::obscure-password-values \
-                                    $websiteConfig] \
-                            "%s %s\n" \
-                            {
-                                websiteTitle
-                                headExtra
-                                bodyExtra
-                                start
-                                moreText
-                                sidebarNote
-                            }] \
-                    {    }]
+            log::info [::textutil::indent $formatted {    }]
         }
 
-        return $websiteConfig
+        return $config
     }
 
     # Read the setting $settingName from website config in $inputDir

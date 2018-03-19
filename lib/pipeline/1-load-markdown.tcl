@@ -22,10 +22,12 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
 
     # Load the content of the file $file into the input database.
     proc load-page file {
-        lassign [utils::separate-frontmatter \
-                    [utils::read-file -translation binary $file]] \
-                frontmatter \
+        set bin [utils::read-file -translation binary $file]
+        lassign [utils::separate-frontmatter $bin] \
+                frontmatterWithComments \
                 raw
+        set frontmatter [utils::remove-comments $frontmatterWithComments]
+
         set inputDir [db settings get config inputDir]
         set id [utils::replace-path-root $file $inputDir {}]
 

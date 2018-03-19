@@ -225,7 +225,7 @@ namespace eval ::tclssg::tests {
             filename008.ext filename009.ext filename010.ext]
 
     tcltest::test separate-frontmatter-1.1 separate-frontmatter \
-                -cleanup {unset result first elem} \
+                -cleanup {unset prased result first elem} \
                 -body {
         set prased {}
         lappend prased [separate-frontmatter {{hello world} Hello, world!}]
@@ -343,6 +343,23 @@ namespace eval ::tclssg::tests {
         }
     } -returnCodes error -result {unknown extra arguments: "-qux wat"}
 
+    tcltest::test remove-comments-1.1 remove-comments \
+                -body {
+        utils::remove-comments {
+            foo 1
+            # Comment.
+            bar 2
+            baz 3
+                   # Another comment.
+        }
+    } -match regexp -result {\n\s+foo 1\n\s+bar 2\n\s+baz 3\n\s+}
+
+    tcltest::test remove-comments-1.2 {remove-comments used wrong} \
+                -body {
+        utils::remove-comments {foo 1 # Not actually a comment.
+                                bar 2}
+    } -match regexp -result {foo 1 # Not actually a comment.\n\s+bar 2}
+
     # Integration tests.
 
     proc make-temporary-project {} {
@@ -373,7 +390,7 @@ namespace eval ::tclssg::tests {
 
         # Set deployment options in the website config.
         set configFile $project/website.conf
-        set config [::fileutil::cat $configFile]
+        set config [utils::remove-comments [utils::read-file $configFile]]
         dict set config deployCopy path $project/deploy-copy-test
         dict set config deployCustom [dict create \
             start "cp -r \"\$outputDir\"\

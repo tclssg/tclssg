@@ -4,6 +4,7 @@
     blogPost 1
     tags {test {a long tag with spaces}}
     date 2014-01-02
+    # This is a comment.
     modifiedDate 2015-01-07
     showDate 0
     moreText {(<a href="$link">read more still</a>)}

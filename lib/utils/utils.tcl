@@ -442,6 +442,12 @@ namespace eval ::tclssg::utils {
             error "unknown extra arguments: \"$args\""
         }
     }
+
+    proc remove-comments data {
+        set lines [split $data \n]
+        set filtered [::struct::list filterfor x $lines {![regexp {^\s*#} $x]}]
+        return [join  $filtered \n]
+    }
 }
 
 package provide tclssg::utils 0
