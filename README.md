@@ -99,7 +99,7 @@ Answers to frequently asked questions can be found on the [FAQ page](https://git
 License
 -------
 
-MIT. See the file `LICENSE` for details.
+MIT. See the file [`LICENSE`](LICENSE) for details.
 
 The Tclssg logo images are copyright (c) 2014 dbohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
