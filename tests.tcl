@@ -463,13 +463,13 @@ namespace eval ::tclssg::tests {
                 -body {
         set project [make-temporary-project]
         set file [file join $project libtest.tcl]
-        fileutil::writeFile $file [
-            subst {
+        fileutil::writeFile $file [list \
+            apply {{path project} {
                 source [file join $path ssg.tcl]
                 tclssg configure $path
                 tclssg cli command build $project $project/output
                 puts done
-            }
+            }} $path $project \
         ]
         set result [tcl $file]
         return [lindex $result end]
