@@ -43,8 +43,9 @@ On **Fedora**, **RHEL** or **CentOS**:
 
 On **Windows** the easiest option is to install ActiveTcl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) does not include Tcllib or an SQLite 3 module, so it will not run Tclssg out of the box. After installing ActiveTcl run
 
-    c:\Tcl\bin\teacup.exe install html
     c:\Tcl\bin\teacup.exe install json
+    c:\Tcl\bin\teacup.exe install ncgi
+    c:\Tcl\bin\teacup.exe install sha256
 
 On **OS X** use [MacPorts](https://www.macports.org/) or install ActiveTcl for Mac. With MacPorts:
 
