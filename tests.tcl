@@ -383,7 +383,7 @@ namespace eval ::tclssg::tests {
 
     tcltest::test command-line-1.2 {Tclssg command line commands} \
                 -cleanup {unset result configFile config} \
-                -constraints diff \
+                -constraints {unix diff} \
                 -body {
         variable project
         set tclssgArguments [list $project]
