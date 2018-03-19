@@ -310,6 +310,39 @@ namespace eval ::tclssg::tests {
     } -result [list "<pre><code>target:\n    command foo bar</code></pre>" \
                     "<pre><code>target:\n\tcommand foo bar</code></pre>"]
 
+    tcltest::test named-args-1.1 named-args \
+                -cleanup {unset args foo bar baz} \
+                -body {
+        set args {-foo 1 -bar 5}
+        utils::named-args {
+            -foo  foo
+            -bar  bar
+            -baz  {baz default}
+        }
+        return [list $foo $bar $baz]
+    } -result {1 5 default}
+
+    tcltest::test named-args-1.2 {named-args missing} \
+                -cleanup {unset args foo bar} \
+                -body {
+        set args {-foo 1 -bar 5}
+        utils::named-args {
+            -foo  foo
+            -bar  bar
+            -baz  baz
+        }
+    } -returnCodes error -result {missing required argument -baz}
+
+    tcltest::test named-args-1.3 {named-args extra} \
+                -cleanup {unset args foo bar} \
+                -body {
+        set args {-foo 1 -bar 5 -qux wat}
+        utils::named-args {
+            -foo  foo
+            -bar  bar
+        }
+    } -returnCodes error -result {unknown extra arguments: "-qux wat"}
+
     # Integration tests.
 
     proc make-temporary-project {} {

@@ -415,6 +415,27 @@ namespace eval ::tclssg::utils {
 
         return $lol
     }
+
+    proc named-args mapping {
+        upvar 1 args args
+        dict for {key dest} $mapping {
+            catch {unset default}
+            lassign $dest varName default
+
+            upvar 1 $varName v
+            if {[dict exists $args $key]} {
+                set v [dict get $args $key]
+            } elseif {[info exists default]} {
+                set v $default
+            } else {
+                error "missing required argument $key"
+            }
+            dict unset args $key
+        }
+        if {$args ne {}} {
+            error "unknown extra arguments: \"$args\""
+        }
+    }
 }
 
 package provide tclssg::utils 0

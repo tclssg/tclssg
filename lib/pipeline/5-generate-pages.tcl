@@ -104,12 +104,14 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
     }
 
     proc gen args {
-        set baseOutput [dict get $args -output]
-        set extraArticles [dict-default-get {} $args -extraArticles]
-        set input [dict get $args -input]
-        set interp [dict get $args -interp]
-        set paginate [dict-default-get 1 $args -paginate]
-        set templateProc [dict get $args -template]
+        utils::named-args {
+            -interp         interp
+            -input          input
+            -output         baseOutput
+            -template       templateProc
+            -extraArticles  {extraArticles {}}
+            -paginate       {paginate 1}
+        }
 
         set output $baseOutput
         set root [root-path $output]
