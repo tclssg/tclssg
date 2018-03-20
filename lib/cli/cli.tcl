@@ -59,7 +59,7 @@ namespace eval ::tclssg::cli::command {
     proc build {inputDir outputDir {debugDir {}} {options {}}} {
         allow-options {--debug --local --plugins} $options
 
-        set websiteConfig [load-config $inputDir]
+        set websiteConfig [config::load $inputDir]
 
         if {{--debug} in $options} {
             debugger enable
@@ -128,7 +128,7 @@ namespace eval ::tclssg::cli::command {
     proc deploy-copy {inputDir outputDir {debugDir {}} {options {}}} {
         allow-options {} $options
 
-        set websiteConfig [load-config $inputDir]
+        set websiteConfig [config::load $inputDir]
         set deployDest [dict get $websiteConfig deployCopy path]
 
         utils::copy-files $outputDir $deployDest always
@@ -162,7 +162,7 @@ namespace eval ::tclssg::cli::command {
                             code $exitStatus."
             }
         }
-        set websiteConfig [load-config $inputDir]
+        set websiteConfig [config::load $inputDir]
         set deployCustom [dict get $websiteConfig deployCustom]
 
         log::info deploying...
@@ -180,7 +180,7 @@ namespace eval ::tclssg::cli::command {
     proc deploy-ftp {inputDir outputDir {debugDir {}} {options {}}} {
         allow-options {} $options
 
-        set websiteConfig [load-config $inputDir]
+        set websiteConfig [config::load $inputDir]
 
         package require ftp
         global errorInfo
@@ -224,7 +224,7 @@ namespace eval ::tclssg::cli::command {
     }
 
     proc open {inputDir outputDir {debugDir {}} {options {}}} {
-        set websiteConfig [load-config $inputDir]
+        set websiteConfig [config::load $inputDir]
 
         package require browse
         ::browse::url [file rootname [file join $outputDir index.md]].html
@@ -233,7 +233,7 @@ namespace eval ::tclssg::cli::command {
     proc serve {inputDir outputDir {debugDir {}} {options {}}} {
         allow-options {--browse --verbose} $options
 
-        set websiteConfig [load-config $inputDir]
+        set websiteConfig [config::load $inputDir]
         set host [utils::dict-default-get localhost \
                                           $websiteConfig \
                                           server \

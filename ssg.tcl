@@ -42,35 +42,6 @@ namespace eval tclssg {
     proc version {} {
         variable version
         return $version
-        variable configSchema {
-            abbreviate
-            blogDefaults
-            blogPostsPerFile
-            charset
-            {comments engine}
-            {comments disqusShortname}
-            copyright
-            enableMacros
-            inputDir
-            locale
-            {markdown converter}
-            {markdown tabs}
-            maxSidebarLinks
-            maxTagCloudTags
-            outputDir
-            pageDefaults
-            prettyURLs
-            {rss enable}
-            {rss feedDescription}
-            {rss posts}
-            {rss tagFeeds}
-            sidebarPostIds
-            {sitemap enable}
-            sortTagsBy
-            timezone
-            url
-            websiteTitle
-        }
     }
 
     proc configure newPath {
@@ -97,6 +68,7 @@ namespace eval tclssg {
         }
 
         package require tclssg::cli
+        package require tclssg::config
         package require tclssg::converters
         package require tclssg::db
         package require tclssg::debugger
@@ -110,27 +82,6 @@ namespace eval tclssg {
         namespace import utils::dict-default-get
 
         return
-    }
-
-    # Check the website config for errors that may not be caught elsewhere.
-    proc validate-config config {
-        variable configSchema
-
-        # Check that the website URL end with a '/'.
-        set url [dict-default-get {} $config url]
-        if {($url ne {}) && ([string index $url end] ne "/")} {
-            error {"url" in the website config does not end with "/"}
-        }
-
-        set flattened {}
-        foreach keyPath $configSchema {
-            dict set flattened $keyPath [dict get $config {*}$keyPath]
-            dict unset config {*}$keyPath
-        }
-        if {$config ne {}} {
-            error "unknown setting in website config: \"$config\""
-        }
-        return flattened
     }
 
     proc run-pipeline-stage {ns files} {
@@ -179,37 +130,10 @@ namespace eval tclssg {
         }
     }
 
-    # Load the website configuration file from the directory inputDir. Return
-    # the raw content of the file without validating it. If $verbose is true
-    # print the content.
-    proc load-config {inputDir {verbose 1}} {
-        set configRaw [utils::read-file [file join $inputDir website.conf]]
-        set config [utils::remove-comments $configRaw]
-
-        # Show loaded config to user (without the password values).
-        if {$verbose} {
-            set formatted \
-                [utils::dict-format [utils::obscure-password-values $config] \
-                                    "%s %s\n" \
-                                    {
-                                        websiteTitle
-                                        headExtra
-                                        bodyExtra
-                                        start
-                                        moreText
-                                        sidebarNote
-                                    }]
-            log::info {loaded config file}
-            log::info [::textutil::indent $formatted {    }]
-        }
-        validate-config $config
-        return $config
-    }
-
     # Read the setting $settingName from the website config file in $inputDir.
     proc read-path-setting {inputDir settingName} {
         if {[catch {
-            set config [::tclssg::load-config $inputDir 0]
+            set config [::tclssg::config::load $inputDir 0]
         } errorMessage options]} {
             if {[regexp {^Cannot read file} $errorMessage]} {
                 return {}

@@ -14,9 +14,11 @@ namespace eval ::tclssg::tests {
     namespace eval ::tclssg [list variable path $path]
 
     package require http
+    package require logger
     package require sqlite3
 
     package require tclssg::cli
+    package require tclssg::config
     package require tclssg::converters
     package require tclssg::db
     package require tclssg::debugger
@@ -29,6 +31,8 @@ namespace eval ::tclssg::tests {
 
     namespace path ::tclssg
     namespace import ::tclssg::utils::*
+
+    ::logger::initNamespace ::tclssg error
 
     if {[llength $argv] > 0} {
         tcltest::configure -match $argv
@@ -374,9 +378,10 @@ namespace eval ::tclssg::tests {
 
     variable project [make-temporary-project]
 
-    proc modify-config {path updates} {
-        set config [utils::remove-comments [utils::read-file $path]]
-        ::fileutil::writeFile $path [dict merge $config $updates]
+    proc modify-config {inputDir updates} {
+        set config [config load $inputDir]
+        ::fileutil::writeFile $inputDir/website.conf \
+                              [dict merge $config $updates]
         return
     }
 
@@ -394,7 +399,7 @@ namespace eval ::tclssg::tests {
         set tclssgArguments [list $project]
 
         # Set deployment options in the website config.
-        modify-config $project/website.conf [dict create \
+        modify-config $project [dict create \
             deployCopy [dict create path $project/deploy-copy-test] \
             deployCustom [dict create \
                 start [list cp -r \$outputDir $project/deploy-custom-test] \
@@ -424,9 +429,11 @@ namespace eval ::tclssg::tests {
         variable project
 
         set port [unused-port]
-        modify-config $project/website.conf [dict create \
-            host localhost \
-            port $port \
+        modify-config $project [dict create \
+            server [dict create \
+                host localhost \
+                port $port \
+            ] \
         ]
 
         tcl ssg.tcl build $project $project/output
