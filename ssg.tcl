@@ -110,7 +110,9 @@ namespace eval tclssg {
         db config set inputDir $inputDir
         db config set outputDir $outputDir
         db config set buildTimestamp [clock seconds]
-        db settings set security plugins $plugins
+        # For security reasons the value of "plugins" can only be set via the
+        # command line. It is not part of the config file schema.
+        db config set plugins $plugins
         lappend ::tclssg::templates::paths [file join $inputDir templates]
 
         # Run the pre-build stages of the pipeline.

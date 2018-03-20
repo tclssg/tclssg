@@ -8,7 +8,7 @@ namespace eval ::tclssg::pipeline::0-load-plugins {
     namespace path ::tclssg
 
     proc load files {
-        set plugins [db settings get security plugins 0]
+        set plugins [db config get plugins 0]
 
         db transaction {
             set inputDir [db config get inputDir]
