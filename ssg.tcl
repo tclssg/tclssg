@@ -42,6 +42,35 @@ namespace eval tclssg {
     proc version {} {
         variable version
         return $version
+        variable configSchema {
+            abbreviate
+            blogDefaults
+            blogPostsPerFile
+            charset
+            {comments engine}
+            {comments disqusShortname}
+            copyright
+            enableMacros
+            inputDir
+            locale
+            {markdown converter}
+            {markdown tabs}
+            maxSidebarLinks
+            maxTagCloudTags
+            outputDir
+            pageDefaults
+            prettyURLs
+            {rss enable}
+            {rss feedDescription}
+            {rss posts}
+            {rss tagFeeds}
+            sidebarPostIds
+            {sitemap enable}
+            sortTagsBy
+            timezone
+            url
+            websiteTitle
+        }
     }
 
     proc configure newPath {
@@ -84,12 +113,24 @@ namespace eval tclssg {
     }
 
     # Check the website config for errors that may not be caught elsewhere.
-    proc validate-config websiteConfig {
+    proc validate-config config {
+        variable configSchema
+
         # Check that the website URL end with a '/'.
-        set url [dict-default-get {} $websiteConfig url]
+        set url [dict-default-get {} $config url]
         if {($url ne {}) && ([string index $url end] ne "/")} {
             error {"url" in the website config does not end with "/"}
         }
+
+        set flattened {}
+        foreach keyPath $configSchema {
+            dict set flattened $keyPath [dict get $config {*}$keyPath]
+            dict unset config {*}$keyPath
+        }
+        if {$config ne {}} {
+            error "unknown setting in website config: \"$config\""
+        }
+        return flattened
     }
 
     proc run-pipeline-stage {ns files} {
@@ -116,7 +157,6 @@ namespace eval tclssg {
         db init
         debugger init $inputDir $debugDir
 
-        validate-config $websiteConfig
         dict for {key value} $websiteConfig {
             db transaction {
                 db settings set config $key $value
@@ -162,7 +202,7 @@ namespace eval tclssg {
             log::info {loaded config file}
             log::info [::textutil::indent $formatted {    }]
         }
-
+        validate-config $config
         return $config
     }
 
@@ -174,7 +214,7 @@ namespace eval tclssg {
             if {[regexp {^Cannot read file} $errorMessage]} {
                 return {}
             } else {
-                return -options $errorInfo $errorMessage
+                return -options $options $errorMessage
             }
         }
         set value [dict-default-get {} $config $settingName]
