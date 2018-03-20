@@ -11,7 +11,7 @@ Quis ullamco nulla anim sunt ex proident qui consequat enim adipisicing do aute 
 
 <!--more-->
 
-Macro test: 1 + 2 = <%= 1 + 2 %>. Set `enableMacros 1` in `website.conf` to see.
+Macro test: 1 + 2 = <%= 1 + 2 %>. Set `macros 1` in `website.conf` to see.
 
 Data test: `<%! db input get data/test.json raw %>`
 

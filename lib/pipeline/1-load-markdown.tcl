@@ -66,7 +66,7 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
                 dict set frontmatter modifiedTimestamp $modified
             }
 
-            set macros [db config get enableMacros 0]
+            set macros [db config get macros 0]
             set cooked [prepare-content $file \
                                         $frontmatter \
                                         $raw \

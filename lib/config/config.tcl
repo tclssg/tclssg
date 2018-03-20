@@ -26,11 +26,11 @@ namespace eval ::tclssg::config {
         {deployFtp port}
         {deployFtp server}
         {deployFtp user}
-        enableMacros
         inputDir
         locale
         {markdown converter}
         {markdown tabs}
+        macros
         maxSidebarLinks
         maxTagCloudTags
         outputDir
