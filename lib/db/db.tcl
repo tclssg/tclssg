@@ -37,7 +37,8 @@ namespace eval ::tclssg::db {
                 file TEXT,
                 key TEXT,
                 value TEXT,
-                PRIMARY KEY (file, key)
+                PRIMARY KEY (file, key),
+                FOREIGN KEY(file) REFERENCES input(file)
             );
             CREATE TABLE tags(
                 file TEXT,
@@ -46,13 +47,23 @@ namespace eval ::tclssg::db {
                 FOREIGN KEY(file) REFERENCES input(file)
             );
         }
-        # Compatibility.
-        if {[catch {
-            tclssg-db function lindex -deterministic ::lindex
-        }]} {
-            tclssg-db function lindex ::lindex
-        }
+
         tclssg-db nullvalue %NULL%
+
+        foreach {name script} {
+            dict_path_exists  ::tclssg::db::dict-path-exists
+            dict_path_get     ::tclssg::db::dict-path-get
+            lindex            ::lindex
+            llength           ::llength
+            lrange            ::lrange
+        } {
+            # Compatibility.
+            if {[catch {
+                tclssg-db function $name -deterministic $script
+            }]} {
+                tclssg-db function $name $script
+            }
+        }
     }
 
     proc eval args {
@@ -61,6 +72,15 @@ namespace eval ::tclssg::db {
 
     proc transaction script {
         uplevel 1 [list tclssg-db transaction $script]
+    }
+
+    # Helper procs to use as function in SQLite.
+    proc dict-path-exists {dict path} {
+        return [dict exists $dict {*}$path]
+    }
+
+    proc dict-path-get {dict path} {
+        return [dict get $dict {*}$path]
     }
 }
 
@@ -124,7 +144,6 @@ namespace eval ::tclssg::db::output {
     proc delete file {
         tclssg-db eval {
             DELETE FROM output WHERE file = $file;
-            DELETE FROM settings WHERE file = $file;
         }
     }
 
@@ -168,43 +187,57 @@ namespace eval ::tclssg::db::settings {
     namespace export *
     namespace ensemble create
 
-    proc split-key key {
-        return [list [lindex $key 0] [lrange $key 1 end]]
-    }
-
     # We store values verbatim instead of flattening dictionaries into
     # multiple rows of (path, value) pairs. We can't transform nested keys
     # into paths because we cannot differentiate between a dictionary and a
     # string that wasn't intended as one.
     proc set {file key value} {
+        if {[llength $key] > 1} {
+            error "expected a key of list length one, but got [list $key]"
+        }
         tclssg-db transaction {
-            lassign [split-key $key] tableKey dictKey
-            ::set wrapped $value
-            if {$dictKey ne {}} {
-                ::set wrapped [get $file $tableKey {}]
-                dict set wrapped {*}$dictKey $value
-            }
             tclssg-db eval {
                 INSERT OR REPLACE INTO settings(file, key, value)
-                VALUES (:file, :tableKey, :wrapped);
+                VALUES (:file, :key, :value);
             }            
         }
     }
 
     proc get {file key {default %NULL%}} {
-        lassign [split-key $key] tableKey dictKey
-        lassign [tclssg-db eval {
-            SELECT ifnull(max(value), NULL) FROM settings
-            WHERE file = :file AND key = :tableKey;
-        }] result
-        if {$result eq {%NULL%}} {
-            ::set result $default
-        } elseif {$dictKey ne {}} {
-            ::set result [::tclssg::utils::dict-default-get $default \
-                                                            $result \
-                                                            {*}$dictKey]
+        return [mget [list $file] $key $default]
+    }
+
+    proc mget {files key {default %NULL%}} {
+        ::set i 0
+        ::set vars {}
+        foreach file $files {
+            ::set fileArr($i) $file
+            lappend vars :fileArr($i)
+            incr i
         }
-        return $result
+        ::set fileValues [join $vars {, }]
+        ::set ordering "file = [join $vars { DESC, file = }] DESC"
+
+        tclssg-db eval [format {
+            SELECT ifnull(
+                (SELECT
+                    CASE
+                        WHEN llength(:key) = 1 THEN value
+                        ELSE dict_path_get(value, lrange(:key, 1, 'end'))
+                    END
+                 FROM settings
+                 WHERE file IN (%1$s) AND
+                       key = lindex(:key, 0) AND
+                       value IS NOT NULL AND
+                       (llength(:key) = 1 OR
+                        dict_path_exists(value, lrange(:key, 1, 'end')))
+                 ORDER BY %2$s
+                 LIMIT 1),
+                :default
+            ) AS result
+        } $fileValues $ordering] row {
+            return $row(result)
+        }
     }
 }
 
