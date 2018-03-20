@@ -29,6 +29,10 @@ namespace eval ::tclssg::db {
                 content TEXT,
                 FOREIGN KEY(input) REFERENCES input(file)
             );
+            CREATE TABLE config(
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
             CREATE TABLE settings(
                 file TEXT,
                 key TEXT,
@@ -137,6 +141,26 @@ namespace eval ::tclssg::db::output {
         tclssg-db eval {
             SELECT :field FROM output WHERE file = :file;
         }
+    }
+}
+
+namespace eval ::tclssg::db::config {
+    namespace export *
+    namespace ensemble create
+
+    proc set {key value} {
+        tclssg-db eval {
+            INSERT OR REPLACE INTO config
+            VALUES (:key, :value);
+        }
+    }
+
+    proc get {key {default %NULL%}} {
+        lassign [tclssg-db eval {
+            SELECT ifnull(max(value), :default) FROM config
+            WHERE key = :key;
+        }] result
+        return $result
     }
 }
 

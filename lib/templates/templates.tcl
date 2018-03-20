@@ -48,8 +48,8 @@ set procs {
     }
 
     proc file-setting {file key {default %NULL%}} {
-        set blogDefaults [db settings get config blogDefaults {}]
-        set pageDefaults [db settings get config pageDefaults {}]
+        set blogDefaults [db config get blogDefaults {}]
+        set pageDefaults [db config get pageDefaults {}]
         set value [db settings get $file $key]
         if {$value ne {%NULL%}} {
             return $value
@@ -72,7 +72,7 @@ set procs {
         set includeIndexHtml [dict-default-get 1 $args -includeIndexHtml]
 
         set output [file rootname $input]
-        if {[db settings get config prettyURLs 0]} {
+        if {[db config get prettyURLs 0]} {
             regexp {^(.*?)/?index$} $output _ output 
             if {$n > 1} {
                 append output /page/$n

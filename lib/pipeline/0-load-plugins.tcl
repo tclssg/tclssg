@@ -11,7 +11,7 @@ namespace eval ::tclssg::pipeline::0-load-plugins {
         set plugins [db settings get security plugins 0]
 
         db transaction {
-            set inputDir [db settings get config inputDir]
+            set inputDir [db config get inputDir]
             foreach file $files {
                 set id [utils::replace-path-root $file $inputDir {}]
                 if {[regexp {^/?plugins.*\.tcl$} $id]} {

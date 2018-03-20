@@ -293,14 +293,14 @@ namespace eval ::tclssg::tests {
 
     tcltest::test markdown-1.1 {Built-in Markdown converter} \
                 -body {
-        db settings set config {markdown converter} {}
+        db config set {markdown converter} {}
         ::tclssg::converters::markdown::markdown-to-html {* hi}
     } -match regexp -result {<ul>.*?<li>hi</li>.*?</ul>}
 
     tcltest::test markdown-2.1 cmark \
                 -constraints cmark \
                 -body {
-        db settings set config {markdown converter} cmark
+        db config set {markdown converter} cmark
         ::tclssg::converters::markdown::markdown-to-html {* hi}
     } -match regexp -result {<ul>.*?<li>hi</li>.*?</ul>}
 

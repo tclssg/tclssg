@@ -28,7 +28,7 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
                 raw
         set frontmatter [utils::remove-comments $frontmatterWithComments]
 
-        set inputDir [db settings get config inputDir]
+        set inputDir [db config get inputDir]
         set id [utils::replace-path-root $file $inputDir {}]
 
         # Skip pages marked as drafts.
@@ -47,7 +47,7 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
             # Parse date and modified into a Unix timestamp plus a format
             # string.
             set clockOptions {}
-            set timezone [db settings get config timezone {}]
+            set timezone [db config get timezone {}]
             if {$timezone ne {}} {
                 set clockOptions [list -timezone $timezone]
             }
@@ -66,7 +66,7 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
                 dict set frontmatter modifiedTimestamp $modified
             }
 
-            set macros [db settings get config enableMacros 0]
+            set macros [db config get enableMacros 0]
             set cooked [prepare-content $file \
                                         $frontmatter \
                                         $raw \

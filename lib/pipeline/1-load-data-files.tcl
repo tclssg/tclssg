@@ -9,7 +9,7 @@ namespace eval ::tclssg::pipeline::1-load-data-files {
 
     proc load files {
         db transaction {
-            set inputDir [db settings get config inputDir]
+            set inputDir [db config get inputDir]
             foreach file $files {
                 set id [utils::replace-path-root $file $inputDir {}]
                 if {[regexp {^/?data} $id]} {

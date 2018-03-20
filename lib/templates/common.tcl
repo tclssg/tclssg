@@ -4,7 +4,7 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 proc config {key {default %NULL%}} {
-    return [db settings get config $key $default]
+    return [db config get $key $default]
 }
 
 proc setting {key {default %NULL%}} {

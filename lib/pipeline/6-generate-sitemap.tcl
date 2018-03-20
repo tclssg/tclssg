@@ -9,8 +9,8 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
     namespace path ::tclssg
 
     proc transform {} {
-        if {![db settings get config {sitemap enable} 0]} return
-        set outputDir [db settings get config outputDir]
+        if {![db config get {sitemap enable} 0]} return
+        set outputDir [db config get outputDir]
         set sitemapFile [file join $outputDir sitemap.xml]
         log::info "writing sitemap to [list $sitemapFile]"
         utils::write-file $sitemapFile [make-sitemap]
@@ -19,7 +19,7 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
     # Generate a sitemap for the static website. This requires the setting
     # "url" to be set in the website config.
     proc make-sitemap {} {
-        set outputDir [db settings get config outputDir]
+        set outputDir [db config get outputDir]
         set header [utils::trim-indentation {
         <?xml version="1.0" encoding="UTF-8"?>
         <urlset
@@ -38,7 +38,7 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
 
         db transaction {
             set result {}
-            set url [db settings get config url]
+            set url [db config get url]
             if {$url eq {%NULL%}} {
                 error {can't generate a sitemap without a base URL set\
                        in the config}

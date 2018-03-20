@@ -10,8 +10,8 @@ namespace eval ::tclssg::converters::markdown {
 
     # Convert raw Markdown to HTML.
     proc markdown-to-html {markdown} {
-        set converter [db settings get config {markdown converter}]
-        set tabs [db settings get config {markdown tabs} 0]
+        set converter [db config get {markdown converter}]
+        set tabs [db config get {markdown tabs} 0]
         if {$converter in {{} {%NULL%}}} {
             return [::Markdown::convert $markdown $tabs]
         } else {

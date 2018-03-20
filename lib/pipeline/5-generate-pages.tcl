@@ -8,8 +8,8 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
     namespace path ::tclssg
 
     proc transform {} {
-        set inputDir [db settings get config inputDir]
-        set outputDir [db settings get config outputDir]
+        set inputDir [db config get inputDir]
+        set outputDir [db config get outputDir]
 
         set interp 5-generate-pages
         interpreter create $interp
@@ -40,7 +40,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
     }
 
     proc add-page-number {output n} {
-        if {[db settings get config prettyURLs 0]} {
+        if {[db config get prettyURLs 0]} {
             regexp {(.*?)(?:/page/[0-9]+)?/index.html$} $output _ output
             if {$n > 1} {
                 append output /page/$n
@@ -117,9 +117,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         set root [root-path $output]
 
         if {$paginate} {
-            set blogPostsPerFile [db settings get config \
-                                                  blogPostsPerFile \
-                                                  0xFFFF]
+            set blogPostsPerFile [db config get blogPostsPerFile 0xFFFF]
             set grouped [utils::group-by $blogPostsPerFile $extraArticles]
             set topGroup [list $input {*}[lindex $grouped 0]]
             if {$grouped eq {}} {

@@ -107,7 +107,7 @@ namespace eval ::tclssg::config {
             }
         }
         if {$config ne {}} {
-            error "unknown setting in website config: \"$config\""
+            error "unknown settings in website config: \"$config\""
         }
         return $flattened
     }

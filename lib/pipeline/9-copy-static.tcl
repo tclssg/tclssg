@@ -7,8 +7,8 @@ namespace eval ::tclssg::pipeline::9-copy-static {
     namespace path ::tclssg
 
     proc transform {} {
-        set inputDir [db settings get config inputDir]
-        set outputDir [db settings get config outputDir]
+        set inputDir [db config get inputDir]
+        set outputDir [db config get outputDir]
 
         ::tclssg::utils::copy-files [file join $inputDir static] \
                                     $outputDir \

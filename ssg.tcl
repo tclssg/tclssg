@@ -107,15 +107,9 @@ namespace eval tclssg {
 
         db init
         debugger init $inputDir $debugDir
-
-        dict for {key value} $websiteConfig {
-            db transaction {
-                db settings set config $key $value
-            }
-        }
-        db settings set config inputDir $inputDir
-        db settings set config outputDir $outputDir
-        db settings set config buildTimestamp [clock seconds]
+        db config set inputDir $inputDir
+        db config set outputDir $outputDir
+        db config set buildTimestamp [clock seconds]
         db settings set security plugins $plugins
         lappend ::tclssg::templates::paths [file join $inputDir templates]
 
@@ -125,9 +119,15 @@ namespace eval tclssg {
             run-pipeline-stage $ns $files
         }
 
-        # Check that the config confirms to the schema. We do it here rather
-        # than earlier to let plugins add their own settings to the schema.
-        config::parse-by-schema $websiteConfig
+        # Check that the config confirms to the schema and insert the settings
+        # into the DB. We perform the validation here rather than earlier to let
+        # plugins add their own settings to the schema.
+        db transaction {
+            dict for {key value} [config::parse-by-schema $websiteConfig] {
+                if {$key in {inputDir outputDir}} continue
+                db config set $key $value
+            }
+        }
         unset websiteConfig
 
         # Run the rest of the pipeline.

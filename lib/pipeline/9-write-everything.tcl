@@ -6,7 +6,7 @@ namespace eval ::tclssg::pipeline::9-write-everything {
     namespace path ::tclssg
 
     proc transform {} {
-        set outputDir [db settings get config outputDir]
+        set outputDir [db config get outputDir]
         db eval {SELECT file, content FROM output} row {
             set dest [file join $outputDir $row(file)]
             set subdir [file dirname $dest]

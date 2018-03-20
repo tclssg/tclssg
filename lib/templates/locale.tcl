@@ -3,7 +3,7 @@
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-mclocale [db settings get config locale en_US]
+mclocale [db config get locale en_US]
 #mcset en_US {Posts} {Posts}
 #mcset en_US {Tags} {Tags}
 #mcset en_US {Tagged: %1$s} {Tagged: %1$s}
