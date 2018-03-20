@@ -85,6 +85,32 @@ namespace eval ::tclssg::config {
             error {"url" in the website config does not end with "/"}
         }
     }
+
+    # Check that the config conforms to the schema. Flatten the config into a
+    # {path value ...} dict.
+    proc parse-by-schema config {
+        variable schema
+
+        set flattened {}
+        foreach keyPath $schema {
+            if {[dict exists $config {*}$keyPath]} {
+                dict set flattened $keyPath [dict get $config {*}$keyPath]
+                dict set config {*}$keyPath {}
+                while {[llength $keyPath] > 0} {
+                    if {[dict get $config {*}$keyPath] eq {}} {
+                        dict unset config {*}$keyPath
+                    } else {
+                        break
+                    }
+                    set keyPath [lrange $keyPath 0 end-1]
+                }
+            }
+        }
+        if {$config ne {}} {
+            error "unknown setting in website config: \"$config\""
+        }
+        return $flattened
+    }
 }
 
 package provide tclssg::config 0

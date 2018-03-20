@@ -5,10 +5,12 @@
 
 namespace eval ::tclssg::pipeline::5-plugin-demo {
     namespace path ::tclssg
+    lappend ::tclssg::config::schema greeting
 
     proc transform {} {
         log::info {running demo plugin}
         db input add fake/hello.txt {} {} [clock seconds]
-        db output add hello.txt fake/hello.txt {Hello, World!}
+        set greeting [db settings get config greeting {Hello, %s!}]
+        db output add hello.txt fake/hello.txt [format $greeting World]
     }
 }

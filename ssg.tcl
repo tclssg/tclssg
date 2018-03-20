@@ -113,17 +113,24 @@ namespace eval tclssg {
                 db settings set config $key $value
             }
         }
-        unset websiteConfig
         db settings set config inputDir $inputDir
         db settings set config outputDir $outputDir
         db settings set config buildTimestamp [clock seconds]
         db settings set security plugins $plugins
         lappend ::tclssg::templates::paths [file join $inputDir templates]
 
+        # Run the pre-build stages of the pipeline.
         set files [::fileutil::find $inputDir {file isfile}]
         foreach ns [lsort [namespace children pipeline 0*]] {
             run-pipeline-stage $ns $files
         }
+
+        # Check that the config confirms to the schema. We do it here rather
+        # than earlier to let plugins add their own settings to the schema.
+        config::parse-by-schema $websiteConfig
+        unset websiteConfig
+
+        # Run the rest of the pipeline.
         foreach ns [lsort [namespace children pipeline]] {
             if {[string match 0* [namespace tail $ns]]} continue
             run-pipeline-stage $ns $files
