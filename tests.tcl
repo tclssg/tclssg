@@ -374,6 +374,12 @@ namespace eval ::tclssg::tests {
 
     variable project [make-temporary-project]
 
+    proc modify-config {path updates} {
+        set config [utils::remove-comments [utils::read-file $path]]
+        ::fileutil::writeFile $path [dict merge $config $updates]
+        return
+    }
+
     tcltest::test command-line-1.1 {Tclssg command line commands} \
                 -body {
         tcl ssg.tcl version
@@ -381,28 +387,21 @@ namespace eval ::tclssg::tests {
     } -match glob -result {*usage: ssg.tcl*}
 
     tcltest::test command-line-1.2 {Tclssg command line commands} \
-                -cleanup {unset result configFile config} \
+                -cleanup {unset result} \
                 -constraints {unix diff} \
                 -body {
         variable project
         set tclssgArguments [list $project]
 
         # Set deployment options in the website config.
-        set configFile $project/website.conf
-        set config [utils::remove-comments [utils::read-file $configFile]]
-        dict set config deployCopy path $project/deploy-copy-test
-        dict set config deployCustom [dict create \
-            start "cp -r \"\$outputDir\"\
-                   \"$project/deploy-custom-test\"" \
-            file {} \
-            end {} \
+        modify-config $project/website.conf [dict create \
+            deployCopy [dict create path $project/deploy-copy-test] \
+            deployCustom [dict create \
+                start [list cp -r \$outputDir $project/deploy-custom-test] \
+                file {} \
+                end {} \
+            ] \
         ]
-        set port [unused-port]
-        dict set config server [dict create \
-            host localhost \
-            port $port \
-        ]
-        ::fileutil::writeFile $configFile $config
 
         tcl ssg.tcl build {*}$tclssgArguments
         tcl ssg.tcl update --yes {*}$tclssgArguments
@@ -418,12 +417,23 @@ namespace eval ::tclssg::tests {
     } -result {}
 
     tcltest::test command-line-1.3 {serve command} \
-                -cleanup {close $ch; unset ch i foundServerInfo indexPage} \
-                -body {
+            -cleanup {
+        close $ch
+        unset ch foundServerInfo i indexPage serveCommand
+    } -body {
         variable project
+
+        set port [unused-port]
+        modify-config $project/website.conf [dict create \
+            host localhost \
+            port $port \
+        ]
+
         tcl ssg.tcl build $project $project/output
-        set ch [open |[list [info nameofexecutable] ssg.tcl serve \
-                                                            -verbose $project]]
+        set serveCommand [list [info nameofexecutable] ssg.tcl serve \
+                                                               -verbose \
+                                                               $project]
+        set ch [open |$serveCommand]
         set foundServerInfo 0
         fconfigure $ch -blocking 0
         set i 0
