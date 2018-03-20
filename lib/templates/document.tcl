@@ -4,7 +4,17 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 namespace eval ::document {}
-template-proc ::document::render {} {<!DOCTYPE html>
+template-proc ::document::render {
+    -articles       articles
+    -collection     {collection 0}
+    -collectionTop  {collectionTop 1}
+    -input          input
+    -nextPage       nextPage
+    -output         output
+    -pageNumber     {pageNumber 1}
+    -prevPage       prevPage
+    -root           root
+} {<!DOCTYPE html>
 <html>
   <head>
     <%! setting {head top} {} %>
@@ -16,21 +26,21 @@ template-proc ::document::render {} {<!DOCTYPE html>
     <% } %>
 
     <% if {[config url] ne {%NULL%}} { %>
-      <link rel="canonical" href="<%! file join [config url] $::output %>">
+      <link rel="canonical" href="<%! file join [config url] $output %>">
     <% } %>
-    <% if {$::prevPage ne {}} { %>
-      <link rel="prev" href="<%! entities $::prevPage %>">
+    <% if {$prevPage ne {}} { %>
+      <link rel="prev" href="<%! entities $prevPage %>">
     <% } %>
-    <% if {$::nextPage ne {}} { %>
-      <link rel="next" href="<%! entities $::nextPage %>">
+    <% if {$nextPage ne {}} { %>
+      <link rel="next" href="<%! entities $nextPage %>">
     <% } %>
     <% if {[setting favicon] ne {%NULL%}} { %>
-      <link rel="icon" href="<%! file join $::root [setting favicon] %>">
+      <link rel="icon" href="<%! file join $root [setting favicon] %>">
     <% } %>
     <% if {[blog-post?] && [config {rss enable} 0]} { %>
       <link rel="" type="application/rss+xml" href="<%! rss-feed %>">
     <% } %>
-    <% if {$::prevPage ne {%NULL%} || $::nextPage ne {%NULL%} ||
+    <% if {$prevPage ne {%NULL%} || $nextPage ne {%NULL%} ||
            [setting noIndex 0]} {
       # Tell search engines to not index the tag pages or the blog index
       # beyond the first page.
@@ -45,7 +55,7 @@ template-proc ::document::render {} {<!DOCTYPE html>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <!-- Custom stylesheets, if any -->
     <% foreach cssLink [setting customCSS {}] { %>
-      <link href="<%! url-join $::root $cssLink %>" rel="stylesheet">
+      <link href="<%! url-join $root $cssLink %>" rel="stylesheet">
     <% } %>
     <%! setting {head bottom} {} %>
   </head>
@@ -61,12 +71,12 @@ template-proc ::document::render {} {<!DOCTYPE html>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="<%= $::root %>"><%! navbar-brand %></a>
+          <a class="navbar-brand" href="<%= $root %>"><%! navbar-brand %></a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
           <% foreach {item link} [setting navbarItems {}] { %>
-            <li><a href="<%! file join $::root $link %>"><%= $item %></a></li>
+            <li><a href="<%! file join $root $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
         <% if {[blog-post?] && [config {rss enable} 0]} { %>
@@ -131,42 +141,61 @@ template-proc ::document::render {} {<!DOCTYPE html>
 
 namespace eval ::document {
     proc content {} {
+        upvar 1 articles articles \
+                collection collection \
+                collectionTop collectionTop \
+                root root
+
         set result {}
-        set ::abbreviate [expr {
-            $::collection && [config abbreviate 1]
+        set abbreviate [expr {
+            $collection && [config abbreviate 1]
         }]
-        foreach ::articleInput $::articles {
-            set ::content [db input get $::articleInput cooked]
-            append result [::article::render]
-            set ::collectionTop 0
-        }        
-        # TODO: Get rid of this hack?
-        namespace path ::document
+        foreach articleInput $articles {
+            set content [db input get $articleInput cooked]
+            append result \
+                   [::article::render -abbreviate $abbreviate \
+                                     -articleInput $articleInput \
+                                      -collection $collection \
+                                      -collectionTop $collectionTop \
+                                      -content $content \
+                                      -root $root]
+            set collectionTop 0
+        }
 
         return $result
     }
 
     proc blog-post? {} {
+        upvar 1 input input
+
         return [setting blogPost 0]
     }
 
     proc sidebar-links? {} {
+        upvar 1 input input
+
         return [expr {
             [blog-post?] && [setting showSidebarLinks 1]
         }]
     }
 
     proc sidebar-note? {} {
+        upvar 1 input input
+
         return [setting showSidebarNote 1]
     }
 
     proc tag-cloud? {} {
+        upvar 1 input input
+
         return [expr {
             [blog-post?] && [setting showSidebarTagCloud 1]
         }]
     }
 
     proc content-and-sidebar-class {} {
+        upvar 1 input input
+
         set class_prefix [setting gridClassPrefix col-md-]
         set content_column_width [setting contentColumns 8]
         set sidebar_column_width [expr {12 - $content_column_width}]
@@ -188,6 +217,9 @@ namespace eval ::document {
     }
 
     proc document-title {} {
+        upvar 1 input input \
+                pageNumber pageNumber
+
         set websiteTitle [config websiteTitle {}]
 
         set sep { | }
@@ -205,10 +237,8 @@ namespace eval ::document {
             lappend result [format [mc {Posts tagged "%1$s"}] $tagPageTag]
         }
 
-        if {[info exists ::pageNumber]
-            && [string is integer $::pageNumber]
-            && ($::pageNumber > 1)} {
-            lappend result [format [mc {page %1$s}] $::pageNumber]
+        if {[string is integer $pageNumber] && ($pageNumber > 1)} {
+            lappend result [format [mc {page %1$s}] $pageNumber]
         }
         if {$websiteTitle ne ""} {
             lappend result $websiteTitle
@@ -218,14 +248,20 @@ namespace eval ::document {
     }
 
     proc rss-feed {} {
-        return [file join $::root blog/rss.xml]
+        upvar 1 root root
+
+        return [file join $root blog/rss.xml]
     }
 
     proc navbar-brand {} {
+        upvar 1 input input
+
         return [setting navbarBrand [config websiteTitle {}]]
     }
 
     proc sidebar-links {} {
+        upvar 1 input input
+
         # Blog sidebar.
         set sidebar {}
         if {[sidebar-links?]} {
@@ -245,23 +281,30 @@ namespace eval ::document {
 
 
     proc sidebar-note {} {
+        upvar 1 input input
+
         return [format \
                 {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
                 [setting sidebarNote ""]]
     }
 
     proc prev-next-link {prevLinkTitle nextLinkTitle} {
+        upvar 1 input input \
+                nextPage nextPage \
+                prevPage prevPage \
+                root root
+
         # Blog "next" and "previous" blog index page links.
         set links {}
-        if {[blog-post?] && (($::prevPage ne {}) || ($::nextPage ne {}))} {
+        if {[blog-post?] && (($prevPage ne {}) || ($nextPage ne {}))} {
             append links {<nav class="prev-next text-center"><ul class="pager">}
-            if {$::prevPage ne {}} {
+            if {$prevPage ne {}} {
                 append links "<li class=\"previous\">[rel-link \
-                        $::prevPage [mc $prevLinkTitle]]</li>"
+                        $prevPage [mc $prevLinkTitle]]</li>"
             }
-            if {$::nextPage ne {}} {
+            if {$nextPage ne {}} {
                 append links "<li class=\"next\">[rel-link \
-                        $::nextPage [mc $nextLinkTitle]]</li>"
+                        $nextPage [mc $nextLinkTitle]]</li>"
             }
             append links {</ul></nav><!-- prev-next -->}
         }
@@ -269,6 +312,8 @@ namespace eval ::document {
     }
 
     proc tag-cloud {} {
+        upvar 1 root root
+
         # Blog tag cloud. For each tag it links to pages that are tagged with it.
         set tagCloud {}
 
@@ -290,9 +335,11 @@ namespace eval ::document {
     }
 
     proc footer {} {
-        # Footer.
+        upvar 1 input input \
+                root root
+
         set footer {}
-        set copyright [string map [list \$root $::root \
+        set copyright [string map [list \$root $root \
                                         \$year [clock format [clock seconds] \
                                                              -format %Y]] \
                                   [config copyright {}]]
@@ -306,6 +353,8 @@ namespace eval ::document {
     }
 
     proc comments {} {
+        upvar 1 input input
+
         set engine [config {comments engine} none]
         set result {}
         if {[setting showUserComments 1]} {
@@ -324,6 +373,8 @@ namespace eval ::document {
     }
 
     proc comments-disqus {} {
+        upvar 1 input input
+
         set disqusShortname [config {comments disqusShortname} {}]
         set result [string map [list {%disqusShortname} $disqusShortname] {
             <div id="disqus_thread"></div>

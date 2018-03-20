@@ -8,11 +8,13 @@ proc config {key {default %NULL%}} {
 }
 
 proc setting {key {default %NULL%}} {
-    return [file-setting $::input $key $default]
+    upvar 1 input input
+    return [file-setting $input $key $default]
 }
 
 proc article-setting {key {default %NULL%}} {
-    return [file-setting $::articleInput $key $default]
+    upvar 1 articleInput articleInput
+    return [file-setting $articleInput $key $default]
 }
 
 proc link-path {path {absolute 0}} {
@@ -27,7 +29,8 @@ proc link-path {path {absolute 0}} {
         }
         set link [url-join $url $path]
     } else {
-        set link [url-join $::root $path]
+        upvar 1 root root
+        set link [url-join $root $path]
     }
     if {[config prettyURLs 0]} {
         regexp {(.*?/)index.html$} $link _ link
@@ -36,11 +39,13 @@ proc link-path {path {absolute 0}} {
 }
 
 proc rel-link {path title} {
+    upvar 1 root root
     set link [link-path $path 0]
     return "<a href=\"[entities $link]\">[entities $title]</a>"
 }
 
 proc tag-page-link tag {
+    upvar 1 root root
     return [rel-link blog/tags/[slugify $tag] $tag]
 }
 

@@ -37,6 +37,12 @@ namespace eval ::tclssg::interpreter {
             interp alias $interp $alias {} $command
         }
 
+        # Hack: copy the proc [named-args] because we cannot upvar across
+        # interps.
+        interp eval $interp [list proc named-args \
+                                       [info args ::tclssg::utils::named-args] \
+                                       [info body ::tclssg::utils::named-args]]
+
         set sourced {}
         foreach path $::tclssg::templates::paths {
             if {[file isdir $path]} {

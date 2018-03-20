@@ -64,6 +64,10 @@ set procs {
     }
 
     proc input-to-output-path {input args} {
+        named-args {
+            -n                 {n 1}
+            -includeIndexHtml  {includeIndexHtml 1}
+        }
         set n [dict-default-get 1 $args -n]
         set includeIndexHtml [dict-default-get 1 $args -includeIndexHtml]
 
@@ -87,8 +91,11 @@ set procs {
         return $output
     }
 
-    proc template-proc {name arguments template} {
-        uplevel 1 [list proc $name $arguments [parse $template]]
+    proc template-proc {name namedArgs template} {
+        uplevel 1 [list proc \
+                        $name \
+                        args \
+                        "named-args [list $namedArgs]\n[parse $template]"]
     } 
 }
 

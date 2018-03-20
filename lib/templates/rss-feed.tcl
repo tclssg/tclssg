@@ -4,14 +4,24 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 namespace eval ::rss-feed {}
-template-proc ::rss-feed::render {} {<?xml version="1.0" encoding="UTF-8" ?>
+template-proc ::rss-feed::render {
+    -articles       articles
+    -collection     {collection 0}
+    -collectionTop  {collectionTop 1}
+    -input          input
+    -nextPage       nextPage
+    -output         output
+    -pageNumber     {pageNumber 1}
+    -prevPage       prevPage
+    -root           root
+} {<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
 <atom:link href="<%! rss-feed-link %>" rel="self" type="application/rss+xml" />
 
 <title><%! entities [::document::document-title] %></title>
-<link><%! link-path [input-to-output-path $::input] 1 %></link>
+<link><%! link-path [input-to-output-path $input] 1 %></link>
 <description><%! entities [config {rss feedDescription} {}] %></description>
 <language><%! lindex [split [config locale en_US] _] 0 %></language>
 <%! copyright %>
@@ -26,24 +36,30 @@ namespace eval ::rss-feed {
     variable rfc822 {%a, %d %b %Y %H:%M:%S GMT}
 
     proc content {} {
+        upvar 1 articles articles \
+                articleInput articleInput \
+                collectionTop collectionTop
+
         set result {}
-        foreach ::articleInput $::articles {
-            if {$::collectionTop} {
-                set ::collectionTop 0
+        foreach articleInput $articles {
+            if {$collectionTop} {
+                set collectionTop 0
                 continue
             }
-            append result [item]
+            append result [item -articleInput $articleInput]
         }
         return $result
     }
 
-    template-proc item {} {<%
+    template-proc item {
+        -articleInput  articleInput
+    } {<%
         variable rfc822
 
         set title [article-setting title {}]
-        set timestamp [db input get $::articleInput timestamp]
-        set link [link-path [input-to-output-path $::articleInput] 1]
-        set content [db input get $::articleInput cooked]
+        set timestamp [db input get $articleInput timestamp]
+        set link [link-path [input-to-output-path $articleInput] 1]
+        set content [db input get $articleInput cooked]
         %>
         <item>
           <%= $title ne "" ? "<title><!\[CDATA\[$title\]\]></title>" : "" %>

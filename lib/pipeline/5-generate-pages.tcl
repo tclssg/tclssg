@@ -131,9 +131,9 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
             set grouped [list [list $input {*}$extraArticles]]
         }
         set groupCount [llength $grouped]
-        interpreter inject $interp [dict create \
-            collection [expr {[llength $extraArticles] > 0}] \
-            collectionTop 1 \
+        set templateArgs [dict create \
+            -collection [expr {[llength $extraArticles] > 0}] \
+            -collectionTop 1 \
         ]
 
         set pageNumber 1
@@ -149,18 +149,19 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                 $pageNumber == $groupCount ? {} : $nextOutput
             }]
 
-            interpreter inject $interp [dict create \
-                articles $group \
-                prevPage $prevPage \
-                nextPage $nextPage \
-                output $output \
-                input $input \
-                root $root \
-                pageNumber $pageNumber \
-            ]
+            set templateArgs [dict merge $templateArgs [dict create \
+                -articles $group \
+                -input $input \
+                -nextPage $nextPage \
+                -output $output \
+                -pageNumber $pageNumber \
+                -prevPage $prevPage \
+                -root $root \
+            ]]
             db output add $output \
                           $input \
-                          [interp eval $interp $templateProc]
+                          [interp eval $interp \
+                                       [list $templateProc {*}$templateArgs]]
             incr pageNumber
 
             set prevOutput $output
