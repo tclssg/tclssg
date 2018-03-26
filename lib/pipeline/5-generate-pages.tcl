@@ -27,12 +27,20 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                     -template ::document::render \
                     -input $blogIndexInput \
                     -output $blogIndexOutput \
-                    -extraArticles [collection $blogIndexInput blogPost]
+                    -extraArticles [collection $blogIndexInput blogPost] \
+                    -logScript {apply {{input output} {
+                        ::tclssg::log::info "generating blog index page\
+                                             [list $output]"
+                    }}}
             } else {
                 gen -interp $interp \
                     -template ::document::render \
                     -input $row(file) \
-                    -output [templates input-to-output-path $row(file)]
+                    -output [templates input-to-output-path $row(file)] \
+                    -logScript {apply {{input output} {
+                    ::tclssg::log::info "generating [list $output]\
+                                         from [list $input]"
+                }}}
             }
         }
 
@@ -111,6 +119,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
             -template       templateProc
             -extraArticles  {extraArticles {}}
             -paginate       {paginate 1}
+            -logScript      {logScript {}}
         }
 
         set output $baseOutput
@@ -156,6 +165,9 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                 -prevPage $prevPage \
                 -root $root \
             ]]
+            if {$logScript ne {}} {
+                {*}$logScript $input $output
+            }
             db output add $output \
                           $input \
                           [interp eval $interp \
