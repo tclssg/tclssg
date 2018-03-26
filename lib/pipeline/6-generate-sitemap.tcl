@@ -10,10 +10,11 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
 
     proc transform {} {
         if {![db config get {sitemap enable} 0]} return
-        set outputDir [db config get outputDir]
-        set sitemapFile [file join $outputDir sitemap.xml]
-        log::info "writing sitemap to [list $sitemapFile]"
-        utils::write-file $sitemapFile [make-sitemap]
+        log::info {generating sitemap}
+        set sitemap [make-sitemap]
+
+        db input add sitemap {} {} [db config get buildTimestamp]
+        db output add sitemap.xml sitemap $sitemap
     }
 
     # Generate a sitemap for the static website. This requires the setting
