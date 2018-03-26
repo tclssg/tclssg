@@ -25,7 +25,11 @@ namespace eval ::tclssg::pipeline::5-generate-rss {
                 -input $blogIndexInput \
                 -output blog/rss.xml \
                 -extraArticles [collection $blogIndexInput blogPost] \
-                -paginate 0
+                -paginate 0 \
+                -logScript {apply {{input output} {
+                    ::tclssg::log::info "generating blog RSS feed\
+                                         [list $output]"
+                }}}
         }
 
         interp delete $interp
