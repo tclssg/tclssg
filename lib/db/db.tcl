@@ -56,6 +56,7 @@ namespace eval ::tclssg::db {
             lindex            ::lindex
             llength           ::llength
             lrange            ::lrange
+            regexp            ::regexp
         } {
             # Compatibility.
             if {[catch {

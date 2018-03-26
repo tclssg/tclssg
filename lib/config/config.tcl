@@ -45,6 +45,9 @@ namespace eval ::tclssg::config {
         sidebarPostIds
         {sitemap enable}
         sortTagsBy
+        {tidy enable}
+        {tidy options}
+        {tidy path}
         timezone
         url
         websiteTitle
