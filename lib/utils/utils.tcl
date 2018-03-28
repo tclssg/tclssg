@@ -448,6 +448,17 @@ namespace eval ::tclssg::utils {
         set filtered [::struct::list filterfor x $lines {![regexp {^\s*#} $x]}]
         return [join  $filtered \n]
     }
+
+    proc longest-common-list-prefix {xs ys} {
+        set common {}
+        foreach x $xs y $ys {
+            if {$x ne $y} {
+                break
+            }
+            lappend common $x
+        }
+        return $common
+    }
 }
 
 package provide tclssg::utils 0

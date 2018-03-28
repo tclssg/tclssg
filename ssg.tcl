@@ -55,16 +55,36 @@ namespace eval tclssg {
             $::tclssg::debugMode ? {debug} : {info}
         }]
         # This is a hack that depends on the internal structure of the logger.
-        set ::logger::tree::tclssg::prevPrefix {}
+        set ::logger::tree::tclssg::lastSeen {}
         proc ::logger::tree::tclssg::stdoutcmd {level text} {
-            variable prevPrefix
+            namespace path ::tclssg::utils
+            variable lastSeen
 
-            set dt [clock format [clock seconds] \
-                                 -format {%Y-%m-%d %H:%M:%S %Z}]
-            set prefix "$dt \[$level\] "
+            set time [clock seconds]
+            set timestamp [clock format $time -format {%Y-%m-%d %H:%M:%S %Z}]
 
-            puts [expr {$prefix ne $prevPrefix ? $prefix : {}}]$text
-            set prevPrefix $prefix
+            set printPrefix [expr {
+                [dict-default-get {} $lastSeen level] ne $level ||
+                $time - [dict-default-get -1 $lastSeen time] >= 10
+            }]
+
+            # Check that the text is a valid list.
+            if {$printPrefix || [catch {lindex $text end}]} {
+                set prefix "---- $timestamp \[$level\]\n"
+                set output $prefix$text
+
+                dict set lastSeen level $level
+                dict set lastSeen time $time
+            } else {
+                set common [::tclssg::utils::longest-common-list-prefix \
+                                [dict-default-get {} $lastSeen text] \
+                                $text]
+                set len [string length $common]
+                set output [string repeat { } $len][string range $text $len end]
+            }
+
+            puts $output
+            dict set lastSeen text $text
         }
 
         package require tclssg::cli

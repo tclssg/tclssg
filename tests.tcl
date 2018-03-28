@@ -363,6 +363,18 @@ namespace eval ::tclssg::tests {
                                 bar 2}
     } -match regexp -result {foo 1 # Not actually a comment.\n\s+bar 2}
 
+    tcltest::test longest-common-list-prefix-1.1 {simple usage} \
+                -body {
+        list [utils::longest-common-list-prefix {} {}] \
+             [utils::longest-common-list-prefix {} foo] \
+             [utils::longest-common-list-prefix foo {}] \
+             [utils::longest-common-list-prefix foo foo] \
+             [utils::longest-common-list-prefix {foo bar baz} {foo}] \
+             [utils::longest-common-list-prefix {foo bar baz} {foo bar}] \
+             [utils::longest-common-list-prefix {foo bar} {foo bar baz}] \
+             [utils::longest-common-list-prefix foo {foo bar baz}] \
+    } -result {{} {} {} foo foo {foo bar} {foo bar} foo}
+
     # Integration tests.
 
     proc make-temporary-project {} {
