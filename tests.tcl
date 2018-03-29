@@ -27,7 +27,7 @@ namespace eval ::tclssg::tests {
     package require tclssg::templates
     package require tclssg::utils
 
-    package require Markdown
+    package require tclssg::vendor::Markdown
 
     namespace path ::tclssg
     namespace import ::tclssg::utils::*

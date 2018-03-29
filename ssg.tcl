@@ -103,7 +103,7 @@ namespace eval tclssg {
         package require tclssg::templates
         package require tclssg::utils
 
-        package require Markdown
+        package require tclssg::vendor::Markdown
 
         namespace import utils::dict-default-get
 

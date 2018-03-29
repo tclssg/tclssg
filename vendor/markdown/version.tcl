@@ -22,5 +22,4 @@
 # THE SOFTWARE.
 #
 
-package provide Markdown 1.0
-
+package provide tclssg::vendor::Markdown 1.0
