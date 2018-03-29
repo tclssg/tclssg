@@ -4,6 +4,8 @@
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
+package require try
+
 namespace eval ::log-search {
     proc usage {} {
         puts stderr "usage: [file tail [info script]] regexp \[file\
@@ -205,18 +207,18 @@ namespace eval ::log-search {
     proc detect-color-mode {} {
         switch -exact -- $::tcl_platform(platform) {
             unix {
-                if {[catch {
+                try {
                     package require term::ansi::code::ctrl
                     namespace path ::term::ansi::code::ctrl
-                }]} {
+                } on error {} {
                     return none
                 }
                 return ansi
             }
             windows {
-                if {[catch {
+                try {
                     package require twapi
-                }]} {
+                } on error {} {
                     return none
                 }
                 return twapi
@@ -262,12 +264,14 @@ namespace eval ::log-search {
 
         if {$file eq {-}} {
             set ch stdin
-        } elseif {[catch {
-            set ch [open $file r]
-        } result]} {
-            regexp {^.*?: (.*)$} $result _ result
-            puts stderr "error: couldn't open [list $file]: $result"
-            exit 1
+        } else {
+            try {
+                open $file r
+            } on error result {
+                regexp {^.*?: (.*)$} $result _ result
+                puts stderr "error: couldn't open [list $file]: $result"
+                exit 1
+            }
         }
 
         set colorMode [expr {

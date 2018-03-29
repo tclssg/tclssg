@@ -14,6 +14,7 @@ package require sha256
 package require sqlite3
 package require struct
 package require textutil
+package require try
 
 set PROFILE 0
 if {$PROFILE} {
@@ -77,9 +78,12 @@ namespace eval tclssg {
                 dict set lastSeen time $time
             } else {
                 set lastText [dict-default-get {} $lastSeen text]
-                if {[catch {lindex $text 0; lindex $lastText 0}]} {
+                try {
+                    lindex $text 0
+                    lindex $lastText 0
+                } on error {} {
                     set output $text
-                } else {
+                } on ok {} {
                     set common [::tclssg::utils::longest-common-list-prefix \
                                     $lastText \
                                     $text]
@@ -167,15 +171,15 @@ namespace eval tclssg {
 
     # Read the setting $settingName from the website config file in $inputDir.
     proc read-path-setting {inputDir settingName} {
-        if {[catch {
-            set config [::tclssg::config::load $inputDir 0]
-        } errorMessage options]} {
+        try {
+            ::tclssg::config::load $inputDir 0
+        } on error {errorMessage options} {
             if {[regexp {^Cannot read file} $errorMessage]} {
                 return {}
             } else {
                 return -options $options $errorMessage
             }
-        }
+        } on ok config {}
         set value [dict-default-get {} $config $settingName]
         # Make a relative path from the config relative to $inputDir.
         if {$value ne {} && [utils::path-is-relative? $value]} {
@@ -277,17 +281,16 @@ namespace eval tclssg {
         }
 
         # Execute command.
-        if {[catch {
+        try {
                 tclssg cli command $command \
                                    $inputDir \
                                    $outputDir \
                                    $debugDir \
                                    $options
-            } errorMessage]} {
+        } on error errorMessage {
             set errorMessage "\n*** error: $errorMessage ***"
             if {$::tclssg::debugMode} {
-                global errorInfo
-                append errorMessage "\nTraceback:\n$errorInfo"
+                append errorMessage "\nTraceback:\n$::errorInfo"
             }
             error-message $errorMessage
         }

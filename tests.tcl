@@ -53,12 +53,12 @@ namespace eval ::tclssg::tests {
     proc unused-port {} {
         for {set i 0} {$i < 5} {incr i} {
             set port [expr {10000 + int(50000*rand())}]
-            if {![catch {
-                set ch [socket -server {} $port]
-            }]} {
+            try {
+                socket -server {} $port
+            } on ok ch {
                 close $ch
                 return $port
-            }
+            } on error {} {}
         }
         error "couldn't find an unused port after $i attempts"
     }

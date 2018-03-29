@@ -55,17 +55,16 @@ namespace eval ::tclssg::pipeline::7-tidy-html {
     # Execute tidy(1). Ignore exit status 1, which means there were warnings,
     # but return other errors.
     proc tidy {options html} {
-        if {[catch {
+        try {
             exec -ignorestderr -- \
                  [db config get {tidy path} tidy] {*}$options << $html
-        } result opts]} {
-            set errorcode [dict get $opts -errorcode]
-            lassign $errorcode class _ code
-            if {!($class eq {CHILDSTATUS} && $code == 1)} {
+        } trap CHILDSTATUS {result opts} {
+            set code [lindex [dict get $opts -errorcode] 2]
+            if {$code != 1} {
                 return -options $opts $result
             }
             regsub {\nchild process exited abnormally$} $result {} result
-        }
+        } on ok result {}
         return $result
     }
 }

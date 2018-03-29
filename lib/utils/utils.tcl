@@ -227,11 +227,11 @@ namespace eval ::tclssg::utils {
             if {$debug} {
                 log::debug [list $formatScan $date]
             }
-            if {![catch {
-                    set scan [clock scan $date -format $formatScan {*}$options]
-                }]} {
-                # Work around unexpected treatment %Y and %Y-%m dates, see
-                # http://wiki.tcl-lang.org/2525.
+            try {
+                clock scan $date -format $formatScan {*}$options
+            } on ok scan {
+                # Work around unexpected treatment of %Y and %Y-%m dates;
+                # see http://wiki.tcl-lang.org/2525.
                 set resultTimeVal [clock scan [join [list $date $padding] ""] \
                         -format {%Y-%m-%d-%H-%M-%S} {*}$options]
                 set resultFormat $formatStandard
@@ -239,7 +239,7 @@ namespace eval ::tclssg::utils {
                     log::debug match
                     log::debug [clock format $scan {*}$options]
                 }
-            }
+            } on error {} {}
         }
         return [list $resultTimeVal $resultFormat]
     }
@@ -351,13 +351,12 @@ namespace eval ::tclssg::utils {
             return $result
         }
 
-        set error [catch {
-                set content [dict keys $args]
-                set widths [dict values $args]
-        }]
-        if {$error} {
+        try {
+            set content [dict keys $args]
+            set widths [dict values $args]
+        } on error {} {
             return -code error \
-                    {wrong # args: should be "columns {content width ...}"}
+                   {wrong # args: should be "columns {content width ...}"}
         }
 
         # For all columns...

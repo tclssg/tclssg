@@ -59,9 +59,9 @@ namespace eval ::tclssg::db {
             regexp            ::regexp
         } {
             # Compatibility.
-            if {[catch {
+            try {
                 tclssg-db function $name -deterministic $script
-            }]} {
+            } on error {} {
                 tclssg-db function $name $script
             }
         }

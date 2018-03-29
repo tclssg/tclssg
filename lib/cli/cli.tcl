@@ -148,10 +148,9 @@ namespace eval ::tclssg::cli::command {
             }]
             log::info "running command [list $preparedCommand]"
             set exitStatus 0
-            set error [catch {
+            try {
                 exec -ignorestderr -- {*}$preparedCommand >@ stdout 2>@ stderr
-            } msg options]
-            if {$error} {
+            } on error {msg options} {
                 lassign [dict get $options -errorcode] errorCode _ exitStatus
                 if {$errorCode ne {CHILDSTATUS}} {
                     return -options $options $msg
