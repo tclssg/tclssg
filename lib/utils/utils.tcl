@@ -8,7 +8,18 @@ namespace eval ::tclssg::utils {
     namespace ensemble create
     namespace path ::tclssg
 
-    interp alias {} ::tclssg::utils::read-file {} ::fileutil::cat
+    proc read-file args {
+        if {[llength $args] == 0} {
+            error "wrong # args: should be \"read-file ?options? path"
+        }
+        set path [lindex $args end]
+        set options [lrange $args 0 end-1]
+        set ch [open $path r]
+        fconfigure $ch {*}$options
+        set data [read $ch]
+        close $ch
+        return $data
+    }
     interp alias {} ::tclssg::utils::write-file {} ::fileutil::writeFile
 
     proc normalize-relative-path path {

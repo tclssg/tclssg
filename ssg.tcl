@@ -173,12 +173,8 @@ namespace eval tclssg {
     proc read-path-setting {inputDir settingName} {
         try {
             ::tclssg::config::load $inputDir 0
-        } on error {errorMessage options} {
-            if {[regexp {^Cannot read file} $errorMessage]} {
-                return {}
-            } else {
-                return -options $options $errorMessage
-            }
+        } trap {POSIX ENOENT} {} - trap {POSIX EISDIR} {} {
+            return {}
         } on ok config {}
         set value [dict-default-get {} $config $settingName]
         # Make a relative path from the config relative to $inputDir.
