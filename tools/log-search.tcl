@@ -77,6 +77,10 @@ namespace eval ::log-search {
         if {[regexp -indices -- {^\s+} $line2 match]} {
             lassign $match _ ws
         }
+        set len [string length $line1]
+        if {$ws >= $len} {
+            append line1 [string repeat { } [expr {$ws + 1 - $len}]]
+        }
         list [string range $line1 0 $ws] [string range $line2 $ws+1 end]
     }
 
