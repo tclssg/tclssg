@@ -73,8 +73,8 @@ namespace eval ::tclssg::config {
                                         moreText
                                         sidebarNote
                                     }]
-            log::info {loaded config file}
-            log::info [::textutil::indent $formatted {    }]
+            log::info "loaded config file \{"
+            log::info [::textutil::indent $formatted {    }]\n\}
         }
         validate $config
         return $config
