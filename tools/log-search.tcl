@@ -16,6 +16,7 @@ namespace eval ::log-search {
         set timestamp {}
         set timestampShown 1
         set retained {}
+        set retain 1
         set matched 0
 
         while {[gets $channelId line] != -1} {
@@ -23,6 +24,15 @@ namespace eval ::log-search {
                 set timestamp $line
                 set timestampShown 0
                 continue
+            }
+
+            if {[regexp {^(?:[^\s].*?|)\{$} $line]} {
+                set retain 0
+            } elseif {[regexp ^\}$ $line]} {
+                set retain 1
+            }
+            if {!$retain} {
+                set retained {}
             }
 
             set prevRetained $retained
