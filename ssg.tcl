@@ -69,18 +69,24 @@ namespace eval tclssg {
             }]
 
             # Check that the text is a valid list.
-            if {$printPrefix || [catch {lindex $text end}]} {
+            if {$printPrefix} {
                 set prefix "---- $timestamp \[$level\]\n"
                 set output $prefix$text
 
                 dict set lastSeen level $level
                 dict set lastSeen time $time
             } else {
-                set common [::tclssg::utils::longest-common-list-prefix \
-                                [dict-default-get {} $lastSeen text] \
-                                $text]
-                set len [string length $common]
-                set output [string repeat { } $len][string range $text $len end]
+                set lastText [dict-default-get {} $lastSeen text]
+                if {[catch {lindex $text 0; lindex $lastText 0}]} {
+                    set output $text
+                } else {
+                    set common [::tclssg::utils::longest-common-list-prefix \
+                                    $lastText \
+                                    $text]
+                    set len [string length $common]
+                    set output [string repeat { } $len]
+                    append output [string range $text $len end]
+                }
             }
 
             puts $output
