@@ -6,7 +6,8 @@
 
 namespace eval ::log-search {
     proc usage {} {
-        puts stderr "usage: [file tail [info script]] regexp \[file\]"
+        puts stderr "usage: [file tail [info script]] regexp \[file\
+                     \[--no-color\]\]"
     }
 
     # Find occurrences of $regexp in lines read from $channelId -- with prefix
@@ -227,25 +228,25 @@ namespace eval ::log-search {
     }
 
     proc main {argv} {
-        variable colorMode
+        if {$argv in {-h -help --help}} {
+            usage
+            exit 0
+        }
 
         switch -exact -- [llength $argv] {
             1 {
                 lassign $argv regexp
-                set ch stdin
+                set file -
             }
             2 {
                 lassign $argv regexp file
-                if {[file isfile $file]} {
-                    set ch [open $file r]
-                } elseif {$file eq {-}} {
-                    set ch stdin
-                } else {
-                    puts stderr "error: [list $file] [expr {
-                        [file isdir $file] ?
-                        "is a directory" :
-                        "doesn't exist or can't be opened"
-                    }]"
+            }
+            3 {
+                lassign $argv regexp file noColor
+                if {$noColor ne {--no-color}} {
+                    puts stderr "error: expected \"--no-color\",\
+                                 but got \"$noColor\""
+                    usage
                     exit 1
                 }
             }
@@ -254,7 +255,27 @@ namespace eval ::log-search {
                 exit 1
             }
         }
-        set matched [search $regexp $ch [detect-color-mode]]
+        if {[file isdir $file]} {
+            puts stderr "error: path [list $file] is a directory"
+            exit 1
+        }
+
+        if {$file eq {-}} {
+            set ch stdin
+        } elseif {[catch {
+            set ch [open $file r]
+        } result]} {
+            regexp {^.*?: (.*)$} $result _ result
+            puts stderr "error: couldn't open [list $file]: $result"
+            exit 1
+        }
+
+        set colorMode [expr {
+            [info exists noColor] ? {none} : [detect-color-mode]
+        }]
+
+        set matched [search $regexp $ch $colorMode]
+
         exit [expr {!$matched}]
     }
 }
