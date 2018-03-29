@@ -375,6 +375,52 @@ namespace eval ::tclssg::tests {
              [utils::longest-common-list-prefix foo {foo bar baz}] \
     } -result {{} {} {} foo foo {foo bar} {foo bar} foo}
 
+    # Tool tests.
+
+    tcltest::test log-search-1.1 {usage message} \
+                -body {
+        tcl tools/log-search.tcl --help 2>@1
+    } -result {usage: log-search.tcl regexp [file [--no-color]]}
+
+    tcltest::test log-search-1.2 {error message} \
+                -cleanup {unset result} \
+                -body {
+        catch {
+            tcl tools/log-search.tcl {} /tmp/xyz/this/should/not/exist 2>@1
+        } result
+        set result
+    } -match glob -result {*couldn't open /tmp/xyz/this/should/not/exist*}
+
+    tcltest::test log-search-2.1 {line retention} \
+                -body {
+        tcl tools/log-search.tcl {} - --no-color \
+            << "foo bar baz\n        yup\n    qux hey"
+    } -result "foo bar baz\nfoo bar yup\nfoo qux hey"
+
+    tcltest::test log-search-3.1 {regexp match} \
+                -body {
+        tcl tools/log-search.tcl blo+g - --no-color \
+            << "1 foo\n  bar blog.md\n2 hello\n3.\n   qux blog.html\n4 ?\n5 !"
+    } -result "1 bar blog.md\n3. qux blog.html"
+
+    tcltest::test log-search-4.1 {braces 1} \
+                -body {
+        tcl tools/log-search.tcl key - --no-color \
+            << "hi \{\n  a b\n    key value\n\}"
+    } -result {    key value}
+
+    tcltest::test log-search-4.2 {braces 2} \
+                -body {
+        tcl tools/log-search.tcl key - --no-color \
+            << "\{\n  a b\n    key value\n\}"
+    } -result {    key value}
+
+    tcltest::test log-search-5.1 color \
+                -constraints unix \
+                -body {
+        tcl tools/log-search.tcl {} << "a b\n  c"
+    } -match regexp -result {(?:\x1b\[2m)a[^\n]+?(?:\x1b\[39m)(?:\x1b\[22m)?c}
+
     # Integration tests.
 
     proc make-temporary-project {} {
