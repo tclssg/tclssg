@@ -15,8 +15,11 @@ namespace eval ::tclssg::pipeline::1-load-data-files {
                 if {[regexp {^/?data} $id]} {
                     log::info "reading data file [list $file]"
                     set data [utils::read-file -translation binary $file]
-                    db input add $id $data {} [file mtime $file]
-                    db tags add $id type:data
+                    db input add \
+                        -type data \
+                        -file $id \
+                        -raw $data \
+                        -timestamp [file mtime $file]
                 }
             }
         }

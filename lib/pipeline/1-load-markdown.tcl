@@ -74,14 +74,15 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
                                         1-load-markdown \
                                         [list input $id]]
 
-            db input add $id \
-                         $raw \
-                         $cooked \
-                         [lindex $timestamp 0]
+            db input add \
+                -type page \
+                -file $id \
+                -raw $raw \
+                -cooked $cooked \
+                -timestamp [lindex $timestamp 0]
             db tags add $id \
                         [dict-default-get {} $frontmatter tags]
             dict unset frontmatter tags
-            db tags add $id type:page
 
             tclssg debugger save-intermediate $file \
                                               frontmatter-1-final.tcl \

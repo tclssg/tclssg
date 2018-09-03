@@ -19,6 +19,7 @@ namespace eval ::tclssg::db {
             PRAGMA foreign_keys = ON;
             CREATE TABLE input(
                 file TEXT PRIMARY KEY,
+                type TEXT,
                 raw BLOB,
                 cooked BLOB,
                 timestamp INTEGER
@@ -89,13 +90,20 @@ namespace eval ::tclssg::db::input {
     namespace export *
     namespace ensemble create
 
-    proc add {file raw cooked timestamp} {
+    proc add args {
+        tclssg::utils::named-args {
+            -file       file
+            -type       type
+            -raw        {raw {}}
+            -cooked     {cooked {}}
+            -timestamp  timestamp
+        }
         if {![string is integer -strict $timestamp]} {
             ::set timestamp 0
         }
         tclssg-db eval {
-            INSERT INTO input(file, raw, cooked, timestamp)
-            VALUES (:file, :raw, :cooked, :timestamp);
+            INSERT INTO input(file, type, raw, cooked, timestamp)
+            VALUES (:file, :type, :raw, :cooked, :timestamp);
         }
         return $file
     }
@@ -127,6 +135,13 @@ namespace eval ::tclssg::db::input {
             SELECT %s FROM input WHERE file = :file;
         } $field]] result
         return $result
+    }
+
+    proc list type {
+        tclssg-db eval {
+            SELECT file FROM input
+            WHERE type = :type;
+        }
     }
 }
 
@@ -268,7 +283,8 @@ namespace eval ::tclssg::db::tags {
 
     proc get file {
         tclssg-db eval {
-            SELECT tag FROM tags WHERE file = :file;
+            SELECT tag FROM tags
+            WHERE file = :file;
         }
     }
 

@@ -13,7 +13,10 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
         log::info {generating sitemap}
         set sitemap [make-sitemap]
 
-        db input add sitemap {} {} [db config get buildTimestamp]
+        db input add \
+            -type sitemap \
+            -file sitemap \
+            -timestamp [db config get buildTimestamp]
         db output add sitemap.xml sitemap $sitemap
     }
 
@@ -49,8 +52,8 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
                 SELECT output.file,
                        output.input as input
                 FROM output
-                JOIN tags ON output.input = tags.file
-                WHERE tags.tag = 'type:page'
+                JOIN input ON output.input = input.file
+                WHERE input.type = 'page'
                 ORDER BY output.file ASC;
             } row {
                 if {![db settings preset-get $row(input) showInCollections 1]} {

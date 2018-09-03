@@ -19,8 +19,10 @@ namespace eval ::tclssg::pipeline::1-load-presets {
                         error [list forbidden setting {"presets"} in preset \
                                     file $file]
                     }
-                    db input add $id {} {} [file mtime $file]
-                    db tags add $id type:preset
+                    db input add \
+                        -type preset \
+                        -file $id \
+                        -timestamp [file mtime $file]
                     dict for {key value} $settings {
                         db settings set $id $key $value
                     }
