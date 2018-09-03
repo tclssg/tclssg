@@ -1,7 +1,7 @@
 {
     title {Test page}
     author {Jane Bloggs}
-    blogPost 1
+    presets blog
     tags {test {a long tag with spaces}}
     date 2014-01-02
     # This is a comment.

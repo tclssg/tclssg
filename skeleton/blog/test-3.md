@@ -1,6 +1,6 @@
 {
     title {Test page 3}
-    blogPost 1
+    presets blog
     author {It's a secret.}
     showAuthor 0
     tags {test {another thing}}

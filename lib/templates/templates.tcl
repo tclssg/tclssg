@@ -48,19 +48,7 @@ set procs {
     }
 
     proc file-setting {file key {default %NULL%}} {
-        set blogDefaults [db config get blogDefaults {}]
-        set pageDefaults [db config get pageDefaults {}]
-        set value [db settings get $file $key]
-        if {$value ne {%NULL%}} {
-            return $value
-        }
-        if {[db settings get $file blogPost 0]} {
-            set value [dict-default-get %NULL% $blogDefaults $key]
-            if {$value ne {%NULL%}} {
-                return $value
-            }
-        }
-        return [dict-default-get $default $pageDefaults $key]
+        return [db settings preset-get $file $key $default]
     }
 
     proc input-to-output-path {input args} {

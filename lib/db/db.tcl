@@ -75,7 +75,7 @@ namespace eval ::tclssg::db {
         uplevel 1 [list tclssg-db transaction $script]
     }
 
-    # Helper procs to use as function in SQLite.
+    # Helper procs to use as functions in SQLite.
     proc dict-path-exists {dict path} {
         return [dict exists $dict {*}$path]
     }
@@ -204,11 +204,7 @@ namespace eval ::tclssg::db::settings {
         }
     }
 
-    proc get {file key {default %NULL%}} {
-        return [mget [list $file] $key $default]
-    }
-
-    proc mget {files key {default %NULL%}} {
+    proc raw-mget {files key {default %NULL%}} {
         ::set i 0
         ::set vars {}
         foreach file $files {
@@ -238,6 +234,19 @@ namespace eval ::tclssg::db::settings {
             ) AS result
         } $fileValues $ordering] row {
             return $row(result)
+        }
+    }
+
+    proc preset-get {file key {default %NULL%}} {
+        tclssg-db transaction {
+            ::set files [list $file]
+            foreach preset [raw-mget [list $file] presets {}] {
+                lappend files presets/$preset
+            }
+            lappend files presets/default
+
+            ::set value [raw-mget $files $key $default]
+            return $value
         }
     }
 }

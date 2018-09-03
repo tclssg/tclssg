@@ -1,0 +1,8 @@
+blogPost 1
+showUserComments 1
+showSidebarNote 1
+moreText {(<a href="$link">read more</a>)}
+sidebarNote {
+    <h3>About</h3>
+    This is the blog of the sample Tclssg project.
+}

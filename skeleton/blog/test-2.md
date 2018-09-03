@@ -1,7 +1,7 @@
 {
     title {Test page 2}
     author {Joe Bloggs}
-    blogPost 1
+    presets blog
     tags {test something}
     date 2014-03-04
     modified 2018-03-09

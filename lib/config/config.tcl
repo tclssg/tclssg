@@ -11,7 +11,6 @@ namespace eval ::tclssg::config {
 
     variable schema {
         abbreviate
-        blogDefaults
         blogPostsPerFile
         charset
         {comments disqusShortname}
@@ -34,7 +33,6 @@ namespace eval ::tclssg::config {
         maxSidebarLinks
         maxTagCloudTags
         outputDir
-        pageDefaults
         prettyURLs
         {rss enable}
         {rss feedDescription}

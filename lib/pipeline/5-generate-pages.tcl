@@ -86,25 +86,29 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
     }
 
     proc collection {index setting {filter 1}}  {
-        set posts [db eval {
+        set posts {}
+        db eval {
             SELECT input.file FROM input
-            JOIN settings ON settings.file = input.file
-            WHERE settings.key = :setting AND
-                  settings.value = '1' AND
+            JOIN tags ON tags.file = input.file
+            WHERE tags.tag = 'type:markdown' AND
                   input.file <> :index
             ORDER BY input.timestamp DESC;
-        }]
+        } row {
+            if {[db settings preset-get $row(file) $setting 0]} {
+                lappend posts $row(file)
+            }
+        }
         if {!$filter} {
             return $posts
         }
 
         # Rather than filter for showInCollections in the query, we
-        # use [templates file-setting] to read the showInCollections
+        # use [db settings preset-get] to read the showInCollections
         # setting. This ensures fallback to the appropriate default
         # values.
         set filtered {}
         foreach post $posts {
-            if {[templates file-setting $post showInCollections 1]} {
+            if {[db settings preset-get $post showInCollections 1]} {
                 lappend filtered $post
             }
         }

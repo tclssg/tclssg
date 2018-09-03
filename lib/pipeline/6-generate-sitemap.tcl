@@ -47,22 +47,24 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
             # Exclude from the sitemap pages that are hidden from collections.
             db eval {
                 SELECT output.file,
-                       ifnull(mtime.value, ctime.value) as t
+                       output.input as input
                 FROM output
                 JOIN tags ON output.input = tags.file
-                LEFT JOIN settings as ctime ON output.input = ctime.file AND
-                                               ctime.key = 'timestamp'
-                LEFT JOIN settings as mtime ON output.input = mtime.file AND
-                                               mtime.key = 'modifiedTimestamp'
                 WHERE tags.tag = 'type:markdown'
                 ORDER BY output.file ASC;
             } row {
-                if {![templates file-setting $row(file) showInCollections 1]} {
+                if {![db settings preset-get $row(input) showInCollections 1]} {
                     continue
                 }
+
+                set t [db settings preset-get $row(input) modifiedTimestamp]
+                if {$t eq {%NULL%}} {
+                    set t [db settings preset-get $row(input) timestamp]
+                }
+
                 set lastmod {}
-                if {$row(t) ne {%NULL%}} {
-                    lassign $row(t) sec format
+                if {$t ne {%NULL%}} {
+                    lassign $t sec format
                     set lastmod "\n  <lastmod>[clock format $sec \
                                  -format $format]</lastmod>"
                 }

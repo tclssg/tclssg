@@ -1,6 +1,6 @@
 {
     title Blog
-    blogPost 1
+    presets blog
     showInSidebarLinks 0
     showArticleTitle 1
     showPostTags 0
