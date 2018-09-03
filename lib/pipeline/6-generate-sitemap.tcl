@@ -50,7 +50,7 @@ namespace eval ::tclssg::pipeline::6-generate-sitemap {
                        output.input as input
                 FROM output
                 JOIN tags ON output.input = tags.file
-                WHERE tags.tag = 'type:markdown'
+                WHERE tags.tag = 'type:page'
                 ORDER BY output.file ASC;
             } row {
                 if {![db settings preset-get $row(input) showInCollections 1]} {

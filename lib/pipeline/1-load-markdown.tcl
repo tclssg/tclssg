@@ -81,7 +81,7 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
             db tags add $id \
                         [dict-default-get {} $frontmatter tags]
             dict unset frontmatter tags
-            db tags add $id type:markdown
+            db tags add $id type:page
 
             tclssg debugger save-intermediate $file \
                                               frontmatter-1-final.tcl \

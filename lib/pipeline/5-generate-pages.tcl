@@ -3,7 +3,7 @@
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-# Generate HTML output from every input in the DB with the "type:markdown" tag.
+# Generate HTML output from every input in the DB with the "type:page" tag.
 namespace eval ::tclssg::pipeline::5-generate-pages {
     namespace path ::tclssg
 
@@ -19,7 +19,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         db eval {
             SELECT input.file FROM input
             JOIN tags ON tags.file = input.file
-            WHERE tags.tag = 'type:markdown'
+            WHERE tags.tag = 'type:page'
             ORDER BY input.timestamp DESC;
         } row {
             if {$row(file) eq $blogIndexInput} {
@@ -90,7 +90,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         db eval {
             SELECT input.file FROM input
             JOIN tags ON tags.file = input.file
-            WHERE tags.tag = 'type:markdown' AND
+            WHERE tags.tag = 'type:page' AND
                   input.file <> :index
             ORDER BY input.timestamp DESC;
         } row {
