@@ -129,14 +129,17 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         set output $baseOutput
         set root [root-path $output]
 
-        if {$paginate} {
+        if {$paginate && [llength $extraArticles] > 0} {
             set blogPostsPerFile [db config get blogPostsPerFile 0xFFFF]
-            set grouped [utils::group-by $blogPostsPerFile $extraArticles]
-            set topGroup [list $input {*}[lindex $grouped 0]]
-            if {$grouped eq {}} {
-                set grouped [list $topGroup]
-            } else {
-                lset grouped 0 $topGroup
+            if {!([string is integer -strict $blogPostsPerFile] &&
+                  $blogPostsPerFile >= 1)} {
+                error "blogPostsPerFile must be an integer >= 1;\
+                       got \"$blogPostsPerFile\""
+            }
+            set groupedExtras [utils::group-by $blogPostsPerFile $extraArticles]
+            set grouped {}
+            foreach extrasGroup $groupedExtras {
+                lappend grouped [list $input {*}$extrasGroup]
             }
         } else {
             set grouped [list [list $input {*}$extraArticles]]
@@ -169,6 +172,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                 -prevPage $prevPage \
                 -root $root \
             ]]
+
             if {$logScript ne {}} {
                 {*}$logScript $input $output
             }
