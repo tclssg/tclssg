@@ -26,7 +26,7 @@ template-proc ::document::render {
     <% } %>
 
     <% if {[config url] ne {%NULL%}} { %>
-      <link rel="canonical" href="<%! file join [config url] $output %>">
+      <link rel="canonical" href="<%! url-join [config url] $output %>">
     <% } %>
     <% if {$prevPage ne {}} { %>
       <link rel="prev" href="<%! entities $prevPage %>">
