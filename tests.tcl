@@ -16,6 +16,7 @@ namespace eval ::tclssg::tests {
     package require http
     package require logger
     package require sqlite3
+    package require try
 
     package require tclssg::cli
     package require tclssg::config
