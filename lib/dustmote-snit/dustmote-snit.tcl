@@ -9,7 +9,7 @@ package require snit      2
 package require textutil  0-2
 
 namespace eval ::dmsnit {
-    variable version 0.12.0
+    variable version 0.13.0
 }
 package provide dmsnit $::dmsnit::version
 
