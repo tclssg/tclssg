@@ -4,7 +4,7 @@
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-package require try
+package require try 1
 
 namespace eval ::log-search {
     proc usage {} {
@@ -208,7 +208,7 @@ namespace eval ::log-search {
         switch -exact -- $::tcl_platform(platform) {
             unix {
                 try {
-                    package require term::ansi::code::ctrl
+                    package require term::ansi::code::ctrl 0-2
                     namespace path ::term::ansi::code::ctrl
                 } on error {} {
                     return none
@@ -217,7 +217,7 @@ namespace eval ::log-search {
             }
             windows {
                 try {
-                    package require twapi
+                    package require twapi 4
                 } on error {} {
                     return none
                 }

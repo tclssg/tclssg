@@ -3,9 +3,9 @@
 # Copyright (c) 2013, 2014, 2015, 2016, 2017 dbohdan.
 # the terms of the MIT license. See the file LICENSE for details.
 
-package require fileutil
-package require struct
-package require tcltest
+package require fileutil  1
+package require struct    2
+package require tcltest   2
 
 namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $argv0/___]]]
@@ -13,10 +13,10 @@ namespace eval ::tclssg::tests {
     lappend ::auto_path $path
     namespace eval ::tclssg [list variable path $path]
 
-    package require http
-    package require logger
-    package require sqlite3
-    package require try
+    package require http     2
+    package require logger   0-2
+    package require sqlite3  3
+    package require try      1
 
     package require tclssg::cli
     package require tclssg::config

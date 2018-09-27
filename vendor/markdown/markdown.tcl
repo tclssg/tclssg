@@ -22,7 +22,7 @@
 # THE SOFTWARE.
 #
 
-package require textutil
+package require textutil 0-2
 
 ## \file
 # \brief Functions for converting markdown to HTML.

@@ -181,7 +181,7 @@ namespace eval ::tclssg::cli::command {
 
         set websiteConfig [config::load $inputDir]
 
-        package require ftp
+        package require ftp 2
         global errorInfo
         set conn [
             ::ftp::Open \
@@ -243,7 +243,7 @@ namespace eval ::tclssg::cli::command {
                                           port]
         set verbose [expr {{--verbose} in $options}]
 
-        package require dmsnit
+        package require dmsnit 0-2
 
         set httpd [::dmsnit::httpd create %AUTO%]
         $httpd configure \

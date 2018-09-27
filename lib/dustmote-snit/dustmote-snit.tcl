@@ -2,11 +2,11 @@
 # DustMote HTTP server originally developed by Harold Kaplan
 # (https://wiki.tcl-lang.org/4333). Modified by dbohdan.
 # This code is in the public domain.
-package require Tcl 8.5
-package require fileutil
-package require ncgi
-package require snit 2
-package require textutil
+package require Tcl       8.5
+package require fileutil  1
+package require ncgi      1
+package require snit      2
+package require textutil  0-2
 
 namespace eval ::dmsnit {
     variable version 0.12.0

@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 
-package require fileutil
+package require fileutil 1
 
 proc file-structure file {
     set nl 1
