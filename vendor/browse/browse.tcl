@@ -176,4 +176,4 @@ namespace eval ::browse {
 # ### ######### ###########################
 # Ready
 
-package provide browse 0
+package provide tclssg::vendor::browse 0

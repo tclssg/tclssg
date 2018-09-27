@@ -225,7 +225,7 @@ namespace eval ::tclssg::cli::command {
     proc open {inputDir outputDir {debugDir {}} {options {}}} {
         set websiteConfig [config::load $inputDir]
 
-        package require browse
+        package require tclssg::vendor::browse
         ::browse::url [file rootname [file join $outputDir index.md]].html
     }
 
@@ -264,7 +264,7 @@ namespace eval ::tclssg::cli::command {
         }
         $httpd serve
         if {{--browse} in $options} {
-            package require browse
+            package require tclssg::vendor::browse
             ::browse::url "http://$host:$port/"
         }
         vwait [$httpd wait-var-name]
