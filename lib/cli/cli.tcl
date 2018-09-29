@@ -53,7 +53,7 @@ namespace eval ::tclssg::cli::command {
     proc init {inputDir outputDir {debugDir {}} {options {}}} {
         allow-options {} $options
 
-        utils::copy-files skeleton $inputDir ask
+        utils::copy-files [file join $::tclssg::path skeleton] $inputDir ask
     }
 
     proc build {inputDir outputDir {debugDir {}} {options {}}} {
@@ -119,7 +119,7 @@ namespace eval ::tclssg::cli::command {
         }
         foreach {dir descr} $updateSourceDirs {
             log::info "updating $descr"
-            utils::copy-files [file join skeleton $dir] \
+            utils::copy-files [file join $::tclssg::path skeleton $dir] \
                               [file join $inputDir $dir] \
                               $overwriteMode
         }
