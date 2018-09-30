@@ -225,12 +225,18 @@ namespace eval tclssg {
 
         # Version.
         set currentPath [pwd]
-        catch {
-            cd $::tclssg::path
-            if {[file isdir [file join $::tclssg::path .git]]} {
-                append ::tclssg::version \
-                       " (commit [string range [exec git rev-parse HEAD] 0 9])"
+
+        cd $::tclssg::path
+        if {[file tail [pwd]] eq {app} &&
+            [file isfile ../git-commit]} {
+            set commit [fileutil::cat ../git-commit]
+        } else {
+            catch {
+                set commit [exec git rev-parse HEAD]
             }
+        }
+        if {[info exists commit]} {
+            append ::tclssg::version " (commit [string range $commit 0 9])"
         }
         cd $currentPath
 
