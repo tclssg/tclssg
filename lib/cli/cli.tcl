@@ -243,7 +243,7 @@ namespace eval ::tclssg::cli::command {
                                           port]
         set verbose [expr {{--verbose} in $options}]
 
-        package require dmsnit 0.13
+        package require dmsnit 0.14
 
         set httpd [::dmsnit::httpd create %AUTO%]
         $httpd configure \

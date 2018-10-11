@@ -9,7 +9,7 @@ package require snit      2
 package require textutil  0-2
 
 namespace eval ::dmsnit {
-    variable version 0.13.0
+    variable version 0.14.0
 }
 package provide dmsnit $::dmsnit::version
 
@@ -233,14 +233,19 @@ package provide dmsnit $::dmsnit::version
             return
         }
 
+        foreach varName {dirList fileList} types {d {b c f l p s}} {
+            set $varName [lsort -dictionary \
+                    [glob -directory $path -nocomplain -tails -types $types *]]
+        }
+
         set links {}
-        set pathList [lsort -dictionary \
-                [glob -tails -nocomplain -directory $path *]]
-        foreach url $pathList {
-            if { [file isdir [file join $path $url]] } {
-                append url /
-            }
-            append links "\n            <li><a href=\"$url\">$url</a></li>"
+        foreach dir $dirList {
+            lappend links "\n            <li><a href=\"$dir/\">$dir/</a></li>"
+        }
+        foreach file $fileList {
+            # Skip symlinks to directories.
+            if {$file in $dirList} continue
+            lappend links "\n            <li><a href=\"$file\">$file</a></li>"
         }
 
         puts -nonewline $connectChannel [template::expand {
@@ -259,7 +264,7 @@ package provide dmsnit $::dmsnit::version
                     </ul>
                 </body>
             </html>
-        } $titlePath $links]
+        } $titlePath [join $links]]
         $self clean-up $connectChannel
         $self log "200 $path"
     }
