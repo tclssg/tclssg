@@ -4,12 +4,13 @@
 # This code is in the public domain.
 package require Tcl       8.5
 package require fileutil  1
+package require html      1
 package require ncgi      1
 package require snit      2
 package require textutil  0-2
 
 namespace eval ::dmsnit {
-    variable version 0.14.0
+    variable version 0.14.1
 }
 package provide dmsnit $::dmsnit::version
 
@@ -238,14 +239,23 @@ package provide dmsnit $::dmsnit::version
                     [glob -directory $path -nocomplain -tails -types $types *]]
         }
 
+        set formatLink {{path {endSlash 0}} {
+            set href [::html::html_entities [::dmsnit::url::encode $path]]
+            set text [::html::html_entities $path]
+            if {$endSlash} {
+                append href /
+                append text /
+            }
+            return "\n            <li><a href=\"$href\">$text</a></li>"
+        }}
         set links {}
         foreach dir $dirList {
-            lappend links "\n            <li><a href=\"$dir/\">$dir/</a></li>"
+            lappend links [apply $formatLink $dir 1]
         }
         foreach file $fileList {
             # Skip symlinks to directories.
             if {$file in $dirList} continue
-            lappend links "\n            <li><a href=\"$file\">$file</a></li>"
+            lappend links [apply $formatLink $file 0]
         }
 
         puts -nonewline $connectChannel [template::expand {
@@ -264,7 +274,7 @@ package provide dmsnit $::dmsnit::version
                     </ul>
                 </body>
             </html>
-        } $titlePath [join $links]]
+        } [::html::html_entities $titlePath] [join $links {}]]
         $self clean-up $connectChannel
         $self log "200 $path"
     }
@@ -448,8 +458,34 @@ namespace eval ::dmsnit::template {
 }
 
 namespace eval ::dmsnit::url {
-    proc ::dmsnit::url::decode str {
+    variable reserved {
+        !  %21
+        #  %23
+        $  %24
+        &  %26
+        '  %27
+        (  %28
+        )  %29
+        *  %2A
+        +  %2B
+        ,  %2C
+        /  %2F
+        :  %3A
+        ;  %3B
+        =  %3D
+        ?  %3F
+        @  %40
+        [  %5B
+        ]  %5D
+    }
+
+    proc decode str {
         return [::ncgi::decode $str]
+    }
+
+    proc encode str {
+        variable reserved
+        return [string map $reserved $str]
     }
 }
 
