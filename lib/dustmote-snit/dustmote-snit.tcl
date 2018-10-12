@@ -10,7 +10,7 @@ package require snit      2
 package require textutil  0-2
 
 namespace eval ::dmsnit {
-    variable version 0.14.1
+    variable version 0.15.0
 }
 package provide dmsnit $::dmsnit::version
 
@@ -375,12 +375,20 @@ package provide dmsnit $::dmsnit::version
 namespace eval ::dmsnit::mime {
     variable mimeDataInverted {
         text/plain {
+            authors
             copying
+            dockerfile
             license
             makefile
             readme
+            todo
+            vagrantfile
+
             .c
+            .cfg
+            .cmd
             .conf
+            .cpp
             .h
             .ini
             .log
@@ -392,8 +400,12 @@ namespace eval ::dmsnit::mime {
             .tcl
             .terms
             .tm
+            .toml
             .txt
             .wiki
+            .yaml
+            .yml
+
             .howto
             .license
             .readme
@@ -418,6 +430,7 @@ namespace eval ::dmsnit::mime {
         application/pdf         .pdf
         image/png               .png
         application/postscript  .ps
+        image/svg+xml           .svg
         application/xhtml       .xhtml
         application/xml         .xml
         application/zip         .zip
