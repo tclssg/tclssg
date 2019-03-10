@@ -18,7 +18,7 @@ template-proc ::rss-feed::render {
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
-<atom:link href="<%! rss-feed-link %>" rel="self" type="application/rss+xml" />
+<atom:link href="<%! rss-feed-path $input $root %>" rel="self" type="application/rss+xml" />
 
 <title><%! entities [::document::document-title] %></title>
 <link><%! link-path [input-to-output-path $input] 1 %></link>
@@ -85,8 +85,21 @@ namespace eval ::rss-feed {
         }]
     }
 
-    proc rss-feed-link {} {
+    proc rss-feed-path {input root} {
+        set tagPageTag [db settings preset-get $input tagPageTag {}]
 
+        if {$tagPageTag eq {}} {
+            return [file join $root blog/rss.xml]
+        }
+
+        set path [input-to-output-path $input]
+
+        if {[db config get prettyURLs 0]} {
+            return [file join $root [file dirname $path] rss.xml]
+        } else {
+            # Get the output path without the page number added to it.
+            return [file join $root [file rootname $path]].xml
+        }
     }
 
     proc last-build-date {} {

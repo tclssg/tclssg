@@ -76,6 +76,10 @@ namespace eval ::tclssg::db {
         uplevel 1 [list tclssg-db transaction $script]
     }
 
+    proc valid-field-name field {
+        return [regexp {^[a-zA-Z0-9]+$} $field]
+    }
+
     # Helper procs to use as functions in SQLite.
     proc dict-path-exists {dict path} {
         return [dict exists $dict {*}$path]
@@ -136,9 +140,9 @@ namespace eval ::tclssg::db::input {
 
     proc set {file field value} {
         # TODO: get rid of format?
-        if {![regexp {^[a-zA-Z0-9]+$} $field]} {
+        if {![::tclssg::db::valid-field-name $field]} {
             # A very simple failsafe.
-            error "wrong field name: \"$field\""
+            error "bad field name: \"$field\""
         }
         tclssg-db eval [format {
             UPDATE input SET %s = :value WHERE file = :file;
@@ -146,8 +150,8 @@ namespace eval ::tclssg::db::input {
     }
 
     proc get {file field} {
-        if {![regexp {^[a-zA-Z0-9]+$} $field]} {
-            error "wrong field name: \"$field\""
+        if {![::tclssg::db::valid-field-name $field]} {
+            error "bad field name: \"$field\""
         }
         lassign [tclssg-db eval [format {
             SELECT %s FROM input WHERE file = :file;
@@ -182,8 +186,8 @@ namespace eval ::tclssg::db::output {
     }
 
     proc set {file field value} {
-        if {![regexp {^[a-zA-Z0-9]+$} $field]} {
-            error "wrong field name: \"$field\""
+        if {![::tclssg::db::valid-field-name $field]} {
+            error "bad field name: \"$field\""
         }
         tclssg-db eval [format {
             UPDATE output SET %s = :value WHERE file = :file;
@@ -191,9 +195,23 @@ namespace eval ::tclssg::db::output {
     }
 
     proc get {file field} {
-        tclssg-db eval {
-            SELECT :field FROM output WHERE file = :file;
+        if {![::tclssg::db::valid-field-name $field]} {
+            error "bad field name: \"$field\""
         }
+
+        tclssg-db eval [format {
+            SELECT %s FROM output WHERE file = :file;
+        } $field]
+    }
+
+    proc get-by-input {input field} {
+        if {![::tclssg::db::valid-field-name $field]} {
+            error "bad field name: \"$field\""
+        }
+
+        tclssg-db eval [format {
+            SELECT %s FROM output WHERE input = :input;
+        } $field]
     }
 }
 

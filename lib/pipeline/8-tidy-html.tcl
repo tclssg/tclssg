@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -8,7 +8,7 @@
 # repository to run this stage. Windows binaries are available from
 # http://binaries.html-tidy.org/. The original HTML Tidy without HTML5 support
 # won't do.
-namespace eval ::tclssg::pipeline::7-tidy-html {
+namespace eval ::tclssg::pipeline::8-tidy-html {
     variable defaultOptions {
         --drop-empty-elements  0
         --indent               1

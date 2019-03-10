@@ -18,9 +18,10 @@ namespace eval ::tclssg::pipeline::6-generate-tag-pages {
         set tags [db::tags::list]
 
         foreach tag $tags {
-            set input [tag-page-path $tag][file ext $tagIndexInput]
+            set input [tag-page-input-path $tag][file ext $tagIndexInput]
 
             db input copy $tagIndexInput $input
+            db input set $input type tag-page
             db input set $input timestamp [db config get buildTimestamp]
             db settings set $input tagPageTag $tag
 
@@ -44,7 +45,7 @@ namespace eval ::tclssg::pipeline::6-generate-tag-pages {
         interp delete $interp
     }
 
-    proc tag-page-path tag {
+    proc tag-page-input-path tag {
         return blog/tags/[utils::slugify $tag]
     }
 

@@ -29,10 +29,10 @@ template-proc ::document::render {
       <link rel="canonical" href="<%! url-join [config url] $output %>">
     <% } %>
     <% if {$prevPage ne {}} { %>
-      <link rel="prev" href="<%! entities $prevPage %>">
+      <link rel="prev" href="<%! entities [link-path $prevPage] %>">
     <% } %>
     <% if {$nextPage ne {}} { %>
-      <link rel="next" href="<%! entities $nextPage %>">
+      <link rel="next" href="<%! entities [link-path $nextPage] %>">
     <% } %>
     <% if {[setting favicon] ne {%NULL%}} { %>
       <link rel="icon" href="<%! file join $root [setting favicon] %>">
@@ -251,17 +251,7 @@ namespace eval ::document {
         upvar 1 input input \
                 root root
 
-        set tagPageTag [setting tagPageTag {}]
-
-        if {$tagPageTag eq {}} {
-            return [file join $root blog/rss.xml]
-        } elseif {[config prettyURLs 0]} {
-            return rss.xml
-        } else {
-            # Get the output path without the page number added to it.
-            set path [input-to-output-path $input]
-            return [file rootname [file tail $path]].xml
-        }
+        return [::rss-feed::rss-feed-path $input $root]
     }
 
     proc navbar-brand {} {
