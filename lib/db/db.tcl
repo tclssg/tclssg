@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -106,6 +106,24 @@ namespace eval ::tclssg::db::input {
             VALUES (:file, :type, :raw, :cooked, :timestamp);
         }
         return $file
+    }
+
+    proc copy {file1 file2} {
+        tclssg-db eval {
+            INSERT INTO input(file, type, raw, cooked, timestamp)
+            SELECT :file2, type, raw, cooked, timestamp FROM input
+            WHERE file = :file1;
+
+            INSERT INTO settings(file, key, value)
+            SELECT :file2, key, value FROM settings
+            WHERE file = :file1;
+
+            INSERT INTO tags(file, tag)
+            SELECT :file2, tag FROM tags
+            WHERE file = :file1;
+        }
+
+        return $file2
     }
 
     proc delete file {

@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -226,7 +226,7 @@ namespace eval ::document {
 
         set pageTitle [setting title {}]
         set showTitle [setting showTitle 1]
-        set tagPageTag {}
+        set tagPageTag [setting tagPageTag {}]
 
         set result {}
         if {($showTitle) && ($pageTitle ne "")} {
@@ -248,9 +248,20 @@ namespace eval ::document {
     }
 
     proc rss-feed {} {
-        upvar 1 root root
+        upvar 1 input input \
+                root root
 
-        return [file join $root blog/rss.xml]
+        set tagPageTag [setting tagPageTag {}]
+
+        if {$tagPageTag eq {}} {
+            return [file join $root blog/rss.xml]
+        } elseif {[config prettyURLs 0]} {
+            return rss.xml
+        } else {
+            # Get the output path without the page number added to it.
+            set path [input-to-output-path $input]
+            return [file rootname [file tail $path]].xml
+        }
     }
 
     proc navbar-brand {} {

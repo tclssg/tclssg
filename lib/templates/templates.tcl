@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -77,6 +77,23 @@ set procs {
             append output .html
         }
         return $output
+    }
+
+    proc output-to-input-path output {
+        set input %NULL%
+        db eval {
+            SELECT input.file FROM input
+        } row {
+            set path [templates input-to-output-path $row(file)]
+            if {$path eq $output} {
+                set input $row(file)
+                break
+            }
+        }
+        if {$input eq {%NULL%}} {
+            set path %NULL%
+        }
+        return [list $input $path]
     }
 
     proc template-proc {name namedArgs template} {

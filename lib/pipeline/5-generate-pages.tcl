@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -67,21 +67,8 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         # Find the blog index by the output rather than the input to account for
         # the possible differences in the file extension and to allow the index
         # to be generated at an earlier stage of the pipeline.
-        set blogIndexInput %NULL%
         set blogIndexOutput [templates input-to-output-path blog/index.foo]
-        db eval {
-            SELECT input.file FROM input
-        } row {
-            set output [templates input-to-output-path $row(file)]
-            if {$output eq $blogIndexOutput} {
-                set blogIndexInput $row(file)
-                break
-            }
-        }
-        if {$blogIndexInput eq {%NULL%}} {
-            set blogIndexOutput %NULL%
-        }
-        return [list $blogIndexInput $blogIndexOutput]
+        return [templates output-to-input-path $blogIndexOutput]
     }
 
     proc collection {index setting {filter 1}}  {

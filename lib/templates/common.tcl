@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -44,9 +44,21 @@ proc rel-link {path title} {
     return "<a href=\"[entities $link]\">[entities $title]</a>"
 }
 
+proc tag-page-path tag {
+    set path blog/tags/[slugify $tag]
+
+    if {[config prettyURLs 0]} {
+        append path /
+    } else {
+        append path .html
+    }
+
+    return $path
+}
+
 proc tag-page-link tag {
     upvar 1 root root
-    return [rel-link blog/tags/[slugify $tag] $tag]
+    return [rel-link [tag-page-path $tag] $tag]
 }
 
 proc blog-post? {} {
