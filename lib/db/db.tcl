@@ -300,6 +300,31 @@ namespace eval ::tclssg::db::settings {
             return $value
         }
     }
+
+    proc inputs-with-true-setting {setting {dropList {}} {filter 1}}  {
+        ::set posts {}
+        tclssg-db eval {
+            SELECT input.file FROM input
+            WHERE input.type = 'page'
+            ORDER BY input.timestamp DESC;
+        } row {
+            if {[preset-get $row(file) $setting 0]} {
+                lappend posts $row(file)
+            }
+        }
+
+        # Rather than filter for showInCollections in the query, we
+        # use [preset-get] to read the showInCollections setting.
+        # This ensures fallback to the appropriate default values.
+        ::set filtered {}
+        foreach post $posts {
+            if {$post ni $dropList &&
+                (!$filter || [preset-get $post showInCollections 1])} {
+                lappend filtered $post
+            }
+        }
+        return $filtered
+    }
 }
 
 namespace eval ::tclssg::db::tags {

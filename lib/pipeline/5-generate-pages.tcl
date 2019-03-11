@@ -26,7 +26,9 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
                     -template ::document::render \
                     -input $blogIndexInput \
                     -output $blogIndexOutput \
-                    -extraArticles [collection $blogIndexInput blogPost] \
+                    -extraArticles [db settings inputs-with-true-setting \
+                                                blogPost \
+                                                [list $blogIndexInput]] \
                     -logScript {apply {{input output} {
                         ::tclssg::log::info "generating blog index page\
                                              [list $output]"
@@ -69,35 +71,6 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         # to be generated at an earlier stage of the pipeline.
         set blogIndexOutput [templates input-to-output-path blog/index.foo]
         return [templates output-to-input-path $blogIndexOutput]
-    }
-
-    proc collection {index setting {filter 1}}  {
-        set posts {}
-        db eval {
-            SELECT input.file FROM input
-            WHERE input.type = 'page' AND
-                  input.file <> :index
-            ORDER BY input.timestamp DESC;
-        } row {
-            if {[db settings preset-get $row(file) $setting 0]} {
-                lappend posts $row(file)
-            }
-        }
-        if {!$filter} {
-            return $posts
-        }
-
-        # Rather than filter for showInCollections in the query, we
-        # use [db settings preset-get] to read the showInCollections
-        # setting. This ensures fallback to the appropriate default
-        # values.
-        set filtered {}
-        foreach post $posts {
-            if {[db settings preset-get $post showInCollections 1]} {
-                lappend filtered $post
-            }
-        }
-        return $filtered
     }
 
     proc gen args {

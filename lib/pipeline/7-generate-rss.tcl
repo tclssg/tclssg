@@ -21,7 +21,9 @@ namespace eval ::tclssg::pipeline::7-generate-rss {
             set lastFeedPost [expr {
                 [db config get {rss posts} 10] - 1
             }]
-            set posts [lrange [collection $blogIndexInput blogPost] \
+            set posts [lrange [db settings inputs-with-true-setting \
+                                           blogPost \
+                                           $blogIndexInput] \
                               0 \
                               $lastFeedPost]
 
