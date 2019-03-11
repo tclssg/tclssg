@@ -14,7 +14,7 @@ namespace eval ::tclssg::pipeline::7-generate-rss {
         set interp 7-generate-rss
         interpreter create $interp
 
-        lassign [blog-index] blogIndexInput
+        lassign [templates blog-index] blogIndexInput
         lassign [tag-index] tagIndexInput
 
         if {$blogIndexInput ne {%NULL%}} {

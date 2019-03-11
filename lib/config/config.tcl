@@ -40,7 +40,6 @@ namespace eval ::tclssg::config {
         {rss tagFeeds}
         {server host}
         {server port}
-        sidebarPostIds
         {sitemap enable}
         sortTagsBy
         tagPages

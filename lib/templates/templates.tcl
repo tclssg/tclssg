@@ -56,8 +56,6 @@ set procs {
             -n                 {n 1}
             -includeIndexHtml  {includeIndexHtml 1}
         }
-        set n [dict-default-get 1 $args -n]
-        set includeIndexHtml [dict-default-get 1 $args -includeIndexHtml]
 
         set output [file rootname $input]
         if {[db config get prettyURLs 0]} {
@@ -80,20 +78,23 @@ set procs {
     }
 
     proc output-to-input-path output {
-        set input %NULL%
-        db eval {
+        foreach input [db eval {
             SELECT input.file FROM input
-        } row {
-            set path [templates input-to-output-path $row(file)]
-            if {$path eq $output} {
-                set input $row(file)
-                break
+        }] {
+            if {[input-to-output-path $input] eq $output} {
+                return [list $input $output]
             }
         }
-        if {$input eq {%NULL%}} {
-            set path %NULL%
-        }
-        return [list $input $path]
+
+        return {%NULL% %NULL%}
+    }
+
+    proc blog-index {} {
+        # Find the blog index by the output rather than the input to account for
+        # the possible differences in the file extension and to allow the index
+        # to be generated at an earlier stage of the pipeline.
+        set blogIndexOutput [input-to-output-path blog/index.foo]
+        return [output-to-input-path $blogIndexOutput]
     }
 
     proc template-proc {name namedArgs template} {

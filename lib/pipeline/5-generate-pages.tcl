@@ -14,7 +14,7 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
         set interp 5-generate-pages
         interpreter create $interp
 
-        lassign [blog-index] blogIndexInput blogIndexOutput
+        lassign [templates blog-index] blogIndexInput blogIndexOutput
 
         db eval {
             SELECT input.file FROM input
@@ -63,14 +63,6 @@ namespace eval ::tclssg::pipeline::5-generate-pages {
             append output .html
         }
         return $output
-    }
-
-    proc blog-index {} {
-        # Find the blog index by the output rather than the input to account for
-        # the possible differences in the file extension and to allow the index
-        # to be generated at an earlier stage of the pipeline.
-        set blogIndexOutput [templates input-to-output-path blog/index.foo]
-        return [templates output-to-input-path $blogIndexOutput]
     }
 
     proc gen args {

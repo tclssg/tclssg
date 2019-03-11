@@ -262,21 +262,24 @@ namespace eval ::document {
 
     proc sidebar-links {} {
         upvar 1 input input
+        upvar 1 root root
 
         # Blog sidebar.
+        set blogIndex [list [blog-index]]
         set sidebar {}
-        if {[sidebar-links?]} {
-            append sidebar "<nav class=\"sidebar-links\"><h3>[mc Posts]</h3><ul>"
 
-            # Limit the number of posts linked to according to maxSidebarLinks.
-            set sidebarPostIds [config sidebarPostIds {}]
-            set maxSidebarLinks [config maxSidebarLinks inf]
+        append sidebar "<nav class=\"sidebar-links\"><h3>[mc Posts]</h3><ul>"
 
-            foreach id [pick-at-most $sidebarPostIds $maxSidebarLinks] {
-                append sidebar [format-link $id]
-            }
-            append sidebar {</ul></nav><!-- sidebar-links -->}
+        set sidebarPosts \
+            [db settings inputs-with-true-setting blogPost $blogIndex]
+
+        foreach input [pick-at-most $sidebarPosts [config maxSidebarLinks]] {
+            set output [input-to-output-path $input -includeIndexHtml 0]
+            set title [file-setting $input title $output]
+            append sidebar <li>[rel-link $output $title]</li>
         }
+        append sidebar {</ul></nav><!-- sidebar-links -->}
+
         return $sidebar
     }
 

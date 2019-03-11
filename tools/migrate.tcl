@@ -297,8 +297,6 @@ proc migrate::config settings {
         removed template
     }
 
-    id sidebarPostIds
-
     group sitemap {
         id enable
     }
