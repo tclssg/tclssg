@@ -7,13 +7,15 @@ namespace eval ::tclssg::pipeline::6-generate-tag-pages {
     namespace path {::tclssg ::tclssg::pipeline::5-generate-pages}
 
     proc transform {} {
+        if {![db config get tagPages 1]} return
+
         set inputDir [db config get inputDir]
         set outputDir [db config get outputDir]
 
         set interp 6-generate-tag-pages
         interpreter create $interp
 
-        lassign [tag-index] tagIndexInput _
+        lassign [tag-index] tagIndexInput
 
         set tags [db::tags::list]
 
