@@ -161,6 +161,8 @@ proc migrate::page {settings {indent {}}} {
 
     id description
 
+    id draft
+
     id favicon
 
     id gridClassPrefix
@@ -186,6 +188,8 @@ proc migrate::page {settings {indent {}}} {
     transform hideFromSidebarLinks showInSidebarLinks negate
     
     transform hideModifiedDate showModifiedDate negate
+
+    transform hidePostTags showPostTags negate
     
     transform hideSidebarLinks showSidebarLinks negate
     
@@ -198,6 +202,8 @@ proc migrate::page {settings {indent {}}} {
     transform hideUserComments showUserComments negate
 
     id locale
+
+    id modified
 
     renamed modifiedDate modified
 
@@ -219,7 +225,11 @@ proc migrate::page {settings {indent {}}} {
 
     id sidebarPosition
 
+    id tags
+
     id title
+
+    renamed updated modified
 
     drain
 
