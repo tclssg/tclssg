@@ -22,7 +22,7 @@ namespace eval migrate::dsl {
 
         try {
             set value [dict get $settings {*}$args]
-        } trap {TCL LOOKUP DICT} _ {
+        } on error {} {
             return -level 2 {}
         }
 
