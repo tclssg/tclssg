@@ -514,8 +514,8 @@ namespace eval ::tclssg::tests {
                 after 10
                 incr i
             }
-            # Give the server approximately one second to start up.
-            if {$i > 100} {
+            # Give the server approximately two seconds to start up.
+            if {$i > 200} {
                 break
             }
         }
