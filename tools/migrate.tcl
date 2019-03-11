@@ -6,15 +6,11 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require fileutil 1
+package require struct 2
 package require try 1
 
 namespace eval migrate {
     namespace export *
-
-    variable location [file dirname [file dirname [file normalize $argv0/___]]]
-
-    lappend ::auto_path [file join $location ../lib]
-    package require tclssg::utils
 }
 
 namespace eval migrate::dsl {
@@ -43,7 +39,7 @@ namespace eval migrate::dsl {
     }
 
     proc comment-out text {
-        upvar 1 indent indent
+        upvar 1 indent indent 
         return "# [join [split $text \n] "\n$indent# "]"
     }
 
@@ -116,7 +112,7 @@ namespace eval migrate::dsl {
             set acc $parentAcc
         }
 
-        add [join $result \n]\n\}
+        add [join $result \n]\n\}\n
     }
 
     proc drain {} {
@@ -178,27 +174,27 @@ proc migrate::page {settings {indent {}}} {
     transform hide showInCollections negate
 
     transform hideArticleTitle showArticleTitle negate
-
+    
     transform hideAuthor showAuthor negate
-
+    
     transform hideDate showDate negate
-
+    
     transform hideFooter showFooter negate
 
     transform hideFromCollections showInCollections negate
-
+    
     transform hideFromSidebarLinks showInSidebarLinks negate
-
+    
     transform hideModifiedDate showModifiedDate negate
-
+    
     transform hideSidebarLinks showSidebarLinks negate
-
+    
     transform hideSidebarNote showSidebarNote negate
-
+    
     transform hideTagCloud showSidebarTagCloud negate
-
+    
     transform hideTitle showTitle negate
-
+    
     transform hideUserComments showUserComments negate
 
     id locale
@@ -227,7 +223,7 @@ proc migrate::page {settings {indent {}}} {
 
     drain
 
-    return [join $acc \n]
+    return [join $acc \n]\n
 }
 
 proc migrate::config settings {
@@ -281,7 +277,7 @@ proc migrate::config settings {
 
     group rss {
         id enable
-
+        
         id feedDescription
 
         removed feedFilename
@@ -309,14 +305,102 @@ proc migrate::config settings {
 
     id websiteTitle
 
-    drain
+    drain 
 
-    return [dict create config [join $acc \n] \
+    return [dict create config [join $acc \n]\n \
                         presets $presets]
 }
 
+proc migrate::missing-keys {reference settings} {
+    set reference [::tclssg::utils::remove-comments $reference]
+    set settings [::tclssg::utils::remove-comments $settings]
+    set missing {}
+
+    dict for {key _} $reference {
+        if {![dict exists $settings $key]} {
+            dict set missing $key [dict get $reference $key]
+        }
+    }
+
+    return $missing
+}
+
+
+namespace eval migrate::main {}
+
+proc migrate::main::skel-path path {
+    variable location
+
+    return [file join $location ../skeleton $path]
+}
+
+proc migrate::main::preset-with-defaults {migrated skel key} {
+    set preset [dict get $migrated presets $key]
+    set missing [missing-keys [dict get $skel $key] $preset]
+    append preset "# The following defaults were added\
+                   from the v2.0 project skeleton.\n"
+    dict for {key value} $missing {
+        append preset [list $key $value]\n
+    }
+
+    return $preset
+}
+
+proc migrate::main::config {src dest} {
+    puts stderr "Migrating config file [list $src/website.conf] to\
+                 [list $dest/website.conf], [list $dest/presets/default]\
+                 and [list $dest/presets/blog]"
+
+    dict set skel default [fileutil::cat [skel-path presets/default]]
+    dict set skel blog [fileutil::cat [skel-path presets/blog]]
+
+    set oldConfig [fileutil::cat $src/website.conf]
+    set migrated [migrate::config $oldConfig]
+
+    fileutil::writeFile $dest/website.conf \
+                        [dict get $migrated config]
+
+    file mkdir $dest/presets
+
+    set presets(default) [preset-with-defaults $migrated $skel default]
+    set presets(blog) [preset-with-defaults $migrated $skel blog]
+
+    fileutil::writeFile $dest/presets/default $presets(default)
+    fileutil::writeFile $dest/presets/blog $presets(blog)
+}
+
+proc migrate::main::pages {src dest} {
+    puts stderr "Migrating pages:"
+
+    set prefix [file join $src pages]
+    foreach path [fileutil::findByPattern $prefix -glob *.md] {
+        set outputPath [file join $dest [fileutil::relative $prefix $path]]
+
+        puts stderr "    [list $path] to [list $outputPath]"
+
+        set page [fileutil::cat $path]
+        lassign [::tclssg::utils::separate-frontmatter $page] \
+                frontmatter \
+                raw
+
+        set new \{\n[migrate::page $frontmatter {    }]\n\}\n$raw
+
+        fileutil::writeFile $outputPath $new
+    }
+}
+
+
 # If this is the main script...
 if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
+    namespace eval migrate::main {
+        namespace path [namespace parent]
+
+        variable location [file dirname [file dirname [file normalize $argv0/___]]]
+        
+        lappend ::auto_path [file join $location ../lib]
+        package require tclssg::utils
+    }
+
     proc [info script] {src dest} {
         if {![file exists $src/website.conf]} {
             puts stderr "website.conf not found in [list $src].\
@@ -329,50 +413,15 @@ if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
             exit 1
         }
 
+        migrate::main::config $src $dest
 
-        puts stderr "Migrating config file [list $src/website.conf] to\
-                     [list $dest/website.conf], [list $dest/presets/default]\
-                     and [list $dest/presets/blog]"
-
-        set configOld [fileutil::cat $src/website.conf]
-        set configNew [migrate::config $configOld]
-
-        fileutil::writeFile $dest/website.conf \
-                            [dict get $configNew config]
-
-        file mkdir $dest/presets
-
-        fileutil::writeFile $dest/presets/default \
-                            [dict get $configNew presets default]
-
-        fileutil::writeFile $dest/presets/blog \
-                            [dict get $configNew presets blog]
-
-
-        puts stderr "Migrating pages:"
-
-        set prefix [file join $src pages]
-        foreach path [fileutil::findByPattern $prefix -glob *.md] {
-            set outputPath [file join $dest [fileutil::relative $prefix $path]]
-
-            puts stderr "    [list $path] to [list $outputPath]"
-
-            set page [fileutil::cat $path]
-            lassign [tclssg::utils::separate-frontmatter $page] \
-                    frontmatter \
-                    raw
-
-            set new \{\n[migrate::page $frontmatter {    }]\n\}\n$raw
-
-            fileutil::writeFile $outputPath $new
-        }
-
+        migrate::main::pages $src $dest
 
         puts stderr "Copying static/"
         file copy $src/static $dest
 
         puts stderr "Copying default templates from project skeleton"
-        file copy [file join $migrate::location ../skeleton/templates] $dest
+        file copy [migrate::main::skel-path templates] $dest
     }
 
     [info script] {*}$argv
