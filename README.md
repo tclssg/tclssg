@@ -2,22 +2,23 @@
 
 [![Build Status](https://travis-ci.org/tclssg/tclssg.svg)](https://travis-ci.org/tclssg/tclssg)
 
-Tclssg is a static site generator with template support written in Tcl for dbohdan.com. It is intended to make it easy to manage a small to medium-sized personal website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.3/) for layout (with Bootstrap theme support) and Tcl code embedded in HTML for templating.
+Tclssg is a static site generator with template support written in Tcl for dbohdan.com. It is intended to make it easy to manage a small to medium-sized website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
 
 Features
 --------
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](https://github.com/tclssg/tclssg/wiki/Templating);
 * Plain old pages and blog posts [1];
+* Footnotes;
 * RSS feeds;
-* SEO and usability features out of the box: site maps, canonical and previous/next links, noindex on collection pages.
+* SEO and usability features out of the box: site maps, canonical and previous/next links, `noindex` on collection pages.
 * Valid HTML5 and CSS level 3 output;
-* Deployment over FTP;
+* Legacy deployment over FTP;
 * Deployment over SCP or other protocols with a [custom deployment command](https://github.com/tclssg/tclssg/wiki/Using-deployCustom);
 * Support for external comment engines (currently: Disqus);
-* Relative links in the HTML output by default that make it suitable for viewing over *file://*;
+* Relative links in the HTML output, which make it suitable for viewing over *file://*;
 * [Reasonably fast](https://github.com/tclssg/tclssg/wiki/Benchmarks);
-* Few dependencies. Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Windows and Mac.
+* Few dependencies. Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Windows, and Mac.
 
 1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
 
@@ -28,26 +29,22 @@ Page screenshot
 Getting started
 ---------------
 
-Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, OS X and Windows 2000/XP/7/8.x.
+Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Windows 2000/XP/7/8.x/10.
 
-To use it you will need Tcl 8.5 or newer, Tcllib and SQLite version 3 bindings for Tcl installed.
+To use it you will need Tcl 8.5 or newer, Tcllib, and SQLite version 3 bindings for Tcl installed.
 
 To install those on **Debian** or **Ubuntu** run the following command:
 
-    sudo apt-get install tcl tcllib libsqlite3-tcl
+    sudo apt install tcl tcllib libsqlite3-tcl
 
 On **Fedora**, **RHEL** or **CentOS**:
 
     su -
     yum install tcl tcllib sqlite-tcl
 
-On **Windows** the easiest option is to install ActiveTcl from [ActiveState](http://activestate.com/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) does not include Tcllib or an SQLite 3 module, so it will not run Tclssg out of the box. After installing ActiveTcl run
+On **Windows 7 and later** the recommended way to run Tclssg is to install [Magicsplat Tcl/Tk for Windows](https://www.magicsplat.com/tcl-installer/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) does not include Tcllib or an SQLite 3 module, so it will not run Tclssg out of the box.
 
-    c:\Tcl\bin\teacup.exe install json
-    c:\Tcl\bin\teacup.exe install ncgi
-    c:\Tcl\bin\teacup.exe install sha256
-
-On **OS X** use [MacPorts](https://www.macports.org/) or install ActiveTcl for Mac. With MacPorts:
+On **macOS** use [MacPorts](https://www.macports.org/) or install ActiveTcl for Mac. With MacPorts:
 
     sudo port install tcllib tcl-sqlite3
 
@@ -64,7 +61,7 @@ or on Windows
     ssg.cmd build --local
     ssg.cmd serve --browse
 
-This will create a new website project in the directory `website/input` based on the default project skeleton, build the website in `website/output` and open the result in your web browser.
+This will create a new website project in the directory `website/` based on the default project skeleton, build the website in `website/output/`, and open the result in your web browser.
 
 Markup
 ------
