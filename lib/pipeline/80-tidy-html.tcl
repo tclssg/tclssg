@@ -8,7 +8,7 @@
 # repository to run this stage. Windows binaries are available from
 # http://binaries.html-tidy.org/. The original HTML Tidy without HTML5 support
 # won't do.
-namespace eval ::tclssg::pipeline::8-tidy-html {
+namespace eval ::tclssg::pipeline::80-tidy-html {
     variable defaultOptions {
         --drop-empty-elements  0
         --indent               1

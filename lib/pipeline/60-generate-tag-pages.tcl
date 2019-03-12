@@ -3,8 +3,8 @@
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-namespace eval ::tclssg::pipeline::6-generate-tag-pages {
-    namespace path {::tclssg ::tclssg::pipeline::5-generate-pages}
+namespace eval ::tclssg::pipeline::60-generate-tag-pages {
+    namespace path {::tclssg ::tclssg::pipeline::50-generate-pages}
 
     proc transform {} {
         if {![db config get tagPages 1]} return
@@ -12,7 +12,7 @@ namespace eval ::tclssg::pipeline::6-generate-tag-pages {
         set inputDir [db config get inputDir]
         set outputDir [db config get outputDir]
 
-        set interp 6-generate-tag-pages
+        set interp 60-generate-tag-pages
         interpreter create $interp
 
         lassign [tag-index] tagIndexInput

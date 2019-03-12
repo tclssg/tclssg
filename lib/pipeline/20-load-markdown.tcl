@@ -1,15 +1,15 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
 # Load Markdown files into the database. Expand Markdown -> Markdown macros in
 # them if macros are enabled.
-namespace eval ::tclssg::pipeline::2-load-markdown {
+namespace eval ::tclssg::pipeline::20-load-markdown {
     namespace path ::tclssg
 
     proc load files {
-        set interp 2-load-markdown
+        set interp 20-load-markdown
         interpreter create $interp
         foreach file $files {
             if {[string tolower [file extension $file]] in {.md .markdown}} {
@@ -86,7 +86,7 @@ namespace eval ::tclssg::pipeline::2-load-markdown {
                                         $frontmatter \
                                         $raw \
                                         $macros \
-                                        2-load-markdown \
+                                        20-load-markdown \
                                         [list input $id]]
 
             db input set $id type page

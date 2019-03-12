@@ -4,7 +4,7 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 # Load settings from the preset files into the database.
-namespace eval ::tclssg::pipeline::1-load-presets {
+namespace eval ::tclssg::pipeline::10-load-presets {
     namespace path ::tclssg
 
     proc load files {

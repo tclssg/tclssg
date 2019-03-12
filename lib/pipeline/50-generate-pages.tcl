@@ -4,14 +4,14 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 # Generate HTML output from every input in the DB with the type "page".
-namespace eval ::tclssg::pipeline::5-generate-pages {
+namespace eval ::tclssg::pipeline::50-generate-pages {
     namespace path ::tclssg
 
     proc transform {} {
         set inputDir [db config get inputDir]
         set outputDir [db config get outputDir]
 
-        set interp 5-generate-pages
+        set interp 50-generate-pages
         interpreter create $interp
 
         lassign [templates blog-index] blogIndexInput blogIndexOutput

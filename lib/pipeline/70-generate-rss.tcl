@@ -3,15 +3,15 @@
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-namespace eval ::tclssg::pipeline::7-generate-rss {
+namespace eval ::tclssg::pipeline::70-generate-rss {
     proc transform {} {
         namespace path {
             ::tclssg
-            ::tclssg::pipeline::5-generate-pages
-            ::tclssg::pipeline::6-generate-tag-pages
+            ::tclssg::pipeline::50-generate-pages
+            ::tclssg::pipeline::60-generate-tag-pages
         }
 
-        set interp 7-generate-rss
+        set interp 70-generate-rss
         interpreter create $interp
 
         lassign [templates blog-index] blogIndexInput
