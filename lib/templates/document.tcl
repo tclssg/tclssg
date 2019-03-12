@@ -52,7 +52,10 @@ template-proc ::document::render {
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="<%! file join $root vendor/bootstrap/css/bootstrap.min.css %>">
     <!-- Bootstrap theme -->
-    <% if {[setting {bootstrap theme}] ne {%NULL%}} { %>
+    <% if {[setting bootstrap] ne {%NULL%}} { %>
+      <% if {[setting {bootstrap version} 3] ne {3}} {
+        error "Bootstrap version must be \"3\""
+      } %>
       <link rel="stylesheet" href="<%! file join $root [setting {bootstrap theme}] %>">
     <% } %>
     <!-- Custom stylesheets, if any -->
