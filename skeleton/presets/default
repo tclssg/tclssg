@@ -10,3 +10,4 @@ navbarItems {
 customCSS {
     tclssg.css
 }
+imagePath /images

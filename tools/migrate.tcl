@@ -333,6 +333,20 @@ proc migrate::missing-keys {reference settings} {
     return $missing
 }
 
+proc migrate::macros raw {
+    set sourced {}
+
+    if {[regsub {<%\s*interp-source footnotes.tcl\s*%>} $raw {} raw]} {
+        lappend sourced footnotes.tcl
+    }
+
+    if {[regsub {<%\s*interp-source img.tcl\s*%>} $raw {} raw]} {
+        lappend sourced img.tcl
+    }
+
+    return [list $raw $sourced]
+}
+
 
 namespace eval migrate::main {}
 
@@ -346,7 +360,7 @@ proc migrate::main::preset-with-defaults {migrated skel key} {
     set preset [dict get $migrated presets $key]
     set missing [missing-keys [dict get $skel $key] $preset]
     append preset "# The following defaults were added\
-                   from the v2.0 project skeleton.\n"
+                   from the current v2.x project skeleton.\n"
     dict for {key value} $missing {
         append preset [list $key $value]\n
     }
@@ -380,6 +394,7 @@ proc migrate::main::config {src dest} {
 proc migrate::main::pages {src dest} {
     puts stderr "Migrating pages:"
 
+    set imgFiles {}
     set prefix [file join $src pages]
     foreach path [fileutil::findByPattern $prefix -glob *.md] {
         set outputPath [file join $dest [fileutil::relative $prefix $path]]
@@ -391,10 +406,29 @@ proc migrate::main::pages {src dest} {
                 frontmatter \
                 raw
 
-        set new \{\n[migrate::page $frontmatter {    }]\n\}\n$raw
+        set newFrontmatter [migrate::page $frontmatter {    }]
+
+        regsub {<%\s*interp-source footnotes.tcl\s*%>} $raw {} raw
+
+        lassign [migrate::macros $raw] raw sourced
+        if {{img.tcl} in $sourced} {
+            lappend imgFiles $outputPath
+        }
+
+        set new \{\n$newFrontmatter\n\}\n$raw
 
         fileutil::writeFile $outputPath $new
     }
+
+    set messages {}
+    if {$imgFiles ne {}} {
+        lappend messages \
+                "img.tcl sourced in the files from which [list $imgFiles] were\
+                 migrated. You may need to adjust the \"imagePath\" page\
+                 setting in the default preset."
+    }
+
+    return $messages
 }
 
 
@@ -421,15 +455,22 @@ if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
             exit 1
         }
 
+        set messages {}
+
         migrate::main::config $src $dest
 
-        migrate::main::pages $src $dest
+        lappend messages {*}[migrate::main::pages $src $dest]
 
         puts stderr "Copying static/"
         file copy $src/static $dest
 
         puts stderr "Copying default templates from project skeleton"
         file copy [migrate::main::skel-path templates] $dest
+
+        puts stderr "\nMessages and warnings:"
+        foreach message $messages {
+            puts stderr "    $message"
+        }
     }
 
     [info script] {*}$argv
