@@ -265,13 +265,13 @@ namespace eval ::document {
         upvar 1 root root
 
         # Blog sidebar.
-        set blogIndex [list [blog-index]]
+        lassign [blog-index] blogIndex
         set sidebar {}
 
         append sidebar "<nav class=\"sidebar-links\"><h3>[mc Posts]</h3><ul>"
 
         set sidebarPosts \
-            [db settings inputs-with-true-setting blogPost $blogIndex]
+            [db settings inputs-with-true-setting blogPost [list $blogIndex]]
 
         foreach input [pick-at-most $sidebarPosts [config maxSidebarLinks]] {
             set output [input-to-output-path $input -includeIndexHtml 0]
