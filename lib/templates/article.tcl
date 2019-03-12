@@ -53,22 +53,27 @@ namespace eval ::article {
         upvar 1 articleInput articleInput \
                 root root
 
-        set title [entities [article-setting title {}]]
-        if {($title eq {}) || ![article-setting showTitle 1] ||
+        set title [article-setting title {}]
+
+        if {$title eq {} ||
+            ![article-setting showTitle 1] ||
             ![article-setting showArticleTitle 1]} {
             return {}
-        } else {
-            set result {<h1 class="page-title">}
-            if {[article-setting blogPost 0] &&
-                $collection &&
-                !$collectionTop} {
-                append result [rel-link [article-output] $title]
-            } else {
-                append result $title
-            }
-            append result {</h1>}
-            return $result            
         }
+
+        set result {<h1 class="page-title">}
+
+        if {[article-setting blogPost 0] &&
+            $collection &&
+            !$collectionTop} {
+            append result [rel-link [article-output] $title]
+        } else {
+            append result [entities $title]
+        }
+
+        append result {</h1>}
+
+        return $result
     }
 
     proc article-output {} {
