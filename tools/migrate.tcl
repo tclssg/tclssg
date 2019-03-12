@@ -467,6 +467,9 @@ if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
         puts stderr "Copying default templates from project skeleton"
         file copy [migrate::main::skel-path templates] $dest
 
+        puts stderr "Copying vendored assets from project skeleton"
+        file copy [migrate::main::skel-path static/vendor] $dest/static/
+
         puts stderr "\nMessages and warnings:"
         foreach message $messages {
             puts stderr "    $message"

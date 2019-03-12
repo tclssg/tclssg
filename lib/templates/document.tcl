@@ -50,9 +50,9 @@ template-proc ::document::render {
     <title><%! document-title %></title>
 
     <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="<%! file join $root vendor/bootstrap/css/bootstrap.min.css %>">
     <!-- Bootstrap theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="<%! file join $root vendor/bootstrap/css/bootstrap-theme.min.css %>">
     <!-- Custom stylesheets, if any -->
     <% foreach cssLink [setting customCSS {}] { %>
       <link href="<%! url-join $root $cssLink %>" rel="stylesheet">
@@ -134,8 +134,8 @@ template-proc ::document::render {
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="<%! file join $root vendor/jquery/jquery.min.js %>"></script>
+    <script src="<%! file join $root vendor/bootstrap/js/bootstrap.min.js %>"></script>
     <%! setting {body bottom} {} %>
 </html>}
 
