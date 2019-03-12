@@ -149,7 +149,22 @@ proc migrate::page {settings {indent {}}} {
         id top
     }
 
-    removed bootstrapTheme
+    transform bootstrapTheme bootstrap {apply {{indent path} {
+        regsub {\$rootDirPath/} \
+               $path \
+               {} \
+               path
+        regsub {external/bootstrap-3.\d.\d-dist} \
+               $path \
+               vendor/bootstrap \
+               path
+
+        set res \n
+        append res "${indent}    version 3\n"
+        append res "${indent}    theme $path\n"
+
+        return $res
+    }} $indent}
 
     id contentColumns
 

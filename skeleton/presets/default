@@ -7,6 +7,10 @@ navbarItems {
     Blog blog/
     Contact contact
 }
+bootstrap {
+    version 3
+    theme vendor/bootstrap/css/bootstrap-theme.min.css
+}
 customCSS {
     tclssg.css
 }

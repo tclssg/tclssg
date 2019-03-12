@@ -52,7 +52,9 @@ template-proc ::document::render {
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="<%! file join $root vendor/bootstrap/css/bootstrap.min.css %>">
     <!-- Bootstrap theme -->
-    <link rel="stylesheet" href="<%! file join $root vendor/bootstrap/css/bootstrap-theme.min.css %>">
+    <% if {[setting {bootstrap theme}] ne {%NULL%}} { %>
+      <link rel="stylesheet" href="<%! file join $root [setting {bootstrap theme}] %>">
+    <% } %>
     <!-- Custom stylesheets, if any -->
     <% foreach cssLink [setting customCSS {}] { %>
       <link href="<%! url-join $root $cssLink %>" rel="stylesheet">
