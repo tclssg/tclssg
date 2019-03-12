@@ -5,11 +5,11 @@
 
 # Load Markdown files into the database. Expand Markdown -> Markdown macros in
 # them if macros are enabled.
-namespace eval ::tclssg::pipeline::1-load-markdown {
+namespace eval ::tclssg::pipeline::2-load-markdown {
     namespace path ::tclssg
 
     proc load files {
-        set interp 1-load-markdown
+        set interp 2-load-markdown
         interpreter create $interp
         foreach file $files {
             if {[string tolower [file extension $file]] in {.md .markdown}} {
@@ -66,30 +66,35 @@ namespace eval ::tclssg::pipeline::1-load-markdown {
                 dict set frontmatter modifiedTimestamp $modified
             }
 
+            db input add \
+                -type page-dummy \
+                -file $id \
+                -raw $raw \
+                -cooked {} \
+                -timestamp [lindex $timestamp 0]
+
+            db tags add $id \
+                        [dict-default-get {} $frontmatter tags]
+            dict unset frontmatter tags
+
+            foreach {key value} $frontmatter {
+                db settings set $id $key $value
+            }
+
             set macros [db config get macros 0]
             set cooked [prepare-content $file \
                                         $frontmatter \
                                         $raw \
                                         $macros \
-                                        1-load-markdown \
+                                        2-load-markdown \
                                         [list input $id]]
 
-            db input add \
-                -type page \
-                -file $id \
-                -raw $raw \
-                -cooked $cooked \
-                -timestamp [lindex $timestamp 0]
-            db tags add $id \
-                        [dict-default-get {} $frontmatter tags]
-            dict unset frontmatter tags
+            db input set $id type page
+            db input set $id cooked $cooked
 
             tclssg debugger save-intermediate $file \
                                               frontmatter-1-final.tcl \
                                               $frontmatter
-            foreach {key value} $frontmatter {
-                db settings set $id $key $value
-            }
         }
     }
 
