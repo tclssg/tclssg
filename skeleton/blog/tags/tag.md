@@ -1,7 +1,7 @@
 {
     title Blog
     presets blog
-    title 0
+    title {}
     visibleIn {
         collections 0
         postTags 0

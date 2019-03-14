@@ -526,16 +526,16 @@ comments {
 enable 0
 }
 customCSS tclssg.css
-show {
-sidebar {
-note 0
-}
-}
 locale en_US
 navbar {
 items {Home / Blog /blog/ Contact /contact.html}
 }
-sidebarPosition right
+sidebar {
+note {
+enable 0
+}
+position right
+}
 }
 
     tcltest::test migrate-1.3 {migrate v1.0.1 blog post settings} \
@@ -556,15 +556,15 @@ sidebarPosition right
 comments {
 enable 1
 }
-show {
-sidebar {
-note 1
-}
-}
 moreText {(<a href="$link">read more</a>)}
-sidebarNote {
+sidebar {
+note {
+content {
 <h3>About</h3>
 This is the blog of the sample Tclssg project.
+}
+enable 1
+}
 }
 }
 

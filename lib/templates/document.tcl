@@ -182,21 +182,21 @@ namespace eval ::document {
         upvar 1 input input
 
         return [expr {
-            [blog-post?] && [setting {show sidebar links} 1]
+            [blog-post?] && [setting {sidebar links} 1]
         }]
     }
 
     proc sidebar-note? {} {
         upvar 1 input input
 
-        return [setting {show sidebar note} 1]
+        return [setting {sidebar note enable} 1]
     }
 
     proc tag-cloud? {} {
         upvar 1 input input
 
         return [expr {
-            [blog-post?] && [setting {show sidebar tagCloud} 1]
+            [blog-post?] && [setting {sidebar tagCloud} 1]
         }]
     }
 
@@ -208,7 +208,7 @@ namespace eval ::document {
         set sidebar_column_width [expr {12 - $content_column_width}]
         set content_class $class_prefix$content_column_width
         set sidebar_class $class_prefix$sidebar_column_width
-        if {[setting sidebarPosition right] eq {left}} {
+        if {[setting {sidebar position} right] eq {left}} {
             append content_class " ${class_prefix}push-$sidebar_column_width"
             append sidebar_class " ${class_prefix}pull-$content_column_width"
         }
@@ -296,7 +296,7 @@ namespace eval ::document {
 
         return [format \
                 {<div class="sidebar-note">%s</div><!-- sidebar-note -->} \
-                [setting sidebarNote ""]]
+                [setting {sidebar note content} {}]]
     }
 
     proc prev-next-link {prevLinkTitle nextLinkTitle} {

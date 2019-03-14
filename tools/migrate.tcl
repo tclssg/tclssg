@@ -224,7 +224,7 @@ proc migrate::page {settings {indent {}}} {
 
     group visibleIn {
         transform hide collections negate
-        
+
         transform hideFromCollections collections negate
 
         transform hideFromSidebar sidebarLinks negate    
@@ -244,14 +244,6 @@ proc migrate::page {settings {indent {}}} {
         transform hideModifiedDate modified negate
 
         transform hidePostTags postTags negate
-        
-        group sidebar {
-            transform hideSidebarLinks links negate
-        
-            transform hideSidebarNote note negate
-        
-            transform hideTagCloud tagCloud negate
-        }
         
         transform hideTitle title negate
     }
@@ -283,9 +275,19 @@ proc migrate::page {settings {indent {}}} {
 
     removed pagePrelude
 
-    id sidebarNote
+    group sidebar {
+        group note {
+            renamed sidebarNote content
 
-    id sidebarPosition
+            transform hideSidebarNote enable negate
+        }
+
+        renamed sidebarPosition position
+
+        transform hideSidebarLinks links negate
+        
+        transform hideTagCloud tagCloud negate
+    }
 
     id tags
 

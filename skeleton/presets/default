@@ -7,9 +7,6 @@ comments {
     }
 }
 show {
-    sidebar {
-        note 0
-    }
     userComments 0
 }
 navbar {
@@ -17,6 +14,11 @@ navbar {
         Home {}
         Blog blog/
         Contact contact
+    }
+}
+sidebar {
+    note {
+        enable 0
     }
 }
 bootstrap {
