@@ -61,12 +61,23 @@ namespace eval ::tclssg::config {
                 [utils::dict-format [utils::obscure-password-values $config] \
                                     "%s %s\n" \
                                     {
-                                        websiteTitle
-                                        headExtra
-                                        bodyExtra
+                                        charset
+                                        converter
+                                        copyright
+                                        end
+                                        feedDescription
+                                        file
+                                        host
+                                        inputDir
+                                        options
+                                        outputDir
+                                        path
+                                        server
                                         start
-                                        moreText
-                                        sidebarNote
+                                        timezone
+                                        url
+                                        user
+                                        websiteTitle
                                     }]
             log::info "loaded config file \{"
             log::info [::textutil::indent $formatted {    }]\n\}
