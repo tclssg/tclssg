@@ -193,6 +193,16 @@ proc migrate::page {settings {indent {}}} {
         }} $indent}
     }
 
+    group comments {
+        group disqus {
+            renamed {%FROM_CONFIG% comments disqusShortname} shortname
+        }
+
+        id {%FROM_CONFIG% comments engine}
+
+        transform hideUserComments enable negate
+    }
+
     transform customCss customCSS {replace-all {
         $rootDirPath/ {}
     }}
@@ -244,8 +254,6 @@ proc migrate::page {settings {indent {}}} {
         }
         
         transform hideTitle title negate
-        
-        transform hideUserComments userComments negate
     }
 
     id locale
@@ -280,6 +288,7 @@ proc migrate::page {settings {indent {}}} {
 
     renamed updated modified
 
+    dict unset settings %FROM_CONFIG%
     drain
 
     return [join $acc {}]
@@ -301,8 +310,6 @@ proc migrate::config settings {
     id blogPostsPerFile
 
     id charset
-
-    id comments
 
     id copyright
 
@@ -330,7 +337,10 @@ proc migrate::config settings {
 
     id outputDir
 
-    dict set presets default [page [pop pageSettings]]
+    set fromConfig [list %FROM_CONFIG% [list comments [pop comments]]]
+    dict set presets default \
+                     [page [dict merge [pop pageSettings] $fromConfig]]
+
 
     renamed prettyUrls prettyURLs
 

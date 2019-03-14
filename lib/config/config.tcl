@@ -13,8 +13,6 @@ namespace eval ::tclssg::config {
         abbreviate
         blogPostsPerFile
         charset
-        {comments disqusShortname}
-        {comments engine}
         copyright
         {deployCopy path}
         {deployCustom end}

@@ -364,9 +364,9 @@ namespace eval ::document {
     proc comments {} {
         upvar 1 input input
 
-        set engine [config {comments engine} none]
+        set engine [setting {comments engine} none]
         set result {}
-        if {[setting {show userComments} 1]} {
+        if {[setting {comments show} 1]} {
             switch -nocase -- $engine {
                 disqus { set result [comments-disqus] }
                 none {}
@@ -384,7 +384,7 @@ namespace eval ::document {
     proc comments-disqus {} {
         upvar 1 input input
 
-        set disqusShortname [config {comments disqusShortname} {}]
+        set disqusShortname [setting {comments disqus shortname} {}]
         set result [string map [list {%disqusShortname} $disqusShortname] {
             <div id="disqus_thread"></div>
             <script type="text/javascript">

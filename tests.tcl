@@ -467,10 +467,6 @@ namespace eval ::tclssg::tests {
     } -result {
 # The setting "blogIndexPage" has been removed (was: "blog/index.md").
 blogPostsPerFile 10
-comments {
-engine none
-disqusShortname {}
-}
 deployCustom {
 start {scp -rp "$outputDir" localhost:/tmp/deployment-test/}
 file {}
@@ -526,12 +522,14 @@ contentColumns 8
 gridClassPrefix col-md-
 theme vendor/bootstrap/css/bootstrap-theme.min.css
 }
+comments {
+enable 0
+}
 customCSS tclssg.css
 show {
 sidebar {
 note 0
 }
-userComments 0
 }
 locale en_US
 navbar {
@@ -555,11 +553,13 @@ sidebarPosition right
             }
         }] presets blog]]
     } -result {
+comments {
+enable 1
+}
 show {
 sidebar {
 note 1
 }
-userComments 1
 }
 moreText {(<a href="$link">read more</a>)}
 sidebarNote {

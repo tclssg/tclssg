@@ -1,5 +1,11 @@
 description {This is an example website project for Tclssg.}
 locale en_US
+comments {
+    engine none
+    disqus {
+        shortname {}
+    }
+}
 show {
     sidebar {
         note 0
