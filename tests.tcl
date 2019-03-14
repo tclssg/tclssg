@@ -497,7 +497,7 @@ url http://example.com/
 websiteTitle {SSG Test}
 }
 
-    tcltest::test migrate-2.1 {migrate v1.0.1 page and blog post settings} \
+    tcltest::test migrate-1.2 {migrate v1.0.1 page and blog post settings} \
                 -cleanup {unset presets result} \
                 -body {
         source tools/migrate.tcl
@@ -529,10 +529,10 @@ websiteTitle {SSG Test}
             }
         }] presets]
 
-        set result {}
-        append result \n[flatten-settings [dict get $presets default]]
-        append result ======
-        append result \n[flatten-settings [dict get $presets blog]]
+        set result \n
+        append result [flatten-settings [dict get $presets default]]
+        append result ======\n
+        append result [flatten-settings [dict get $presets blog]]
         return $result
     } -result {
 bootstrap {
@@ -554,6 +554,28 @@ moreText {(<a href="$link">read more</a>)}
 sidebarNote {
 <h3>About</h3>
 This is the blog of the sample Tclssg project.
+}
+}
+
+    tcltest::test migrate-2.1 {migrate nested page settings} \
+                -body {
+        source tools/migrate.tcl
+        return \n[migrate::page {
+            article {
+                top foo
+            }
+            body {
+                top bar
+                bottom baz
+            }
+        }]
+    } -result {
+article {
+    top foo
+}
+body {
+    bottom baz
+    top bar
 }
 }
 

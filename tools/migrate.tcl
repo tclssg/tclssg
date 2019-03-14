@@ -16,24 +16,29 @@ namespace eval migrate {
 namespace eval migrate::dsl {
     namespace export *
 
-    proc pop-settings-key args {
-        upvar 2 settings settings
+    proc pop-settings-key path {
+        upvar 1 settings settings
+        upvar 1 name name
         upvar 1 value value
 
-        try {
-            set value [dict get $settings {*}$args]
-        } on error {} {
+        if {![dict exists $settings {*}$path]} {
+            # Handle with care.
             return -level 2 {}
         }
 
-        dict unset settings {*}$args
+        set name [lindex $path end]
+        set value [dict get $settings {*}$path]
+
+        dict unset settings {*}$path
     }
 
     proc op {name arguments body} {
         set prelude {
-            pop-settings-key $name
-            upvar 1 indent indent
+            upvar 1 settings settings
+            pop-settings-key $path
+
             upvar 1 acc acc
+            upvar 1 indent indent
         }
         proc $name $arguments $prelude$body
     }
@@ -43,11 +48,21 @@ namespace eval migrate::dsl {
         return "# [join [split $text \n] "\n$indent# "]"
     }
 
-    proc add text {
+    proc add-freeform text {
         upvar 1 acc acc
         upvar 1 indent indent
 
         lappend acc $indent$text
+    }
+
+    proc add {name value {notEmpty 0}} {
+        upvar 1 acc acc
+        upvar 1 indent indent
+
+        set emptyRe {^\s*$}
+        if {$notEmpty && [regexp $emptyRe $value]} return
+
+        lappend acc $indent[list $name $value]\n
     }
 
     proc negate x {
@@ -64,43 +79,40 @@ namespace eval migrate::dsl {
         return $updated
     }
 
-    op removed name {
-        add [comment-out "The setting \"$name\" has been removed\
-                          (was: \"$value\")."]
+    op removed path {
+        add-freeform [comment-out "The setting \"$name\" has been removed\
+                                   (was: \"$value\")."]\n
     }
 
-    op id name {
-        add [list $name $value]
+    op id path {
+        add $name $value
     }
 
-    op transform {name newName script} {
-        add [list $newName [uplevel 1 $script [list $value]]]
+    op transform {path newName script} {
+        add $newName [uplevel 1 $script [list $value]]
     }
 
-    op renamed {name newName} {
-        add [list $newName $value]
+    op renamed {path newName} {
+        add $newName $value
     }
 
-    op pop name {
+    op pop path {
         return $value
     }
 
-    op unknown name {
-        add [comment-out "The setting \"$name\" is unknown\
-                          (was: \"$value\")."]
+    op unknown path {
+        add-freeform [comment-out "The setting \"$name\" is unknown\
+                                   (was: \"$value\")."]\n
     }
 
-    op group {name script} {
-        upvar 1 settings settings
+    proc group {newName script} {
+        upvar 1 acc acc
+        upvar 1 indent indent
 
-        set parentSettings $settings
         set parentAcc $acc
-
-        set settings $value
         set acc {}
 
-        add "[list $name] \{"
-        append indent "    "
+        append indent {    }
 
         try {
             uplevel 1 $script
@@ -108,11 +120,12 @@ namespace eval migrate::dsl {
             set indent [string range $indent 0 end-4]
             set result $acc
 
-            set settings $parentSettings
             set acc $parentAcc
         }
 
-        add [join $result \n]\n\}\n
+        if {$result ne {}} {
+            add-freeform "[list $newName] \{\n[join $result {}]\}\n"
+        }
     }
 
     proc drain {} {
@@ -132,10 +145,11 @@ proc migrate::page {settings {indent {}}} {
     set acc {}
 
     group article {
-        id bottom
+        id {article top}
 
-        id top
+        id {article bottom}
     }
+    pop article
 
     id author
 
@@ -144,10 +158,11 @@ proc migrate::page {settings {indent {}}} {
     id blogPost
 
     group body {
-        id bottom
+        id {body bottom}
 
-        id top
+        id {body top}
     }
+    pop body
 
     transform bootstrapTheme bootstrap {apply {{indent path} {
         regsub {\$rootDirPath/} \
@@ -183,10 +198,11 @@ proc migrate::page {settings {indent {}}} {
     id gridClassPrefix
 
     group head {
-        id bottom
+        id {head bottom}
 
-        id top
+        id {head top}
     }
+    pop head
 
     transform hide showInCollections negate
 
@@ -248,7 +264,7 @@ proc migrate::page {settings {indent {}}} {
 
     drain
 
-    return [join $acc \n]\n
+    return [join $acc {}]
 }
 
 proc migrate::config settings {
@@ -303,22 +319,29 @@ proc migrate::config settings {
     removed reuseTemplateInterpreter
 
     group rss {
-        id enable
+        id {rss enable}
         
-        id feedDescription
+        id {rss feedDescription}
 
-        removed feedFilename
+        removed {rss feedFilename}
 
-        id tagFeeds
+        id {rss tagFeeds}
 
-        removed template
+        removed {rss template}
     }
+    pop rss
 
-    id server
+    group server {
+        id {server host}
+
+        id {server port}
+    }
+    pop server
 
     group sitemap {
-        id enable
+        id {sitemap enable}
     }
+    pop sitemap
 
     id sortTagsBy
 
@@ -334,11 +357,11 @@ proc migrate::config settings {
 
     drain 
 
-    return [dict create config [join $acc \n]\n \
+    return [dict create config [join $acc {}] \
                         presets $presets]
 }
 
-proc migrate::missing-keys {reference settings} {
+proc migrate::missing-pairs {reference settings} {
     set reference [::tclssg::utils::remove-comments $reference]
     set settings [::tclssg::utils::remove-comments $settings]
     set missing {}
@@ -377,11 +400,16 @@ proc migrate::main::skel-path path {
 
 proc migrate::main::preset-with-defaults {migrated skel key} {
     set preset [dict get $migrated presets $key]
-    set missing [missing-keys [dict get $skel $key] $preset]
+    set missing [missing-pairs [dict get $skel $key] $preset]
+
+    if {$preset ne {}} {
+        append preset \n
+    }
     append preset "# The following defaults were added\
-                   from the current v2.x project skeleton.\n"
+                   from the current v2.x project skeleton."
+
     dict for {key value} $missing {
-        append preset [list $key $value]\n
+        append preset \n[list $key $value]
     }
 
     return $preset
@@ -399,15 +427,15 @@ proc migrate::main::config {src dest} {
     set migrated [migrate::config $oldConfig]
 
     fileutil::writeFile $dest/website.conf \
-                        [dict get $migrated config]
+                        [dict get $migrated config]\n
 
     file mkdir $dest/presets
 
     set presets(default) [preset-with-defaults $migrated $skel default]
     set presets(blog) [preset-with-defaults $migrated $skel blog]
 
-    fileutil::writeFile $dest/presets/default $presets(default)
-    fileutil::writeFile $dest/presets/blog $presets(blog)
+    fileutil::writeFile $dest/presets/default $presets(default)\n
+    fileutil::writeFile $dest/presets/blog $presets(blog)\n
 }
 
 proc migrate::main::pages {src dest} {
