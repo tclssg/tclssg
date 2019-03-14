@@ -280,6 +280,8 @@ proc migrate::config settings {
 
     id deployFtp
 
+    removed description
+
     renamed enableMacrosInPages macros
 
     removed indexPage
