@@ -530,7 +530,9 @@ customCSS tclssg.css
 showSidebarNote 0
 showUserComments 0
 locale en_US
-navbarItems {Home / Blog /blog/ Contact /contact.html}
+navbar {
+items {Home / Blog /blog/ Contact /contact.html}
+}
 sidebarPosition right
 }
 
@@ -579,6 +581,37 @@ body {
     top bar
 }
 }
+
+    tcltest::test migrate-3.1 {empty group} \
+                -cleanup {rename migrate::empty-group {}} \
+                -body {
+        source tools/migrate.tcl
+
+        proc migrate::empty-group settings {
+            namespace path dsl
+
+            set acc {}
+
+            group alwaysEmpty {
+                id noSuchSetting
+            }
+
+            group foo {
+                id bar
+            }
+
+            drain
+
+            return [join $acc \n]
+        }
+
+        return \n[migrate::empty-group {bar 5}]
+    } -result {
+foo {
+    bar 5
+}
+}
+
 
 
     # Integration tests.

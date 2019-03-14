@@ -2,10 +2,12 @@ description {This is an example website project for Tclssg.}
 locale en_US
 showUserComments 0
 showSidebarNote 0
-navbarItems {
-    Home {}
-    Blog blog/
-    Contact contact
+navbar {
+    items {
+        Home {}
+        Blog blog/
+        Contact contact
+    }
 }
 bootstrap {
     version 3

@@ -144,6 +144,10 @@ proc migrate::page {settings {indent {}}} {
 
     set acc {}
 
+    group alwaysEmpty {
+        id noSuchSetting[expr rand()]
+    }
+
     group article {
         id {article top}
 
@@ -246,13 +250,15 @@ proc migrate::page {settings {indent {}}} {
 
     id moreText
 
-    id navbarBrand
+    group navbar {
+        renamed navbarBrand brand
 
-    transform navbarItems navbarItems {replace-all {
-        $indexLink /
-        $blogIndexLink /blog/
-        $rootDirPath {}
-    }}
+        transform navbarItems items {replace-all {
+            $indexLink /
+            $blogIndexLink /blog/
+            $rootDirPath {}
+        }}
+    }
 
     renamed noindex noIndex
 
