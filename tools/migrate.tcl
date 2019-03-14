@@ -218,7 +218,9 @@ proc migrate::page {settings {indent {}}} {
     transform hideFooter showFooter negate
 
     transform hideFromCollections showInCollections negate
-    
+
+    transform hideFromSidebar showInSidebarLinks negate    
+
     transform hideFromSidebarLinks showInSidebarLinks negate
     
     transform hideModifiedDate showModifiedDate negate
