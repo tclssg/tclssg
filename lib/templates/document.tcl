@@ -114,7 +114,7 @@ template-proc ::document::render {
             <%! if {[tag-cloud?]} tag-cloud %>
           </div>
          <% } else { %>
-          <section class="<%! setting gridClassPrefix col-md- %>12 content">
+          <section class="<%! setting {bootstrap gridClassPrefix} col-md- %>12 content">
             <%! content %>
             <%! prev-next-link {« Newer posts} {Older posts »} %>
           </section>
@@ -201,7 +201,7 @@ namespace eval ::document {
     proc content-and-sidebar-class {} {
         upvar 1 input input
 
-        set class_prefix [setting gridClassPrefix col-md-]
+        set class_prefix [setting {bootstrap gridClassPrefix} col-md-]
         set content_column_width [setting contentColumns 8]
         set sidebar_column_width [expr {12 - $content_column_width}]
         set content_class $class_prefix$content_column_width

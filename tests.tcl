@@ -497,11 +497,11 @@ url http://example.com/
 websiteTitle {SSG Test}
 }
 
-    tcltest::test migrate-1.2 {migrate v1.0.1 page and blog post settings} \
-                -cleanup {unset presets result} \
+    tcltest::test migrate-1.2 {migrate v1.0.1 page settings} \
                 -body {
         source tools/migrate.tcl
-        set presets [dict get [migrate::config {
+
+        return \n[flatten-settings [dict get [migrate::config {
             pageSettings {
                 gridClassPrefix col-md-
                 contentColumns 8
@@ -518,6 +518,26 @@ websiteTitle {SSG Test}
 {$rootDirPath/external/bootstrap-3.3.1-dist/css/bootstrap-theme.min.css}
                 customCss {{$rootDirPath/tclssg.css}}
             }
+        }] presets default]]
+    } -result {
+bootstrap {
+version 3
+gridClassPrefix col-md-
+theme vendor/bootstrap/css/bootstrap-theme.min.css
+}
+contentColumns 8
+customCSS tclssg.css
+showSidebarNote 0
+showUserComments 0
+locale en_US
+navbarItems {Home / Blog /blog/ Contact /contact.html}
+sidebarPosition right
+}
+
+    tcltest::test migrate-1.3 {migrate v1.0.1 blog post settings} \
+                -body {
+        source tools/migrate.tcl
+        return \n[flatten-settings [dict get [migrate::config {
             blogPostSettings {
                 hideUserComments 0
                 hideSidebarNote 0
@@ -527,27 +547,8 @@ websiteTitle {SSG Test}
                     This is the blog of the sample Tclssg project.
                 }
             }
-        }] presets]
-
-        set result \n
-        append result [flatten-settings [dict get $presets default]]
-        append result ======\n
-        append result [flatten-settings [dict get $presets blog]]
-        return $result
+        }] presets blog]]
     } -result {
-bootstrap {
-version 3
-theme vendor/bootstrap/css/bootstrap-theme.min.css
-}
-contentColumns 8
-customCSS tclssg.css
-gridClassPrefix col-md-
-showSidebarNote 0
-showUserComments 0
-locale en_US
-navbarItems {Home / Blog /blog/ Contact /contact.html}
-sidebarPosition right
-======
 showSidebarNote 1
 showUserComments 1
 moreText {(<a href="$link">read more</a>)}

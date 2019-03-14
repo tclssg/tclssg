@@ -164,22 +164,27 @@ proc migrate::page {settings {indent {}}} {
     }
     pop body
 
-    transform bootstrapTheme bootstrap {apply {{indent path} {
-        regsub {\$rootDirPath/} \
-               $path \
-               {} \
-               path
-        regsub {external/bootstrap-3.\d.\d-dist} \
-               $path \
-               vendor/bootstrap \
-               path
+    group bootstrap {
+        if {[dict exists $settings bootstrapTheme] ||
+            [dict exists $settings gridClassPrefix]} {
+            add version 3
+        }
 
-        set res \n
-        append res "${indent}    version 3\n"
-        append res "${indent}    theme $path\n"
+        id gridClassPrefix
 
-        return $res
-    }} $indent}
+        transform bootstrapTheme theme {apply {{indent path} {
+            regsub {\$rootDirPath/} \
+                   $path \
+                   {} \
+                   path
+            regsub {external/bootstrap-3.\d.\d-dist} \
+                   $path \
+                   vendor/bootstrap \
+                   path
+
+            return $path
+        }} $indent}
+    }
 
     id contentColumns
 
@@ -194,8 +199,6 @@ proc migrate::page {settings {indent {}}} {
     id draft
 
     id favicon
-
-    id gridClassPrefix
 
     group head {
         id {head bottom}
