@@ -422,6 +422,142 @@ namespace eval ::tclssg::tests {
         tcl tools/log-search.tcl {} << "a b\n  c"
     } -match regexp -result {(?:\x1b\[2m)a[^\n]+?(?:\x1b\[39m)(?:\x1b\[22m)?c}
 
+
+    proc flatten-settings settings {
+        regsub -all {\n +} $settings \n settings
+        regsub -all \n+ $settings \n settings
+
+        return $settings
+    }
+
+    tcltest::test migrate-1.1 {migrate v1.0.1 website config} \
+                -body {
+        source tools/migrate.tcl
+        return \n[flatten-settings [dict get [migrate::config {
+            websiteTitle {SSG Test}
+            url {http://example.com/}
+            server {
+                host localhost
+                port 8080
+            }
+            sitemap {
+                enable 1
+            }
+            rss {
+                enable 1
+                tagFeeds 1
+            }
+            indexPage {index.md}
+            blogIndexPage {blog/index.md}
+            tagPage {blog/tags/tag.md}
+            outputDir {../output}
+            blogPostsPerFile 10
+            description {This is an example website project for Tclssg.}
+            deployCustom {
+                start {scp -rp "$outputDir" localhost:/tmp/deployment-test/}
+                file {}
+                end {}
+            }
+            enableMacrosInPages 0
+            comments {
+                engine none
+                disqusShortname {}
+            }
+        }] config]]
+    } -result {
+# The setting "blogIndexPage" has been removed (was: "blog/index.md").
+blogPostsPerFile 10
+comments {
+engine none
+disqusShortname {}
+}
+deployCustom {
+start {scp -rp "$outputDir" localhost:/tmp/deployment-test/}
+file {}
+end {}
+}
+# The setting "description" has been removed\
+  (was: "This is an example website project for Tclssg.").
+macros 0
+# The setting "indexPage" has been removed (was: "index.md").
+outputDir ../output
+rss {
+enable 1
+tagFeeds 1
+}
+server {
+host localhost
+port 8080
+}
+sitemap {
+enable 1
+}
+# The setting "tagPage" has been removed (was: "blog/tags/tag.md").
+url http://example.com/
+websiteTitle {SSG Test}
+}
+
+    tcltest::test migrate-2.1 {migrate v1.0.1 page and blog post settings} \
+                -cleanup {unset presets result} \
+                -body {
+        source tools/migrate.tcl
+        set presets [dict get [migrate::config {
+            pageSettings {
+                gridClassPrefix col-md-
+                contentColumns 8
+                locale en_US
+                hideUserComments 1
+                hideSidebarNote 1
+                sidebarPosition right
+                navbarItems {
+                    Home $indexLink
+                    Blog $blogIndexLink
+                    Contact {$rootDirPath/contact.html}
+                }
+                bootstrapTheme\
+{$rootDirPath/external/bootstrap-3.3.1-dist/css/bootstrap-theme.min.css}
+                customCss {{$rootDirPath/tclssg.css}}
+            }
+            blogPostSettings {
+                hideUserComments 0
+                hideSidebarNote 0
+                moreText {(<a href="$link">read more</a>)}
+                sidebarNote {
+                    <h3>About</h3>
+                    This is the blog of the sample Tclssg project.
+                }
+            }
+        }] presets]
+
+        set result {}
+        append result \n[flatten-settings [dict get $presets default]]
+        append result ======
+        append result \n[flatten-settings [dict get $presets blog]]
+        return $result
+    } -result {
+bootstrap {
+version 3
+theme vendor/bootstrap/css/bootstrap-theme.min.css
+}
+contentColumns 8
+customCSS tclssg.css
+gridClassPrefix col-md-
+showSidebarNote 0
+showUserComments 0
+locale en_US
+navbarItems {Home / Blog /blog/ Contact /contact.html}
+sidebarPosition right
+======
+showSidebarNote 1
+showUserComments 1
+moreText {(<a href="$link">read more</a>)}
+sidebarNote {
+<h3>About</h3>
+This is the blog of the sample Tclssg project.
+}
+}
+
+
     # Integration tests.
 
     proc make-temporary-project {} {
