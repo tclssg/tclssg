@@ -312,6 +312,8 @@ proc migrate::config settings {
         removed template
     }
 
+    id server
+
     group sitemap {
         id enable
     }
