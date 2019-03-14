@@ -166,9 +166,12 @@ proc migrate::page {settings {indent {}}} {
 
     group bootstrap {
         if {[dict exists $settings bootstrapTheme] ||
+            [dict exists $settings contentColumns] ||
             [dict exists $settings gridClassPrefix]} {
             add version 3
         }
+
+        id contentColumns
 
         id gridClassPrefix
 
@@ -185,8 +188,6 @@ proc migrate::page {settings {indent {}}} {
             return $path
         }} $indent}
     }
-
-    id contentColumns
 
     transform customCss customCSS {replace-all {
         $rootDirPath/ {}

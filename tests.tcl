@@ -522,10 +522,10 @@ websiteTitle {SSG Test}
     } -result {
 bootstrap {
 version 3
+contentColumns 8
 gridClassPrefix col-md-
 theme vendor/bootstrap/css/bootstrap-theme.min.css
 }
-contentColumns 8
 customCSS tclssg.css
 showSidebarNote 0
 showUserComments 0
