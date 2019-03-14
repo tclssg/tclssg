@@ -24,7 +24,6 @@ namespace eval ::tclssg::config {
         {deployFtp server}
         {deployFtp user}
         inputDir
-        locale
         {markdown converter}
         {markdown tabs}
         macros

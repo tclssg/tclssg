@@ -87,7 +87,7 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
                                         $raw \
                                         $macros \
                                         20-load-markdown \
-                                        [list input $id]]
+                                        [dict create input $id]]
 
             db input set $id type page
             db input set $id cooked $cooked
@@ -100,6 +100,9 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
 
     proc prepare-content {file frontmatter content macros interp
                           extraVariables} {
+        interp eval $interp \
+                    [list mclocale [templates file-setting $file locale]]
+
         if {$macros} {
             set content [dict-default-get {} \
                                           $frontmatter \

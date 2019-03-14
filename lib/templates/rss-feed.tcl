@@ -14,6 +14,8 @@ template-proc ::rss-feed::render {
     -pageNumber     {pageNumber 1}
     -prevPage       prevPage
     -root           root
+} {
+    mclocale [setting locale en_US]
 } {<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
@@ -23,7 +25,7 @@ template-proc ::rss-feed::render {
 <title><%! entities [::document::document-title] %></title>
 <link><%! link-path [input-to-output-path $input] 1 %></link>
 <description><%! entities [config {rss feedDescription} {}] %></description>
-<language><%! lindex [split [config locale en_US] _] 0 %></language>
+<language><%! lindex [split [setting locale en_US] _] 0 %></language>
 <%! copyright %>
 <%! last-build-date %>
 <generator>Tclssg <%! lindex [version] 0 %></generator>

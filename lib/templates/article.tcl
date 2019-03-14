@@ -13,6 +13,8 @@ proc ::article::render args {
         -content        content
         -root           root
     }
+    mclocale [article-setting locale en_US]
+
     set title [title $collection $collectionTop]
     set headerBlock [author][date]
 

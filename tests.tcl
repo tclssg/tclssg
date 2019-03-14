@@ -590,6 +590,41 @@ body {
 }
 }
 
+    tcltest::test migrate-3.1 {merge locale page setting} \
+                -body {
+        source tools/migrate.tcl
+        return \n[migrate::page {
+            locale foo
+            %FROM_CONFIG% {
+                locale bar
+            }
+        }]
+    } -result {
+locale foo
+}
+
+    tcltest::test migrate-3.2 {merge locale page setting} \
+                -body {
+        source tools/migrate.tcl
+        return \n[migrate::page {
+            %FROM_CONFIG% {
+                locale bar
+            }
+        }]
+    } -result {
+locale bar
+}
+    tcltest::test migrate-3.3 {merge locale page setting} \
+                -body {
+        source tools/migrate.tcl
+        return \n[migrate::page {
+            %FROM_CONFIG% {
+                locale {}
+            }
+        }]
+    } -result {
+}
+
     tcltest::test migrate-3.1 {empty group} \
                 -cleanup {rename migrate::empty-group {}} \
                 -body {

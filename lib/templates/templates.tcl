@@ -97,11 +97,23 @@ set procs {
         return [output-to-input-path $blogIndexOutput]
     }
 
-    proc template-proc {name namedArgs template} {
-        uplevel 1 [list proc \
-                        $name \
-                        args \
-                        "named-args [list $namedArgs]\n[parse $template]"]
+    proc template-proc args {
+        switch -- [llength $args] {
+            3 {
+                lassign $args name namedArgs template
+                set prelude {}
+            }
+            4 {
+                lassign $args name namedArgs prelude template
+            }
+            default {
+                error "wrong # args: should be \"template-proc\
+                       name namedArgs ?prelude? template\""
+            }
+        }
+
+        set source "named-args [list $namedArgs]\n$prelude\n[parse $template]"
+        uplevel 1 [list proc $name args $source]
     } 
 }
 

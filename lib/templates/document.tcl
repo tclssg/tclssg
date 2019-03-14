@@ -14,6 +14,8 @@ template-proc ::document::render {
     -pageNumber     {pageNumber 1}
     -prevPage       prevPage
     -root           root
+} {
+    mclocale [setting locale en_US]
 } {<!DOCTYPE html>
 <html>
   <head>

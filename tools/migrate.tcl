@@ -256,7 +256,12 @@ proc migrate::page {settings {indent {}}} {
         transform hideTitle title negate
     }
 
-    id locale
+    if {[dict exists $settings locale]} {
+        id locale
+    } elseif {[dict exists $settings %FROM_CONFIG% locale] &&
+              [dict get $settings %FROM_CONFIG% locale] ne {}} {
+        id {%FROM_CONFIG% locale}
+    }
 
     id modified
 
@@ -297,8 +302,10 @@ proc migrate::page {settings {indent {}}} {
 proc migrate::config settings {
     namespace path dsl
 
-    set indent {}
     set acc {}
+    set indent {}
+
+    set fromConfig {}
     set presets {}
 
     removed absoluteLinks
@@ -329,18 +336,17 @@ proc migrate::config settings {
 
     id inputDir
 
-    id locale
-
     id maxSidebarLinks
 
     renamed maxTags maxTagCloudTags
 
     id outputDir
 
-    set fromConfig [list %FROM_CONFIG% [list comments [pop comments]]]
+    dict set fromConfig comments [pop comments]
+    dict set fromConfig locale [pop locale]
     dict set presets default \
-                     [page [dict merge [pop pageSettings] $fromConfig]]
-
+                     [page [dict merge [pop pageSettings] \
+                                       [dict create %FROM_CONFIG% $fromConfig]]]
 
     renamed prettyUrls prettyURLs
 
