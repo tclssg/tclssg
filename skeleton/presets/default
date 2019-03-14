@@ -1,13 +1,11 @@
 description {This is an example website project for Tclssg.}
 locale en_US
 comments {
+    enable 0
     engine none
     disqus {
         shortname {}
     }
-}
-show {
-    userComments 0
 }
 navbar {
     items {

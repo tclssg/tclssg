@@ -1,6 +1,6 @@
 blogPost 1
-show {
-    userComments 1
+comments {
+    enable 1
 }
 moreText {(<a href="$link">read more</a>)}
 sidebar {
