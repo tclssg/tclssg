@@ -212,35 +212,41 @@ proc migrate::page {settings {indent {}}} {
     }
     pop head
 
-    transform hide showInCollections negate
+    group visibleIn {
+        transform hide collections negate
+        
+        transform hideFromCollections collections negate
 
-    transform hideArticleTitle showArticleTitle negate
-    
-    transform hideAuthor showAuthor negate
-    
-    transform hideDate showDate negate
-    
-    transform hideFooter showFooter negate
+        transform hideFromSidebar sidebarLinks negate    
 
-    transform hideFromCollections showInCollections negate
+        transform hideFromSidebarLinks sidebarLinks negate
+    }
 
-    transform hideFromSidebar showInSidebarLinks negate    
+    group show {
+        transform hideArticleTitle articleTitle negate
+        
+        transform hideAuthor author negate
+        
+        transform hideDate date negate
+        
+        transform hideFooter footer negate
 
-    transform hideFromSidebarLinks showInSidebarLinks negate
-    
-    transform hideModifiedDate showModifiedDate negate
+        transform hideModifiedDate modified negate
 
-    transform hidePostTags showPostTags negate
-    
-    transform hideSidebarLinks showSidebarLinks negate
-    
-    transform hideSidebarNote showSidebarNote negate
-    
-    transform hideTagCloud showSidebarTagCloud negate
-    
-    transform hideTitle showTitle negate
-    
-    transform hideUserComments showUserComments negate
+        transform hidePostTags postTags negate
+        
+        group sidebar {
+            transform hideSidebarLinks links negate
+        
+            transform hideSidebarNote note negate
+        
+            transform hideTagCloud tagCloud negate
+        }
+        
+        transform hideTitle title negate
+        
+        transform hideUserComments userComments negate
+    }
 
     id locale
 

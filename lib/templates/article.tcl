@@ -42,7 +42,7 @@ namespace eval ::article {
         upvar 1 articleInput articleInput
 
         set author [article-setting author]
-        if {($author eq {%NULL%}) || ![article-setting showAuthor 1]} {
+        if {($author eq {%NULL%}) || ![article-setting {show author} 1]} {
             return {}
         } else {
             return [format {<address class="author">%s</address>} $author]
@@ -56,8 +56,8 @@ namespace eval ::article {
         set title [article-setting title {}]
 
         if {$title eq {} ||
-            ![article-setting showTitle 1] ||
-            ![article-setting showArticleTitle 1]} {
+            ![article-setting {show title} 1] ||
+            ![article-setting {show articleTitle} 1]} {
             return {}
         }
 
@@ -104,12 +104,12 @@ namespace eval ::article {
         upvar 1 articleInput articleInput
 
         set resultList {}
-        if {[article-setting showDate 1]} {
+        if {[article-setting {show date} 1]} {
             set dateF [format-date date date timestamp]
             if {$dateF ne ""} {
                 lappend resultList $dateF
             }
-            if {[article-setting showModifiedDate 1]} {
+            if {[article-setting {show modified} 1]} {
                 set modDateF [format-date modified modified modifiedTimestamp]
                 if {$modDateF ne ""} {
                     lappend resultList $modDateF

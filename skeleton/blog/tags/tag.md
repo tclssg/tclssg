@@ -1,10 +1,12 @@
 {
     title Blog
     presets blog
-    showInSidebarLinks 0
-    showTitle 0
-    showPostTags 0
-    showInCollections 0
-    showUserComments 0
+    title 0
+    visibleIn {
+        collections 0
+        postTags 0
+        sidebarLinks 0
+        userComments 0
+    }
 }
 This is a tag page.

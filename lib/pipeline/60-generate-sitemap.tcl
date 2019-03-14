@@ -4,7 +4,7 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 # Add an XML sitemap output listing the outputs of all Markdown inputs that
-# don't have showInCollections 0.
+# don't have {visibleIn collections} 0.
 namespace eval ::tclssg::pipeline::60-generate-sitemap {
     namespace path ::tclssg
 
@@ -56,7 +56,7 @@ namespace eval ::tclssg::pipeline::60-generate-sitemap {
                 WHERE input.type = 'page'
                 ORDER BY output.file ASC;
             } row {
-                if {![db settings preset-get $row(input) showInCollections 1]} {
+                if {![db settings preset-get $row(input) {visibleIn collections} 1]} {
                     continue
                 }
 

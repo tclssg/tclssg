@@ -2,7 +2,9 @@
     title {Test page 3}
     presets blog
     author {It's a secret.}
-    showAuthor 0
+    show {
+        author 0
+    }
     tags {test {another thing}}
     date {2014-05-06 17:08}
 	sidebarNote {

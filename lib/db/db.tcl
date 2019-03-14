@@ -313,13 +313,10 @@ namespace eval ::tclssg::db::settings {
             }
         }
 
-        # Rather than filter for showInCollections in the query, we
-        # use [preset-get] to read the showInCollections setting.
-        # This ensures fallback to the appropriate default values.
         ::set filtered {}
         foreach post $posts {
             if {$post ni $dropList &&
-                (!$filter || [preset-get $post showInCollections 1])} {
+                (!$filter || [preset-get $post {visibleIn collections} 1])} {
                 lappend filtered $post
             }
         }

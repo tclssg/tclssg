@@ -527,8 +527,12 @@ gridClassPrefix col-md-
 theme vendor/bootstrap/css/bootstrap-theme.min.css
 }
 customCSS tclssg.css
-showSidebarNote 0
-showUserComments 0
+show {
+sidebar {
+note 0
+}
+userComments 0
+}
 locale en_US
 navbar {
 items {Home / Blog /blog/ Contact /contact.html}
@@ -551,8 +555,12 @@ sidebarPosition right
             }
         }] presets blog]]
     } -result {
-showSidebarNote 1
-showUserComments 1
+show {
+sidebar {
+note 1
+}
+userComments 1
+}
 moreText {(<a href="$link">read more</a>)}
 sidebarNote {
 <h3>About</h3>

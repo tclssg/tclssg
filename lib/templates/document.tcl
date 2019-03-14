@@ -80,7 +80,7 @@ template-proc ::document::render {
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-          <% foreach {item link} [setting navbarItems {}] { %>
+          <% foreach {item link} [setting {navbar items} {}] { %>
             <li><a href="<%! file join $root $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
@@ -180,21 +180,21 @@ namespace eval ::document {
         upvar 1 input input
 
         return [expr {
-            [blog-post?] && [setting showSidebarLinks 1]
+            [blog-post?] && [setting {show sidebar links} 1]
         }]
     }
 
     proc sidebar-note? {} {
         upvar 1 input input
 
-        return [setting showSidebarNote 1]
+        return [setting {show sidebar note} 1]
     }
 
     proc tag-cloud? {} {
         upvar 1 input input
 
         return [expr {
-            [blog-post?] && [setting showSidebarTagCloud 1]
+            [blog-post?] && [setting {show sidebar tagCloud} 1]
         }]
     }
 
@@ -230,7 +230,7 @@ namespace eval ::document {
         set sep { | }
 
         set pageTitle [setting title {}]
-        set showTitle [setting showTitle 1]
+        set showTitle [setting {show title} 1]
         set tagPageTag [setting tagPageTag {}]
 
         set result {}
@@ -262,7 +262,7 @@ namespace eval ::document {
     proc navbar-brand {} {
         upvar 1 input input
 
-        return [setting navbarBrand [config websiteTitle {}]]
+        return [setting {navbar brand} [config websiteTitle {}]]
     }
 
     proc sidebar-links {} {
@@ -355,7 +355,7 @@ namespace eval ::document {
         if {$copyright ne ""} {
             append footer "<div class=\"copyright\">$copyright</div>"
         }
-        if {[setting showFooter 1]} {
+        if {[setting {show footer} 1]} {
             append footer {<div class="powered-by"><small>Powered by <a href="https://github.com/tclssg/tclssg">Tclssg</a> and <a href="http://getbootstrap.com/">Bootstrap</a></small></div>}
         }
         return $footer
@@ -366,7 +366,7 @@ namespace eval ::document {
 
         set engine [config {comments engine} none]
         set result {}
-        if {[setting showUserComments 1]} {
+        if {[setting {show userComments} 1]} {
             switch -nocase -- $engine {
                 disqus { set result [comments-disqus] }
                 none {}

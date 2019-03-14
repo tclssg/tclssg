@@ -74,7 +74,9 @@ Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!
     blogPost 1
     tags {test {a long tag with spaces}}
     date 2014-01-02
-    showDate 0
+    show {
+        date false
+    }
 }
 **Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id
 voluptate proident enim eu aliqua sit.

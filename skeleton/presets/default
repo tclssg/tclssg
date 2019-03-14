@@ -1,7 +1,11 @@
 description {This is an example website project for Tclssg.}
 locale en_US
-showUserComments 0
-showSidebarNote 0
+show {
+    sidebar {
+        note 0
+    }
+    userComments 0
+}
 navbar {
     items {
         Home {}
