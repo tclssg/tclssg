@@ -12,7 +12,6 @@ namespace eval ::tclssg::config {
     variable schema {
         abbreviate
         blogPostsPerFile
-        charset
         copyright
         {deployCopy path}
         {deployCustom end}
@@ -62,7 +61,6 @@ namespace eval ::tclssg::config {
                 [utils::dict-format [utils::obscure-password-values $config] \
                                     "%s %s\n" \
                                     {
-                                        charset
                                         converter
                                         copyright
                                         end

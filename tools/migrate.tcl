@@ -79,6 +79,15 @@ namespace eval migrate::dsl {
         return $updated
     }
 
+    proc setting-not-empty path {
+        upvar 1 settings settings
+
+        return [expr {
+            [dict exists $settings {*}$path] &&
+            [dict get $settings {*}$path] ne {}
+        }]
+    }
+
     op removed path {
         add-freeform [comment-out "The setting \"$name\" has been removed\
                                    (was: \"$value\")."]\n
@@ -193,6 +202,10 @@ proc migrate::page {settings {indent {}}} {
         }} $indent}
     }
 
+    if {[setting-not-empty {%FROM_CONFIG% charset}]} {
+        id {%FROM_CONFIG% charset}
+    }
+
     group comments {
         group disqus {
             renamed {%FROM_CONFIG% comments disqusShortname} shortname
@@ -250,8 +263,7 @@ proc migrate::page {settings {indent {}}} {
 
     if {[dict exists $settings locale]} {
         id locale
-    } elseif {[dict exists $settings %FROM_CONFIG% locale] &&
-              [dict get $settings %FROM_CONFIG% locale] ne {}} {
+    } elseif {[setting-not-empty {%FROM_CONFIG% locale}]} {
         id {%FROM_CONFIG% locale}
     }
 
@@ -318,8 +330,6 @@ proc migrate::config settings {
 
     id blogPostsPerFile
 
-    id charset
-
     id copyright
 
     removed debugDir
@@ -344,6 +354,7 @@ proc migrate::config settings {
 
     id outputDir
 
+    dict set fromConfig charset [pop charset]
     dict set fromConfig comments [pop comments]
     dict set fromConfig locale [pop locale]
     dict set presets default \
