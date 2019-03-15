@@ -133,7 +133,7 @@ namespace eval migrate::dsl {
         }
 
         if {$result ne {}} {
-            add-freeform "[list $newName] \{\n[join $result {}]\}\n"
+            add-freeform "[list $newName] \{\n[join $result {}]$indent\}\n"
         }
     }
 
