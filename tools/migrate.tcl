@@ -216,6 +216,10 @@ proc migrate::page {settings {indent {}}} {
         transform hideUserComments enable negate
     }
 
+    if {[setting-not-empty {%FROM_CONFIG% copyright}]} {
+        id {%FROM_CONFIG% copyright}
+    }
+
     transform customCss customCSS {replace-all {
         $rootDirPath/ {}
     }}
@@ -330,8 +334,6 @@ proc migrate::config settings {
 
     id blogPostsPerFile
 
-    id copyright
-
     removed debugDir
 
     id deployCopy
@@ -354,12 +356,16 @@ proc migrate::config settings {
 
     id outputDir
 
+
     dict set fromConfig charset [pop charset]
+    dict set fromConfig copyright [pop copyright]
     dict set fromConfig comments [pop comments]
     dict set fromConfig locale [pop locale]
-    dict set presets default \
-                     [page [dict merge [pop pageSettings] \
-                                       [dict create %FROM_CONFIG% $fromConfig]]]
+
+    set merged [dict merge [pop pageSettings] \
+                           [dict create %FROM_CONFIG% $fromConfig]]
+    dict set presets default [page $merged]
+
 
     renamed prettyUrls prettyURLs
 

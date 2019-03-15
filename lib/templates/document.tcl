@@ -363,7 +363,7 @@ namespace eval ::document {
         set copyright [string map [list \$root $root \
                                         \$year [clock format [clock seconds] \
                                                              -format %Y]] \
-                                  [config copyright {}]]
+                                  [setting copyright {}]]
         if {$copyright ne ""} {
             append footer "<div class=\"copyright\">$copyright</div>"
         }

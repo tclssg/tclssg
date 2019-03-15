@@ -12,7 +12,6 @@ namespace eval ::tclssg::config {
     variable schema {
         abbreviate
         blogPostsPerFile
-        copyright
         {deployCopy path}
         {deployCustom end}
         {deployCustom file}
@@ -62,7 +61,6 @@ namespace eval ::tclssg::config {
                                     "%s %s\n" \
                                     {
                                         converter
-                                        copyright
                                         end
                                         feedDescription
                                         file

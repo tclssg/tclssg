@@ -77,7 +77,9 @@ namespace eval ::rss-feed {
     }
 
     proc copyright {} {
-        set copyright [entities [config copyright {}]]]
+        upvar 1 input input
+
+        set copyright [entities [setting copyright {}]]]
         return [expr {
             $copyright eq {} ?
             {} :
