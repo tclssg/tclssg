@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -17,11 +17,7 @@ namespace eval ::tclssg::interpreter {
             ::csv::iscomplete                   ::csv::iscomplete
             ::csv::split                        ::csv::split
             ::json::json2dict                   ::json::json2dict
-            ::msgcat::mclocale                  mclocale
-            ::msgcat::mc                        mc
-            ::msgcat::mcset                     mcset
-            ::puts                              puts
-
+            ::puts                              ::puts
             ::tclssg::converters::markdown::markdown-to-html
                                                 markdown-to-html
             ::tclssg::converters::markdown::inline-markdown-to-html

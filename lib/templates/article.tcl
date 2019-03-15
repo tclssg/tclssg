@@ -13,8 +13,6 @@ proc ::article::render args {
         -content        content
         -root           root
     }
-    mclocale [article-setting locale en_US]
-
     set title [title $collection $collectionTop]
     set headerBlock [author][date]
 
@@ -39,7 +37,13 @@ proc ::article::render args {
     return $output
 }
 
-namespace eval ::article {    
+namespace eval ::article {
+    proc lc text {
+        upvar 1 articleInput articleInput
+
+        localization get [article-setting locale en_US] ::article $text
+    }
+
     proc author {} {
         upvar 1 articleInput articleInput
 
@@ -123,10 +127,10 @@ namespace eval ::article {
                 return ""
             }
             1 {
-                return [format [mc {Published %1$s}] $dateF]
+                return [format [lc {Published %1$s}] $dateF]
             }
             default {
-                return [format [mc {Published %1$s, updated %2$s}] $dateF $modDateF]
+                return [format [lc {Published %1$s, updated %2$s}] $dateF $modDateF]
             }
         }
     }
@@ -161,7 +165,7 @@ namespace eval ::article {
             }
 
             return "<nav class=\"container-fluid tags\">[format \
-                    [mc {Tagged: <ul>%1$s</ul>}] [join \
+                    [lc {Tagged: <ul>%1$s</ul>}] [join \
                     $links]]</nav><!-- tags -->"
         }
     }

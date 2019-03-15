@@ -6,7 +6,15 @@
     date 2014-03-04
     modified 2018-03-09
     moreText {(<a href="$link">check out macros</a>)}
+    locale en_US_rot13
+    sidebar { note { content {
+        <h3>Nobhg</h3>
+        Guvf vf gur oybt bs gur fnzcyr Gpyfft cebwrpg.
+    } } }
 }
+
+This page's locale is `<%! setting locale %>`.
+
 Quis ullamco nulla anim sunt ex proident qui consequat enim adipisicing do aute irure sit dolore enim adipisicing qui sunt pariatur dolore eiusmod commodo sit laboris. Excepteur sit et magna ex labore tempor nulla.
 
 <!--more-->

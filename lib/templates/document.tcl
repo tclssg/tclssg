@@ -14,8 +14,6 @@ template-proc ::document::render {
     -pageNumber     {pageNumber 1}
     -prevPage       prevPage
     -root           root
-} {
-    mclocale [setting locale en_US]
 } {<!DOCTYPE html>
 <html>
   <head>
@@ -90,7 +88,7 @@ template-proc ::document::render {
           <ul class="nav navbar-nav navbar-right">
             <li><a rel="alternate" type="application/rss+xml" href="<%! rss-feed %>"><%=
               ([setting tagPageTag] ne {%NULL%}) && ([config {rss tagFeeds} 0]) ?
-              [mc "Tag RSS"] : [mc "RSS"]
+              [lc "Tag RSS"] : [lc "RSS"]
             %></a></li>
           </ul>
         <% } %>
@@ -151,6 +149,7 @@ namespace eval ::document {
         upvar 1 articles articles \
                 collection collection \
                 collectionTop collectionTop \
+                input input \
                 root root
 
         set result {}
@@ -159,13 +158,16 @@ namespace eval ::document {
         }]
         foreach articleInput $articles {
             set content [db input get $articleInput cooked]
-            append result \
-                   [::article::render -abbreviate $abbreviate \
-                                     -articleInput $articleInput \
-                                      -collection $collection \
-                                      -collectionTop $collectionTop \
-                                      -content $content \
-                                      -root $root]
+
+            append result [::article::render \
+                -abbreviate $abbreviate \
+                -articleInput $articleInput \
+                -collection $collection \
+                -collectionTop $collectionTop \
+                -content $content \
+                -root $root \
+            ]
+
             set collectionTop 0
         }
 
@@ -223,6 +225,12 @@ namespace eval ::document {
         }
     }
 
+    proc lc text {
+        upvar 1 input input
+
+        localization get [setting locale en_US] ::document $text
+    }
+
     proc document-title {} {
         upvar 1 input input \
                 pageNumber pageNumber
@@ -241,11 +249,11 @@ namespace eval ::document {
         }
 
         if {$tagPageTag ne ""} {
-            lappend result [format [mc {Posts tagged "%1$s"}] $tagPageTag]
+            lappend result [format [lc {Posts tagged "%1$s"}] $tagPageTag]
         }
 
         if {[string is integer $pageNumber] && ($pageNumber > 1)} {
-            lappend result [format [mc {page %1$s}] $pageNumber]
+            lappend result [format [lc {page %1$s}] $pageNumber]
         }
         if {$websiteTitle ne ""} {
             lappend result $websiteTitle
@@ -268,14 +276,14 @@ namespace eval ::document {
     }
 
     proc sidebar-links {} {
-        upvar 1 input input
-        upvar 1 root root
+        upvar 1 input input \
+                root root
 
         # Blog sidebar.
         lassign [blog-index] blogIndex
         set sidebar {}
 
-        append sidebar "<nav class=\"sidebar-links\"><h3>[mc Posts]</h3><ul>"
+        append sidebar "<nav class=\"sidebar-links\"><h3>[lc Posts]</h3><ul>"
 
         set sidebarPosts \
             [db settings inputs-with-true-setting blogPost [list $blogIndex]]
@@ -312,11 +320,11 @@ namespace eval ::document {
             append links {<nav class="prev-next text-center"><ul class="pager">}
             if {$prevPage ne {}} {
                 append links "<li class=\"previous\">[rel-link \
-                        $prevPage [mc $prevLinkTitle]]</li>"
+                        $prevPage [lc $prevLinkTitle]]</li>"
             }
             if {$nextPage ne {}} {
                 append links "<li class=\"next\">[rel-link \
-                        $nextPage [mc $nextLinkTitle]]</li>"
+                        $nextPage [lc $nextLinkTitle]]</li>"
             }
             append links {</ul></nav><!-- prev-next -->}
         }
@@ -324,7 +332,8 @@ namespace eval ::document {
     }
 
     proc tag-cloud {} {
-        upvar 1 root root
+        upvar 1 root root \
+                input input
 
         # Blog tag cloud. For each tag it links to pages that are tagged with it.
         set tagCloud {}
@@ -336,7 +345,7 @@ namespace eval ::document {
         }
         set tags [db tags list [config sortTagsBy name] $maxTagCloudTags]
 
-        append tagCloud "<nav class=\"tag-cloud\"><h3>[mc Tags]</h3><ul>"
+        append tagCloud "<nav class=\"tag-cloud\"><h3>[lc Tags]</h3><ul>"
 
         foreach tag $tags {
             append tagCloud <li>[tag-page-link $tag]</li>
