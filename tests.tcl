@@ -376,6 +376,126 @@ namespace eval ::tclssg::tests {
              [utils::longest-common-list-prefix foo {foo bar baz}] \
     } -result {{} {} {} foo foo {foo bar} {foo bar} foo}
 
+
+    tcltest::test dict-expand-shorthand-1.1 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            foo {
+                bar {
+                    baz 1
+                }
+            }
+        }]]
+    } -result {
+foo {
+    bar {
+        baz 1
+    }
+}
+}
+
+    tcltest::test dict-expand-shorthand-1.2 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            {foo bar} {
+                baz 1
+            }
+            {foo qux} 2
+        }]]
+    } -result {
+foo {
+    bar {
+        baz 1
+    }
+    qux 2
+}
+}
+
+    tcltest::test dict-expand-shorthand-1.3 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            {foo bar} {
+                baz 1
+            }
+            foo {
+                qux 2
+            }
+        }]]
+    } -result {
+foo {
+    bar {
+        baz 1
+    }
+    qux 2
+}
+}
+
+    tcltest::test dict-expand-shorthand-1.4 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            {foo bar} {
+                baz 1
+            }
+            {foo qux} 2
+        }]]
+    } -result {
+foo {
+    bar {
+        baz 1
+    }
+    qux 2
+}
+}
+
+    tcltest::test dict-expand-shorthand-1.5 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            {foo bar} {
+                baz 1
+            }
+            {foo qux quux} 2
+        }]]
+    } -result {
+foo {
+    bar {
+        baz 1
+    }
+    qux {
+        quux 2
+    }
+}
+}
+
+    tcltest::test dict-expand-shorthand-1.6 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            foo {
+                bar {
+                    baz 1
+                }
+            }
+            {foo bar qux} 2
+        }]]
+    } -result {
+foo {
+    bar {
+        baz 1
+        qux 2
+    }
+}
+}
+
+    tcltest::test dict-expand-shorthand-2.1 {} \
+                -body {
+        return \n[dict-format [utils::dict-expand-shorthand {
+            {foo bar} {
+                baz 1
+            }
+            {foo bar baz} 2
+        }]]
+    } -returnCodes error -match glob -result {can't merge*}
+
+
     # Tool tests.
 
     tcltest::test log-search-1.1 {usage message} \

@@ -7,10 +7,10 @@
     }
     tags {test {another thing}}
     date {2014-05-06 17:08}
-	sidebar { note { content {
+	{sidebar note content} {
         <h3>Hey!</h3>
         This page has a different sidebar note!
-    } } }
+    }
 }
 Consequat consectetur elit exercitation. Excepteur consectetur proident elit velit est et laboris ex laboris deserunt consectetur in ex aliquip.
 

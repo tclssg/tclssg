@@ -26,7 +26,10 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
         lassign [utils::separate-frontmatter $bin] \
                 frontmatterWithComments \
                 raw
-        set frontmatter [utils::remove-comments $frontmatterWithComments]
+        set frontmatterWithShorthand \
+            [utils::remove-comments $frontmatterWithComments]
+        set frontmatter \
+            [utils::dict-expand-shorthand $frontmatterWithShorthand]
 
         set inputDir [db config get inputDir]
         set id [utils::replace-path-root $file $inputDir {}]

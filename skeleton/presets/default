@@ -14,11 +14,7 @@ navbar {
         Contact contact
     }
 }
-sidebar {
-    note {
-        enable 0
-    }
-}
+{sidebar note enable} 0
 bootstrap {
     version 3
     theme vendor/bootstrap/css/bootstrap-theme.min.css

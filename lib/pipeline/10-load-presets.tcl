@@ -17,7 +17,8 @@ namespace eval ::tclssg::pipeline::10-load-presets {
 
                     set bin [utils::read-file -translation binary $file]
 
-                    set settings [utils::remove-comments $bin]
+                    set settings [utils::dict-expand-shorthand \
+                        [utils::remove-comments $bin]]
 
                     if {[dict exists $settings presets]} {
                         error [list forbidden setting {"presets"} in preset \

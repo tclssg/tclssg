@@ -469,6 +469,32 @@ namespace eval ::tclssg::utils {
         }
         return $common
     }
+
+
+    proc dict-expand-shorthand dict {
+        set result {}
+
+        dict for {key value} $dict {
+            if {![dict exists $result {*}$key]} {
+                dict set result {*}$key $value
+                continue
+            }
+
+            set oldValue [dict get $result {*}$key]
+
+            if {$oldValue eq $value} continue
+
+            if {[llength $oldValue] % 2 == 1} {
+                error "can't merge [list $oldValue] with [list $value] under\
+                       key [list $key]"
+            }
+
+            set merged [dict merge [dict get $result {*}$key] $value]
+            dict set result {*}$key $merged
+        }
+
+        return $result
+    }
 }
 
 package provide tclssg::utils 0

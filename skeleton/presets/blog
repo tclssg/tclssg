@@ -3,12 +3,10 @@ comments {
     enable 1
 }
 moreText {(<a href="$link">read more</a>)}
-sidebar {
-    note {
-        enable 1
-        content {
-            <h3>About</h3>
-            This is the blog of the sample Tclssg project.
-        }
+{sidebar note} {
+    enable 1
+    content {
+        <h3>About</h3>
+        This is the blog of the sample Tclssg project.
     }
 }
