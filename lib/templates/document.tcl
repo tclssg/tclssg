@@ -184,7 +184,7 @@ namespace eval ::document {
         upvar 1 input input
 
         return [expr {
-            [blog-post?] && [setting {sidebar links} 1]
+            [blog-post?] && [setting {sidebar links enable} 1]
         }]
     }
 
@@ -198,7 +198,7 @@ namespace eval ::document {
         upvar 1 input input
 
         return [expr {
-            [blog-post?] && [setting {sidebar tagCloud} 1]
+            [blog-post?] && [setting {sidebar tagCloud enable} 1]
         }]
     }
 
@@ -289,7 +289,7 @@ namespace eval ::document {
             [db settings inputs-with-true-setting blogPost [list $blogIndex]]
 
         foreach destInput [pick-at-most $sidebarPosts \
-                                        [config maxSidebarLinks]] {
+                                        [setting {sidebar links max}]] {
             set output [input-to-output-path $destInput -includeIndexHtml 0]
             set title [file-setting $destInput title $output]
             append sidebar <li>[rel-link $output $title]</li>
@@ -338,8 +338,8 @@ namespace eval ::document {
         # Blog tag cloud. For each tag it links to pages that are tagged with it.
         set tagCloud {}
 
-        # Limit the number of tags listed to according to maxTagCloudTags.
-        set maxTagCloudTags [config maxTagCloudTags inf]
+        # Limit the number of tags listed to according to the setting.
+        set maxTagCloudTags [setting {sidebar tagCloud maxTags} inf]
         if {![string is integer -strict $maxTagCloudTags]} {
             set maxTagCloudTags -1
         }

@@ -292,6 +292,14 @@ proc migrate::page {settings {indent {}}} {
     removed pagePrelude
 
     group sidebar {
+        group links {
+            transform hideSidebarLinks enable negate
+
+            if {[setting-not-empty {%FROM_CONFIG% maxSidebarLinks}]} {
+                renamed {%FROM_CONFIG% maxSidebarLinks} max
+            }
+        }
+
         group note {
             renamed sidebarNote content
 
@@ -299,10 +307,14 @@ proc migrate::page {settings {indent {}}} {
         }
 
         renamed sidebarPosition position
-
-        transform hideSidebarLinks links negate
         
-        transform hideTagCloud tagCloud negate
+        group tagCloud {
+            transform hideTagCloud enable negate
+
+            if {[setting-not-empty {%FROM_CONFIG% maxTags}]} {
+                id {%FROM_CONFIG% maxTags}
+            }
+        }
     }
 
     id tags
@@ -350,10 +362,6 @@ proc migrate::config settings {
 
     id inputDir
 
-    id maxSidebarLinks
-
-    renamed maxTags maxTagCloudTags
-
     id outputDir
 
 
@@ -361,6 +369,8 @@ proc migrate::config settings {
     dict set fromConfig copyright [pop copyright]
     dict set fromConfig comments [pop comments]
     dict set fromConfig locale [pop locale]
+    dict set fromConfig maxSidebarLinks [pop maxSidebarLinks]
+    dict set fromConfig maxTags [pop maxTags]
 
     set merged [dict merge [pop pageSettings] \
                            [dict create %FROM_CONFIG% $fromConfig]]

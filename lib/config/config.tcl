@@ -25,8 +25,6 @@ namespace eval ::tclssg::config {
         {markdown converter}
         {markdown tabs}
         macros
-        maxSidebarLinks
-        maxTagCloudTags
         outputDir
         prettyURLs
         {rss enable}
