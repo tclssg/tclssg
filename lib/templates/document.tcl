@@ -280,9 +280,10 @@ namespace eval ::document {
         set sidebarPosts \
             [db settings inputs-with-true-setting blogPost [list $blogIndex]]
 
-        foreach input [pick-at-most $sidebarPosts [config maxSidebarLinks]] {
-            set output [input-to-output-path $input -includeIndexHtml 0]
-            set title [file-setting $input title $output]
+        foreach destInput [pick-at-most $sidebarPosts \
+                                        [config maxSidebarLinks]] {
+            set output [input-to-output-path $destInput -includeIndexHtml 0]
+            set title [file-setting $destInput title $output]
             append sidebar <li>[rel-link $output $title]</li>
         }
         append sidebar {</ul></nav><!-- sidebar-links -->}
