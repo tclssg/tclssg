@@ -43,7 +43,7 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
                                    frontmatter-0-raw.tcl \
                                    $frontmatter
         debugger save-intermediate $file \
-                                   content-0-raw \
+                                   content-0-raw.md \
                                    $raw
 
         db transaction {
@@ -108,21 +108,19 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
                                           $frontmatter \
                                           prelude]\n$content
             debugger save-intermediate $file \
-                                       content-1-toexpand \
+                                       content-1-with-prelude.md \
                                        $content
             set template [templates parse $content]
             interpreter inject $interp $extraVariables
             set content [interp eval $interp $template]
         }
 
-        debugger save-intermediate $file \
-                                          content-2-markdown \
-                                          $content
+        debugger save-intermediate $file content-2-macroexpanded.md \
+                                         $content
         set content [converters markdown markdown-to-html $content]
 
-        debugger save-intermediate $file \
-                                          content-3-html \
-                                          $content
+        debugger save-intermediate $file content-3-cooked.html \
+                                         $content
         return $content
     }
 }
