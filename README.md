@@ -31,7 +31,7 @@ Getting started
 
 Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Windows 2000/XP/7/8.x/10.
 
-To use it you will need Tcl 8.5 or newer, Tcllib, and SQLite version 3 bindings for Tcl installed.
+To use it you will need Tcl 8.5 or newer, Tcllib, and SQLite version 3 bindings for Tcl installed.  Tclssg can use [tidy-html5](https://www.html-tidy.org) to make HTML prettier, but it is not required.
 
 To install those on **Debian** or **Ubuntu** run the following command:
 
