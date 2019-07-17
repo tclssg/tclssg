@@ -206,7 +206,7 @@ namespace eval ::document {
         upvar 1 input input
 
         set class_prefix [setting {bootstrap gridClassPrefix} col-md-]
-        set content_column_width [setting contentColumns 8]
+        set content_column_width [setting {bootstrap contentColumns} 8]
         set sidebar_column_width [expr {12 - $content_column_width}]
         set content_class $class_prefix$content_column_width
         set sidebar_class $class_prefix$sidebar_column_width
