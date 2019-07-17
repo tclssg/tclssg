@@ -16,11 +16,11 @@ namespace eval ::tclssg::config {
         {deployCustom end}
         {deployCustom file}
         {deployCustom start}
-        {deployFtp password}
-        {deployFtp path}
-        {deployFtp port}
-        {deployFtp server}
-        {deployFtp user}
+        {deployFTP password}
+        {deployFTP path}
+        {deployFTP port}
+        {deployFTP server}
+        {deployFTP user}
         inputDir
         {markdown converter}
         {markdown tabs}

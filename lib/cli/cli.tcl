@@ -185,23 +185,23 @@ namespace eval ::tclssg::cli::command {
         global errorInfo
         set conn [
             ::ftp::Open \
-                    [dict get $websiteConfig deployFtp server] \
-                    [dict get $websiteConfig deployFtp user] \
-                    [dict get $websiteConfig deployFtp password] \
+                    [dict get $websiteConfig deployFTP server] \
+                    [dict get $websiteConfig deployFTP user] \
+                    [dict get $websiteConfig deployFTP password] \
                     -port [utils::dict-default-get 21 \
                                                    $websiteConfig \
-                                                   deployFtp \
+                                                   deployFTP \
                                                    port] \
                     -mode passive
         ]
-        set deployFtpPath [dict get $websiteConfig deployFtp path]
+        set deployFTPPath [dict get $websiteConfig deployFTP path]
 
         ::ftp::Type $conn binary
 
         foreach file [::fileutil::find $outputDir {file isfile}] {
             set destFile [utils::replace-path-root $file \
                                                    $outputDir \
-                                                   $deployFtpPath]
+                                                   $deployFTPPath]
             set path [file split [file dirname $destFile]]
             set partialPath {}
 

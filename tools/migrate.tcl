@@ -352,7 +352,7 @@ proc migrate::config settings {
 
     id deployCustom
 
-    id deployFtp
+    renamed deployFtp deployFTP
 
     removed description
 
