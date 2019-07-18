@@ -67,7 +67,7 @@ template-proc ::document::render {
 
   <body>
     <%! setting {body top} {} %>
-    <div class="navbar navbar-default">
+    <nav class="navbar navbar-default">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -94,10 +94,10 @@ template-proc ::document::render {
         <% } %>
         </div><!--/.nav-collapse -->
       </div>
-    </div>
+    </nav>
 
 
-    <div class="container">
+    <main class="container">
       <div class="row">
         <% if {[sidebar-note?] ||
                ([blog-post?] && ([sidebar-links?] || [tag-cloud?]))} { %>
@@ -108,11 +108,11 @@ template-proc ::document::render {
             <%! content %>
             <%! prev-next-link {« Newer posts} {Older posts »} %>
           </section>
-          <div class="<%= $sidebar_class %> well content">
+          <aside class="<%= $sidebar_class %> well content">
             <%! if {[sidebar-note?]} sidebar-note %>
             <%! if {[sidebar-links?]} sidebar-links %>
             <%! if {[tag-cloud?]} tag-cloud %>
-          </div>
+          </aside>
          <% } else { %>
           <section class="<%! setting {bootstrap gridClassPrefix} col-md- %>12 content">
             <%! content %>
@@ -128,12 +128,11 @@ template-proc ::document::render {
 
       <%! comments %>
 
-
       <footer class="footer">
         <%! footer %>
       </footer>
 
-    </div><!-- /container -->
+    </main><!-- /container -->
 
 
     <!-- Bootstrap core JavaScript
