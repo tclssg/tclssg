@@ -4,7 +4,7 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 set ::footnotes {}
-set ::footnoteSuffix {}
+set ::footnoteSuffixes {}
 
 # Return the footnote number that corresponds to the label $label.
 proc footnote-number label {
@@ -19,11 +19,13 @@ proc footnote-id {label {link 0}} {
 
     # Generate a page-unique footnote suffix that cannot be mistaken for
     # a footnote number.
-    if {$::footnoteSuffix eq {}} {
-        set ::footnoteSuffix -[string range [sha256 -hex $::input] end-3 end]
+    if {![dict exists $::footnoteSuffixes $::input]} {
+        dict set ::footnoteSuffixes \
+                 $::input \
+                 -[string range [sha256 -hex $::input] end-3 end]
     }
 
-    set suffix $::footnoteSuffix
+    set suffix [dict get $::footnoteSuffixes $::input]
     if {$link} {
         return "footnote-$n-link$suffix"
     } else {
