@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -7,19 +7,19 @@ set ::footnotes {}
 set ::footnoteSuffix {}
 
 # Return the footnote number that corresponds to the label $label.
-proc footnote-number {label} {
+proc footnote-number label {
     return [expr {
         [lsearch $::footnotes $label] / 2 + 1
     }]
 }
 
-# Generate a website-unique footnote id or footnote link id.
+# Return a website-unique id for a footnote or a footnote link.
 proc footnote-id {label {link 0}} {
     set n [footnote-number $label]
 
-    # Generate a unique footnote suffix that cannot be mistaken for a footnote
-    # number.
-    if {$::footnoteSuffix eq ""} {
+    # Generate a page-unique footnote suffix that cannot be mistaken for
+    # a footnote number.
+    if {$::footnoteSuffix eq {}} {
         set ::footnoteSuffix -[string range [sha256 -hex $::input] end-3 end]
     }
 
@@ -31,7 +31,7 @@ proc footnote-id {label {link 0}} {
     }
 }
 
-# Generate a link to an existing footnote by its label.
+# Return a link to an existing footnote by its label.
 proc footnote-link label {
     return "<span class=\"footnote-link\" id=\"[footnote-id \
         $label 1]\"><a href=\"#[footnote-id \
@@ -65,7 +65,8 @@ proc footnote args {
     return [footnote-link $label]
 }
 
-# Generate a list of all footnotes. This is typically used at the end of a page.
+# Return (as an HTML list) and empty all stored footnotes.
+# This is typically used at the end of a page.
 proc footnotes {} {
     set result {<ol class="footnotes">}
     dict for {label footnote} $::footnotes {
@@ -73,5 +74,9 @@ proc footnotes {} {
                 $label 0]\">$footnote <a href=\"#[footnote-id \
                 $label 1]\">↩</a></li>"
     }
-    append result {</ol>}
+    append result </ol>
+
+    set ::footnotes {}
+
+    return $result
 }
