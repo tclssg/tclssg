@@ -13,6 +13,7 @@ namespace eval ::tclssg::pipeline::80-tidy-html {
         --drop-empty-elements  0
         --indent               1
         --indent-spaces        4
+        --preserve-entities    1
         --show-warnings        0
         --tidy-mark            0
         --quiet                1
