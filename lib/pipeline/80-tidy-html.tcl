@@ -14,9 +14,9 @@ namespace eval ::tclssg::pipeline::80-tidy-html {
         --indent               1
         --indent-spaces        4
         --preserve-entities    1
+        --quiet                1
         --show-warnings        0
         --tidy-mark            0
-        --quiet                1
         --wrap                 0
     }
 
