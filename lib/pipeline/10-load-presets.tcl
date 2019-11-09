@@ -15,7 +15,7 @@ namespace eval ::tclssg::pipeline::10-load-presets {
                 if {[regexp {^/?presets} $id]} {
                     log::info "reading preset file [list $file]"
 
-                    set bin [utils::read-file -translation binary $file]
+                    set bin [utils::read-file -translation auto $file]
 
                     set settings [utils::dict-expand-shorthand \
                         [utils::remove-comments $bin]]
