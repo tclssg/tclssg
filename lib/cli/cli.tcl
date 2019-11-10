@@ -139,40 +139,47 @@ namespace eval ::tclssg::cli::command {
 
         proc exec-deploy-command {command substDict} {
             if {$command eq {}} return
-            set preparedCommand [::struct::list mapfor x $command {
-                expr {
-                    [regexp {^\$(.*)$} $x _ key] ?
-                    [dict get $substDict $key] :
-                    $x
-                }
-            }]
+
+            set script "string map [list $substDict] \$x"
+            set preparedCommand [::struct::list mapfor x $command $script]
+
             log::info "running command [list $preparedCommand]"
+
             set exitStatus 0
             try {
                 exec -ignorestderr -- {*}$preparedCommand >@ stdout 2>@ stderr
             } on error {msg options} {
                 lassign [dict get $options -errorcode] errorCode _ exitStatus
+
                 if {$errorCode ne {CHILDSTATUS}} {
                     return -options $options $msg
                 }
             }
+
             if {$exitStatus != 0} {
                 log::error "command [list $preparedCommand] returned exit\
                             code $exitStatus."
             }
         }
+
         set websiteConfig [config::load $inputDir]
         set deployCustom [dict get $websiteConfig deployCustom]
 
         log::info deploying...
-        set vars [dict create outputDir $outputDir]
+
+        set vars [dict create \$outputDir $outputDir]
+
         exec-deploy-command [dict get $deployCustom start] $vars
+
         foreach file [::fileutil::find $outputDir {file isfile}] {
-            dict set vars file $file
-            dict set vars rel [::fileutil::relative $outputDir $file]
+            dict set vars \$file $file
+            dict set vars \$rel [::fileutil::relative $outputDir $file]
+
             exec-deploy-command [dict get $deployCustom file] $vars
         }
+
         exec-deploy-command [dict get $deployCustom end] $vars
+
         log::info done
     }
 
