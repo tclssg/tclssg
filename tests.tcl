@@ -133,6 +133,22 @@ namespace eval ::tclssg::tests {
         slugify {hello world}
     } -result hello-world
 
+    tcltest::test slug-compare-1.1 {} -body {
+        slug-compare {Hello, World!} {hello world}
+    } -result 0
+
+    tcltest::test slug-compare-1.2 {} -body {
+        slug-compare {HELLO      WORLD     } {    hello world}
+    } -result 0
+
+    tcltest::test slug-compare-2.1 {} -body {
+        slug-compare foo bar
+    } -result 1
+
+    tcltest::test slug-compare-2.2 {} -body {
+        slug-compare bar foo
+    } -result -1
+
     tcltest::test replace-path-root-1.1 {replace-path-root} \
                 -body {
         replace-path-root ./a/b/c/d/e/f ./a ./x

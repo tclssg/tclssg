@@ -12,6 +12,10 @@ namespace eval ::tclssg::db {
 
     proc init {} {
         sqlite3 tclssg-db :memory:
+
+        tclssg-db collate SLUG ::tclssg::utils::slug-compare
+        tclssg-db nullvalue %NULL%
+
         # Do not store page settings as columns to allow pages to set
         # custom settings. These settings can then be parsed by templates
         # without changes to the static site generator source itself.
@@ -43,13 +47,11 @@ namespace eval ::tclssg::db {
             );
             CREATE TABLE tags(
                 file TEXT,
-                tag TEXT,
+                tag TEXT COLLATE SLUG,
                 PRIMARY KEY (file, tag),
                 FOREIGN KEY(file) REFERENCES input(file)
             );
         }
-
-        tclssg-db nullvalue %NULL%
 
         foreach {name script} {
             dict_path_exists  ::tclssg::db::dict-path-exists
