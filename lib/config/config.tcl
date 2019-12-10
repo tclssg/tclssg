@@ -48,7 +48,10 @@ namespace eval ::tclssg::config {
     # the raw content of the file without validating it. If $verbose is true
     # print the content.
     proc load {inputDir {verbose 1}} {
-        set configRaw [utils::read-file [file join $inputDir website.conf]]
+        set configRaw [utils::read-file \
+            -encoding binary \
+            -translation auto \
+            [file join $inputDir website.conf]]
         set configWithShorthand [utils::remove-comments $configRaw]
         set config [utils::dict-expand-shorthand $configWithShorthand]
 

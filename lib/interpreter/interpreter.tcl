@@ -49,7 +49,8 @@ namespace eval ::tclssg::interpreter {
             foreach file $files {
                 if {$file in $sourced} continue
                 lappend sourced $file
-                interp eval $interp [utils::read-file -translation auto\
+                interp eval $interp [utils::read-file -encoding binary \
+                                                      -translation auto \
                                                       $file]
             }
         }
