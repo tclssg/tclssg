@@ -55,18 +55,25 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
                 set clockOptions [list -timezone $timezone]
             }
 
-            set timestamp [utils::incremental-clock-scan \
-                              [dict-default-get {} $frontmatter date] \
-                              $clockOptions]
-            if {$timestamp ne {{} {}}} {
-                dict set frontmatter timestamp $timestamp
+            set timestamp {{} {}}
+            if {[dict exists $frontmatter date]} {
+                try {
+                    utils::incremental-clock-scan \
+                        [dict get $frontmatter date] \
+                        $clockOptions
+                } on ok timestamp {
+                    dict set frontmatter timestamp $timestamp
+                }
             }
 
-            set modified [utils::incremental-clock-scan \
-                             [dict-default-get {} $frontmatter modified] \
-                             $clockOptions]
-            if {$modified ne {{} {}}} {
-                dict set frontmatter modifiedTimestamp $modified
+            if {[dict exists $frontmatter modified]} {
+                try {
+                    utils::incremental-clock-scan \
+                        [dict get $frontmatter modified] \
+                        $clockOptions
+                } on ok modified {
+                    dict set frontmatter modifiedTimestamp $modified
+                }
             }
 
             db input add \

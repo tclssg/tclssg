@@ -145,6 +145,10 @@ namespace eval ::tclssg::tests {
         incremental-clock-scan {2014-06-26 20:10:00-24:00}
     } -result [list [clock add $correctSecondsUTC 1 day] {%Y-%m-%dT%H:%M:%S%z}]
 
+    tcltest::test incremental-clock-scan-4.0 {incremental-clock-scan with tz} \
+                -body {
+        incremental-clock-scan nope
+    } -returnCodes error -result {no known format matches date-time string nope}
 
     tcltest::test slugify-1.1 {slugify} \
                 -body {

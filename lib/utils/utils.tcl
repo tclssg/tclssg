@@ -284,6 +284,12 @@ namespace eval ::tclssg::utils {
             } on error {} {}
         }
 
+        if {$result(timeVal) eq {}} {
+            return -code error \
+                   -errorcode [list INCR_CLOCK_SCAN BAD_DATE_TIME] \
+                   [list no known format matches date-time string $dateOrig]
+        }
+
         return [list $result(timeVal) $result(format)]
     }
 
