@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -227,36 +227,64 @@ namespace eval ::tclssg::utils {
     }
 
     # Try several formats for clock scan.
-    proc incremental-clock-scan {date {options {}} {debug 0}} {
-        set date [regsub -all {[ :.T/]+} $date {-}]
+    proc incremental-clock-scan {dateOrig {options {}} {debug 0}} {
+        set date [regsub {([+-])(\d\d):(\d\d)$} $dateOrig {\1\2\3}]
+        set date [regsub -all {[ :.T/]+} $date -]
 
-        set resultTimeVal {}
-        set resultFormat {}
-        foreach {formatScan formatStandard padding} {
-            {%Y}                {%Y}                {-01-01-00-00-00}
-            {%Y-%m}             {%Y-%m}             {-01-00-00-00}
-            {%Y-%m-%d}          {%Y-%m-%d}          {-00-00-00}
-            {%Y-%m-%d-%H-%M}    {%Y-%m-%dT%H:%M}    {-00}
-            {%Y-%m-%d-%H-%M-%S} {%Y-%m-%dT%H:%M:%S} {}
+        set result(timeVal) {}
+        set result(format) {}
+
+        foreach {format(test) format(standard) format(padding) format(scan)} {
+            %Y
+            %Y
+            -01-01-00-00-00
+            %Y-%m-%d-%H-%M-%S
+
+            %Y-%m
+            %Y-%m
+            -01-00-00-00
+            %Y-%m-%d-%H-%M-%S
+
+            %Y-%m-%d
+            %Y-%m-%d
+            -00-00-00
+            %Y-%m-%d-%H-%M-%S
+
+            %Y-%m-%d-%H-%M
+            %Y-%m-%dT%H:%M
+            -00
+            %Y-%m-%d-%H-%M-%S
+
+            %Y-%m-%d-%H-%M-%S
+            %Y-%m-%dT%H:%M:%S
+            {}
+            %Y-%m-%d-%H-%M-%S
+
+            %Y-%m-%d-%H-%M-%S%z
+            %Y-%m-%dT%H:%M:%S%z
+            {}
+            %Y-%m-%d-%H-%M-%S%z
         } {
             if {$debug} {
-                log::debug [list $formatScan $date]
+                log::debug [list $format(test) $date]
             }
             try {
-                clock scan $date -format $formatScan {*}$options
+                clock scan $date -format $format(test) {*}$options
             } on ok scan {
                 # Work around unexpected treatment of %Y and %Y-%m dates;
                 # see http://wiki.tcl-lang.org/2525.
-                set resultTimeVal [clock scan [join [list $date $padding] ""] \
-                        -format {%Y-%m-%d-%H-%M-%S} {*}$options]
-                set resultFormat $formatStandard
+                set result(timeVal) [clock scan $date$format(padding) \
+                                                -format $format(scan) \
+                                                {*}$options]
+                set result(format) $format(standard)
                 if {$debug} {
                     log::debug match
                     log::debug [clock format $scan {*}$options]
                 }
             } on error {} {}
         }
-        return [list $resultTimeVal $resultFormat]
+
+        return [list $result(timeVal) $result(format)]
     }
 
     # Find the first directory dir in list dirs in which path exists.

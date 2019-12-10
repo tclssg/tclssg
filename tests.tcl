@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017 dbohdan.
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019 dbohdan.
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require fileutil  1
@@ -9,7 +9,7 @@ package require tcltest   2
 
 namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $argv0/___]]]
-    
+
     lappend ::auto_path $path
     namespace eval ::tclssg [list variable path $path]
 
@@ -79,14 +79,16 @@ namespace eval ::tclssg::tests {
         [regexp {CommonMark converter} [exec cmark --version]]
     }]
 
+    tclssg::db::init
+
+    # Unit tests.
+
     set correctSeconds [clock scan {2014-06-26-20-10} \
             -format {%Y-%m-%d-%H-%M}]
     set correctSecondsShort [clock scan {2014-01-01-00-00-00} \
             -format {%Y-%m-%d-%H-%M-%S}]
-
-    tclssg::db::init
-
-    # Unit tests.
+    set correctSecondsUTC [clock scan {2014-06-26-20-10} \
+            -format {%Y-%m-%d-%H-%M} -gmt 1]
 
     tcltest::test incremental-clock-scan-1.1 {incremental-clock-scan} \
                 -body {
@@ -122,6 +124,27 @@ namespace eval ::tclssg::tests {
                 -body {
         incremental-clock-scan {2014-01-01 00:00:00}
     } -result [list $correctSecondsShort {%Y-%m-%dT%H:%M:%S}]
+
+    tcltest::test incremental-clock-scan-3.1 {incremental-clock-scan with TZ} \
+                -body {
+        incremental-clock-scan {2014-06-26 20:10:00Z}
+    } -result [list $correctSecondsUTC {%Y-%m-%dT%H:%M:%S%z}]
+
+    tcltest::test incremental-clock-scan-3.2 {incremental-clock-scan with TZ} \
+                -body {
+        incremental-clock-scan {2014-06-26 20:10:00+00}
+    } -result [list $correctSecondsUTC {%Y-%m-%dT%H:%M:%S%z}]
+
+    tcltest::test incremental-clock-scan-3.3 {incremental-clock-scan with tz} \
+                -body {
+        incremental-clock-scan {2014-06-26 20:10:00-2400}
+    } -result [list [clock add $correctSecondsUTC 1 day] {%Y-%m-%dT%H:%M:%S%z}]
+
+    tcltest::test incremental-clock-scan-3.4 {incremental-clock-scan with tz} \
+                -body {
+        incremental-clock-scan {2014-06-26 20:10:00-24:00}
+    } -result [list [clock add $correctSecondsUTC 1 day] {%Y-%m-%dT%H:%M:%S%z}]
+
 
     tcltest::test slugify-1.1 {slugify} \
                 -body {
