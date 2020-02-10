@@ -23,4 +23,7 @@ Macro test: 1 + 2 = <%= 1 + 2 %>. Set `macros 1` in `website.conf` to see.
 
 Data test: `<%! db input get data/test.json raw %>`
 
+Markdown data test:
+<%! db input get data/test.md raw %>
+
 Custom template demo: `<%! demo %>`
