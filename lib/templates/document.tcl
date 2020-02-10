@@ -1,11 +1,12 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
 namespace eval ::document {}
 template-proc ::document::render {
     -articles       articles
+    -articleScript  {articleScript ::article::render}
     -collection     {collection 0}
     -collectionTop  {collectionTop 1}
     -input          input
@@ -146,6 +147,7 @@ template-proc ::document::render {
 namespace eval ::document {
     proc content {} {
         upvar 1 articles articles \
+                articleScript articleScript \
                 collection collection \
                 collectionTop collectionTop \
                 input input \
@@ -158,7 +160,7 @@ namespace eval ::document {
         foreach articleInput $articles {
             set content [db input get $articleInput cooked]
 
-            append result [::article::render \
+            append result [{*}$articleScript \
                 -abbreviate $abbreviate \
                 -articleInput $articleInput \
                 -collection $collection \
