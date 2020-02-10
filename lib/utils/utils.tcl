@@ -107,6 +107,7 @@ namespace eval ::tclssg::utils {
     }
 
     proc slug-compare {a b} {
+        if {$a eq $b} { return 0 }
         return [string compare [slugify $a] [slugify $b]]
     }
 
