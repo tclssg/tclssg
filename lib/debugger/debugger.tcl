@@ -49,7 +49,7 @@ namespace eval ::tclssg::debugger {
             log::debug "saving intermediate stage [list $suffix] of\
                         [list $filename] to [list $dest]"
         } else {
-            log::debug "        saving stage [list $suffix] to [list $dest]"
+            log::debug "saving stage [list $suffix] to [list $dest]"
         }
 
         fileutil::writeFile $dest $data
