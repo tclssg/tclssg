@@ -45,7 +45,7 @@ namespace eval Markdown {
     # document. The format of the output is generic XHTML.
     #
     proc convert {markdown {tabs 0}} {
-        set markdown [regsub {\r\n?} $markdown {\n}]
+        set markdown [regsub -all {\r\n?} $markdown \n]
         if {!$tabs} {
             set markdown [::textutil::untabify2 $markdown 4]
         }
