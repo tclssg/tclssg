@@ -11,8 +11,11 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
     proc load files {
         set interp 20-load-markdown
         interpreter create $interp
+
+        set inputDir [db config get inputDir]
         foreach file $files {
-            if {[lindex [file split $file] end-1] in {data}} continue
+            set id [utils::replace-path-root $file $inputDir {}]
+            if {[lindex [file split $id] 0] in {data debug}} continue
 
             if {[string tolower [file extension $file]] in {.md .markdown}} {
                 log::info "reading Markdown file [list $file]"
