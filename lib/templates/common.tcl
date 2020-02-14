@@ -77,3 +77,7 @@ proc url-join args {
     }
     return $url
 }
+
+proc absolute? link {
+    return [regexp {^(?:[a-z]+:)?//} $link]
+}

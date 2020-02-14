@@ -57,7 +57,9 @@ template-proc ::document::render {
       <% if {[setting {bootstrap version} 3] ne {3}} {
         error "Bootstrap version must be \"3\""
       } %>
-      <link rel="stylesheet" href="<%! file join $root [setting {bootstrap theme}] %>">
+      <link rel="stylesheet" href="<%= [absolute? [setting {bootstrap theme}]] ?
+                                       [setting {bootstrap theme}] :
+                                       [file join $root [setting {bootstrap theme}]] %>">
     <% } %>
     <!-- Custom stylesheets, if any -->
     <% foreach cssLink [setting customCSS {}] { %>
