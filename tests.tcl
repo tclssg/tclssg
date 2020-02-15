@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019 dbohdan.
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020 dbohdan.
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require fileutil  1
@@ -719,7 +719,9 @@ position right
 comments {
 enable 1
 }
-moreText {(<a href="$link">read more</a>)}
+more {
+markup {(<a href="$link">read more</a>)}
+}
 sidebar {
 note {
 content {

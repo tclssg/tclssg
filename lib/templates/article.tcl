@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -141,11 +141,14 @@ namespace eval ::article {
 
         if {$abbreviate} {
             set link [link-path [article-output] $absoluteLink]
-            set moreText [article-setting moreText \
-                                          {(<a href="$link">read more</a>)}]
+            set moreMarkup [article-setting {more markup} \
+                                            {(<a href="$link">$text</a>)}]
+            set moreText [article-setting {more text} [lc {read more}]]
             if {[regexp {(.*?)<!-- *more *-->} $content _ content]} {
                 append content \
-                       [string map [list \$link [entities $link]] $moreText]
+                       [string map [list \$link [entities $link] \
+                                         \$text [entities $moreText]] \
+                                   $moreMarkup]
             }
         }
         return $content

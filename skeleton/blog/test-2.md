@@ -5,7 +5,9 @@
     tags {test something}
     date 2014-03-04
     modified 2018-03-09
-    moreText {(<a href="$link">check out macros</a>)}
+    more {
+        markup {(<a href="$link">check out macros</a>)}
+    }
     locale en_US_rot13
     {sidebar note content} {
         <h3>Nobhg</h3>

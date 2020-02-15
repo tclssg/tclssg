@@ -275,7 +275,9 @@ proc migrate::page {settings {indent {}}} {
 
     renamed modifiedDate modified
 
-    id moreText
+    group more {
+        renamed moreText markup
+    }
 
     group navbar {
         renamed navbarBrand brand

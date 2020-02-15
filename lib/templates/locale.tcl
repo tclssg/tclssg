@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -49,6 +49,7 @@ namespace eval ::localization {
 localization set en_US ::article {Published %1$s}
 localization set en_US ::article {Published %1$s, updated %2$s}
 localization set en_US ::article {Tagged: <ul>%1$s</ul>}
+localization set en_US ::article {read more}
 
 localization set en_US ::document {Tag RSS}
 localization set en_US ::document RSS

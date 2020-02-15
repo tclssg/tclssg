@@ -9,7 +9,9 @@
     show {
         date 0
     }
-    moreText {(<a href="$link">read more still</a>)}
+    more {
+        text {read more still}
+    }
 }
 **Lorem ipsum** reprehenderit _ullamco deserunt sit eiusmod_ ut minim in id
 voluptate proident enim eu aliqua sit.

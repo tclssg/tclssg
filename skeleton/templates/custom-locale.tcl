@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -13,6 +13,9 @@ apply {{} {
         
         {Tagged: <ul>%1$s</ul>}
         {Gnttrq: <ul>%1$s</ul>}
+
+        {read more}
+        {ernq zber}
     } {
         localization set en_US_rot13 ::article $text $translation   
     }
