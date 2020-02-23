@@ -352,9 +352,15 @@ namespace eval ::document {
 
         append tagCloud "<nav class=\"tag-cloud\"><h3>[lc Tags]</h3><ul>"
 
+        set hiddenTags {}
+        foreach tag [setting {sidebar tagCloud hide} {}] {
+            lappend hiddenTags [slugify $tag]
+        }
         foreach tag $tags {
+            if {[slugify $tag] in $hiddenTags} continue
             append tagCloud <li>[tag-page-link $tag]</li>
         }
+
         append tagCloud {</ul></nav><!-- tag-cloud -->}
 
         return $tagCloud
