@@ -54,11 +54,12 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
         db transaction {
             # Parse date and modified into a Unix timestamp plus a format
             # string.
-            set clockOptions {}
-            set timezone [db config get timezone {}]
-            if {$timezone ne {}} {
-                set clockOptions [list -timezone $timezone]
-            }
+            set presetTimezone [db settings preset-get $file {timezone date} {}]
+            set timezone [dict-default-get $presetTimezone \
+                                           $frontmatter timezone date]
+            set clockOptions [expr {
+                $timezone eq {} ? {} : [list -timezone $timezone]
+            }]
 
             set timestamp {{} {}}
             if {[dict exists $frontmatter date]} {

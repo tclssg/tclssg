@@ -95,13 +95,30 @@ namespace eval ::article {
 
         set date [article-setting $dateKey]
         set timestamp [article-setting $timestampKey]
+        set tz [article-setting {timezone date} {}]
+        set formatOptions [expr {
+            $tz eq {} ? {} : [list -timezone $tz]
+        }]
 
         if {$date eq {%NULL%}} {
             return {}
         } else {
-            set dt [clock format [lindex $timestamp 0] \
-                                 -format [lindex $timestamp 1]]
-            return "<time datetime=\"$dt\" class=\"$htmlClass\">$date</time>"
+            set datetime [clock format [lindex $timestamp 0] \
+                                 -format [lindex $timestamp 1] \
+                                 {*}$formatOptions \
+            ]
+            if {[string first %z [lindex $timestamp 1]] == -1
+                && $tz ne {}} {
+                append datetime [clock format 0 -format %z -timezone $tz]
+            }
+
+            set text {}
+            if {[article-setting {timezone show} 0]} {
+                set text " [article-setting {timezone text}]"
+            }
+
+            return "<time datetime=\"$datetime\"\
+                          class=\"$htmlClass\">$date$text</time>"
         }
     }
 

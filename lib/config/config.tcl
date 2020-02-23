@@ -38,7 +38,6 @@ namespace eval ::tclssg::config {
         {tidy enable}
         {tidy options}
         {tidy path}
-        timezone
         url
     }
 
@@ -70,7 +69,6 @@ namespace eval ::tclssg::config {
                                         path
                                         server
                                         start
-                                        timezone
                                         url
                                         user
                                     }]

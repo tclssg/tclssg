@@ -325,6 +325,12 @@ proc migrate::page {settings {indent {}}} {
 
     id tags
 
+    group timezone {
+        if {[setting-not-empty {%FROM_CONFIG% timezone}]} {
+            renamed {%FROM_CONFIG% timezone} date
+        }
+    }
+
     id title
 
     renamed updated modified
@@ -382,6 +388,7 @@ proc migrate::config settings {
     dict set fromConfig maxSidebarLinks [pop maxSidebarLinks]
     dict set fromConfig maxTags [pop maxTags]
     dict set fromConfig sortTagsBy [pop sortTagsBy]
+    dict set fromConfig timezone [pop timezone]
     dict set fromConfig websiteTitle [pop websiteTitle]
 
     set merged [dict merge [pop pageSettings] \
@@ -421,8 +428,6 @@ proc migrate::config settings {
     removed tagPage
 
     removed template
-
-    id timezone
 
     id url
 

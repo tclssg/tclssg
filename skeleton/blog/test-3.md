@@ -7,7 +7,13 @@
     }
     tags {test {another thing}}
     date {2014-05-06 17:08}
-	{sidebar note content} {
+    timezone {
+        date UTC
+        show yes
+        text {Coordinated Universal Time}
+    }
+
+    {sidebar note content} {
         <h3>Hey!</h3>
         This page has a different sidebar note!
     }
