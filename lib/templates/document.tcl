@@ -342,7 +342,9 @@ namespace eval ::document {
         set tagCloud {}
 
         # Limit the number of tags listed to according to the setting.
-        set maxTagCloudTags [setting {sidebar tagCloud maxTags} inf]
+        set maxTagCloudTags [setting {sidebar tagCloud max} \
+                                     [setting {sidebar tagCloud maxTags} \
+                                              inf]]
         if {![string is integer -strict $maxTagCloudTags]} {
             set maxTagCloudTags -1
         }

@@ -314,7 +314,7 @@ proc migrate::page {settings {indent {}}} {
             transform hideTagCloud enable negate
 
             if {[setting-not-empty {%FROM_CONFIG% maxTags}]} {
-                id {%FROM_CONFIG% maxTags}
+                renamed {%FROM_CONFIG% maxTags} max
             }
 
             if {[setting-not-empty {%FROM_CONFIG% sortTagsBy}]} {
