@@ -1,7 +1,7 @@
 #! /usr/bin/env tclsh
 # This tool will help you migrate a typical project for Tclssg 1.0.x or earlier
 # to Tclssg 2.x.
-# Copyright (c) 2019
+# Copyright (c) 2019, 2020
 # dbohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -316,6 +316,10 @@ proc migrate::page {settings {indent {}}} {
             if {[setting-not-empty {%FROM_CONFIG% maxTags}]} {
                 id {%FROM_CONFIG% maxTags}
             }
+
+            if {[setting-not-empty {%FROM_CONFIG% sortTagsBy}]} {
+                renamed {%FROM_CONFIG% sortTagsBy} sortBy
+            }
         }
     }
 
@@ -373,6 +377,7 @@ proc migrate::config settings {
     dict set fromConfig locale [pop locale]
     dict set fromConfig maxSidebarLinks [pop maxSidebarLinks]
     dict set fromConfig maxTags [pop maxTags]
+    dict set fromConfig sortTagsBy [pop sortTagsBy]
 
     set merged [dict merge [pop pageSettings] \
                            [dict create %FROM_CONFIG% $fromConfig]]
@@ -407,8 +412,6 @@ proc migrate::config settings {
         id {sitemap enable}
     }
     pop sitemap
-
-    id sortTagsBy
 
     removed tagPage
 

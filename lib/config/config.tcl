@@ -34,7 +34,6 @@ namespace eval ::tclssg::config {
         {server host}
         {server port}
         {sitemap enable}
-        sortTagsBy
         tagPages
         {tidy enable}
         {tidy options}

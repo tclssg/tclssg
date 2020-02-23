@@ -346,7 +346,9 @@ namespace eval ::document {
         if {![string is integer -strict $maxTagCloudTags]} {
             set maxTagCloudTags -1
         }
-        set tags [db tags list [config sortTagsBy name] $maxTagCloudTags]
+        set tags [db tags list \
+                          [setting {sidebar tagCloud sortBy} name] \
+                          $maxTagCloudTags]
 
         append tagCloud "<nav class=\"tag-cloud\"><h3>[lc Tags]</h3><ul>"
 
