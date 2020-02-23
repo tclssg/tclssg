@@ -329,6 +329,10 @@ proc migrate::page {settings {indent {}}} {
 
     renamed updated modified
 
+    if {[setting-not-empty {%FROM_CONFIG% websiteTitle}]} {
+        id {%FROM_CONFIG% websiteTitle}
+    }
+
     dict unset settings %FROM_CONFIG%
     drain
 
@@ -378,6 +382,7 @@ proc migrate::config settings {
     dict set fromConfig maxSidebarLinks [pop maxSidebarLinks]
     dict set fromConfig maxTags [pop maxTags]
     dict set fromConfig sortTagsBy [pop sortTagsBy]
+    dict set fromConfig websiteTitle [pop websiteTitle]
 
     set merged [dict merge [pop pageSettings] \
                            [dict create %FROM_CONFIG% $fromConfig]]
@@ -420,8 +425,6 @@ proc migrate::config settings {
     id timezone
 
     id url
-
-    id websiteTitle
 
     drain 
 

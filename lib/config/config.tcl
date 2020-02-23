@@ -40,7 +40,6 @@ namespace eval ::tclssg::config {
         {tidy path}
         timezone
         url
-        websiteTitle
     }
 
     # Load the website configuration file from the directory inputDir. Return
@@ -74,7 +73,6 @@ namespace eval ::tclssg::config {
                                         timezone
                                         url
                                         user
-                                        websiteTitle
                                     }]
             log::info "loaded config file \{"
             log::info [::textutil::indent $formatted {    }]\n\}

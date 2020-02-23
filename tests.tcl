@@ -653,7 +653,6 @@ enable 1
 }
 # The setting "tagPage" has been removed (was: "blog/tags/tag.md").
 url http://example.com/
-websiteTitle {SSG Test}
 }
 
     tcltest::test migrate-1.2 {migrate v1.0.1 page settings} \

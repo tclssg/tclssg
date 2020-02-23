@@ -238,7 +238,7 @@ namespace eval ::document {
         upvar 1 input input \
                 pageNumber pageNumber
 
-        set websiteTitle [config websiteTitle {}]
+        set websiteTitle [setting websiteTitle {}]
 
         set sep { | }
 
@@ -275,7 +275,7 @@ namespace eval ::document {
     proc navbar-brand {} {
         upvar 1 input input
 
-        return [setting {navbar brand} [config websiteTitle {}]]
+        return [setting {navbar brand} [setting websiteTitle {}]]
     }
 
     proc sidebar-links {} {

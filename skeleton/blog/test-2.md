@@ -13,6 +13,7 @@
         <h3>Nobhg</h3>
         Guvf vf gur oybt bs gur fnzcyr Gpyfft cebwrpg.
     }
+    websiteTitle {FFT Grfg}
 }
 
 This page's locale is `<%! setting locale %>`.
