@@ -8,28 +8,32 @@ namespace eval ::tclssg::interpreter {
     namespace ensemble create
     namespace path ::tclssg
 
+    variable aliases {
+        ::base64::encode                    ::base64::encode
+        ::base64::decode                    ::base64::decode
+        ::csv::iscomplete                   ::csv::iscomplete
+        ::csv::split                        ::csv::split
+        ::json::json2dict                   ::json::json2dict
+        ::puts                              ::puts
+        ::tclssg::converters::markdown::markdown-to-html
+                                            markdown-to-html
+        ::tclssg::converters::markdown::inline-markdown-to-html
+                                            inline-markdown-to-html
+        ::tclssg::db                        db
+        ::tclssg::utils::dict-default-get   dict-default-get
+        ::tclssg::utils::replace-path-root  replace-path-root
+        ::tclssg::utils::slugify            slugify
+        ::tclssg::utils::sha256             sha256
+        ::tclssg::version                   version
+        ::textutil::indent                  indent
+    }
+
     proc create interp {
+        variable aliases
+
         ::safe::interpCreate $interp
 
-        foreach {command alias} {
-            ::base64::encode                    ::base64::encode
-            ::base64::decode                    ::base64::decode
-            ::csv::iscomplete                   ::csv::iscomplete
-            ::csv::split                        ::csv::split
-            ::json::json2dict                   ::json::json2dict
-            ::puts                              ::puts
-            ::tclssg::converters::markdown::markdown-to-html
-                                                markdown-to-html
-            ::tclssg::converters::markdown::inline-markdown-to-html
-                                                inline-markdown-to-html
-            ::tclssg::db                        db
-            ::tclssg::utils::dict-default-get   dict-default-get
-            ::tclssg::utils::replace-path-root  replace-path-root
-            ::tclssg::utils::slugify            slugify
-            ::tclssg::utils::sha256             sha256
-            ::tclssg::version                   version
-            ::textutil::indent                  indent
-        } {
+        foreach {command alias} $aliases {
             interp alias $interp $alias {} $command
         }
 
