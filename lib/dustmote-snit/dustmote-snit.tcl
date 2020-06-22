@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # DustMote HTTP server originally developed by Harold Kaplan
-# (https://wiki.tcl-lang.org/4333).  Modified by dbohdan.
+# (https://wiki.tcl-lang.org/4333).  Modified by D. Bohdan.
 # This code is in the public domain.
 package require Tcl       8.5
 package require fileutil  1

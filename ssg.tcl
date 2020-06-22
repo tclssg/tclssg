@@ -1,7 +1,7 @@
 #!/usr/bin/env tclsh
 # Tclssg, a static website generator.
 # Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
-# dbohdan and contributors listed in AUTHORS. This code is released under
+# D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 package require Tcl       8.5
 package require base64    2

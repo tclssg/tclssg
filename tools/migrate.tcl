@@ -2,7 +2,7 @@
 # This tool will help you migrate a typical project for Tclssg 1.0.x or earlier
 # to Tclssg 2.x.
 # Copyright (c) 2019, 2020
-# dbohdan and contributors listed in AUTHORS. This code is released under
+# D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require fileutil 1

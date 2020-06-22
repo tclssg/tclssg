@@ -100,7 +100,7 @@ License
 
 MIT. See the file [`LICENSE`](LICENSE) for details.
 
-The Tclssg logo images are copyright (c) 2014 dbohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+The Tclssg logo images are copyright (c) 2014 D. Bohdan and are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 [`skeleton/static/images/placeholder.jpg`](skeleton/static/images/placeholder.jpg) is cropped from a [photo](https://unsplash.com/photos/AsNfzwdcz2I) by Daniel Olah distributed under the [Unsplash license](https://unsplash.com/license).
 
