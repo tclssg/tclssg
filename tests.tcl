@@ -368,11 +368,31 @@ namespace eval ::tclssg::tests {
     tcltest::test markdown-3.1 {Tabs in Markdown} \
                 -cleanup {unset md} \
                 -body {
-        set md "```make\ntarget:\n\tcommand foo bar\n```"
+        set md "```\ntarget:\n\tcommand foo bar\n```"
         list [Markdown::convert $md 0] \
              [Markdown::convert $md 1]
-    } -result [list "<pre><code>target:\n    command foo bar</code></pre>" \
-                    "<pre><code>target:\n\tcommand foo bar</code></pre>"]
+    } -result [list \
+        "<pre><code>target:\n    command foo bar</code></pre>" \
+        "<pre><code>target:\n\tcommand foo bar</code></pre>" \
+    ]
+
+    tcltest::test markdown-4.1 {Fenced code block language 1} \
+                -cleanup {unset md} \
+                -body {
+        set md "```make\ntarget:\n\tcommand foo bar\n```"
+        Markdown::convert $md 1
+    } -result "<pre><code class=\"language-make\">target:\n\tcommand\
+               foo bar</code></pre>"
+
+    tcltest::test markdown-4.2 {Fenced code block language 2} \
+                -body {
+        Markdown::convert "```!@#$%^&*()\nhi\n```"
+    } -result "<pre><code class=\"language-!@#$%^&amp;*()\">hi</code></pre>"
+
+    tcltest::test markdown-4.3 {Fenced code block language 3} \
+                -body {
+        Markdown::convert "```foo bar baz\nhi\n```"
+    } -result "<pre><code class=\"language-foo\">hi</code></pre>"
 
     tcltest::test named-args-1.1 named-args \
                 -cleanup {unset args foo bar baz} \

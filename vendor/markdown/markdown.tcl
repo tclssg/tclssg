@@ -115,7 +115,7 @@ namespace eval Markdown {
         while {$index < $no_lines} {
             set line [lindex $lines $index]
 
-            switch -regexp $line {
+            switch -regexp -matchvar line_match $line {
                 {^\s*$} {
                     # EMPTY LINES
                     if {![regexp {^\s*$} [lindex $lines [expr $index - 1]]]} {
@@ -234,7 +234,7 @@ namespace eval Markdown {
 
                     append result <pre><code> $code_result \n </code></pre>
                 }
-                {^(?:(?:`{3,})|(?:~{3,}))(?:\{?\S+\}?)?\s*$} {
+                {^(?:(?:`{3,})|(?:~{3,}))(\{?\S+\}?)?\s*.*$} {
                     # FENCED CODE BLOCKS
                     set code_result {}
 
@@ -258,7 +258,16 @@ namespace eval Markdown {
                     }
                     set code_result [join $code_result \n]
 
-                    append result <pre><code> $code_result </code></pre>
+                    set language [lindex $line_match 1]
+                    set code_attrs [expr {
+                        $language eq {}
+                        ? {}
+                        : " class=\"language-[html_escape $language]\""
+                    }]
+
+                    append result <pre><code$code_attrs> \
+                                  $code_result \
+                                  </code></pre>
                 }
                 {^[ ]{0,3}(?:\*|-|\+) |^[ ]{0,3}\d+\. } {
                     # LISTS
