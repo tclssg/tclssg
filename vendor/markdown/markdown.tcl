@@ -371,9 +371,6 @@ namespace eval Markdown {
 
                             append buffer $line \n
 
-                            if {[is_empty_line $line]} {
-                                break
-                            }
 
                             set line [lindex $lines $index]
                         }
