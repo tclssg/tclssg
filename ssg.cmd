@@ -1,2 +1,3 @@
 @echo off
-tclsh ssg.tcl %*
+tclsh %~dp0/ssg.tcl %*
+
