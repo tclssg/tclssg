@@ -394,6 +394,34 @@ namespace eval ::tclssg::tests {
         Markdown::convert "```foo bar baz\nhi\n```"
     } -result "<pre><code class=\"language-foo\">hi</code></pre>"
 
+    tcltest::test markdown-5.1 {Newlines in HTML tag 1} \
+                -body {
+        Markdown::convert <div>Hello</div>
+    } -result <div>Hello</div>\n
+
+    tcltest::test markdown-5.2 {Newlines in HTML tag 2} \
+                -body {
+        Markdown::convert <div>\nHello\n</div>
+    } -result <div>\nHello\n</div>\n
+
+    # The tests markdown-5.{3,4,5} test for the behavior of John Gruber's
+    # original Markdown.pl.  An implementation of CommonMark would remove
+    # the repeated newlines and wrap the "Hello" in 5.4-5.5 in a <p>.
+    tcltest::test markdown-5.3 {Newlines in HTML tag 3} \
+                -body {
+        Markdown::convert <div>\nHello\n\n\n</div>
+    } -result <div>\nHello\n\n\n</div>\n
+
+    tcltest::test markdown-5.4 {Newlines in HTML tag 4} \
+                -body {
+        Markdown::convert <div>\n\nHello</div>
+    } -result <div>\n\nHello</div>\n
+
+    tcltest::test markdown-5.5 {Newlines in HTML tag 5} \
+                -body {
+        Markdown::convert <div>\n\nHello\n\n\n</div>
+    } -result <div>\n\nHello\n\n\n</div>\n
+
     tcltest::test named-args-1.1 named-args \
                 -cleanup {unset args foo bar baz} \
                 -body {
