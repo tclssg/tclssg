@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2020
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 package require Tcl       8.5
@@ -36,7 +36,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 2.0.0
+    variable version 2.1.0
     variable debugMode 1
     variable path
 
