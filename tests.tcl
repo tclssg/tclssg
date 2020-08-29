@@ -757,7 +757,7 @@ foo {
         list \
             [utils::trim-indentation { }] \
             [utils::trim-indentation " \n "] \
-            [utils::trim-indentation x\nxx\nxxxx\nxx\nx x] \
+            [utils::trim-indentation \nxx\nxxxx\nxx\nx x] \
     } \
     -result "{} {} {\nxx\n}"
 
