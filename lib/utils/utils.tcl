@@ -51,54 +51,29 @@ namespace eval ::tclssg::utils {
         }
     }
 
-    # Trim indentation in multiline quoted text. Unlike textutil::undent this
-    # removes lines at the beginning and the end of the text that were turned
-    # blank by the unindentation.
-    proc trim-indentation {msg {whitespaceChars " "}} {
-        if {$msg eq ""} {
-            return ""
+    # Trim indentation in multiline quoted text. Unlike textutil::undent, this
+    # does not trip up on a leading blank line common in text embedded in Tcl
+    # code. It removes a leading and a trailing blank line if they are present.
+    proc trim-indentation {text {chars {\s}} {max -1}} {
+        set r [format {^(?:[%1$s]*?\n)?(.*?)(?:\n[%1$s]*)?$} $chars]
+        regexp $r $text _ text
+
+        if {$max < 0} {
+            set max [expr {(1 << 63) - 1}]
         }
 
-        set msgLines [split $msg "\n"]
-        set maxLength [string length $msg]
+        foreach line [split $text \n] {
+            if {[regexp ^\[$chars\]*$ $line]} continue
 
-        set regExp [subst -nocommands \
-                {([$whitespaceChars]*)[^$whitespaceChars]}]
+            regexp -indices ^\[$chars\]* $line idc
+            set count [expr {[lindex $idc 1] + 1}]
 
-        set indent [
-            tcl::mathfunc::min {*}[
-                struct::list mapfor x $msgLines {
-                    if {[regexp $regExp $x match whitespace]} {
-                        string length $whitespace
-                    } else {
-                        lindex $maxLength
-                    }
-                }
-            ]
-        ]
+            set max [expr {min($max,$count)}]
+        }
 
-        return [
-            join [
-                ltrim [
-                    struct::list mapfor x \
-                            $msgLines \
-                            {string range $x $indent end}
-                ]
-            ] "\n"
-        ]
-    }
-
-    # Remove empty items at the beginning and the end of a list.
-    proc ltrim {list {emptyRegExp "^$"}} {
-        set first [lsearch -not -regexp $list $emptyRegExp]
-        set last [lsearch -not -regexp [lreverse $list] $emptyRegExp]
-        return [
-            if {$first == -1} {
-                list
-            } else {
-                lrange $list $first end-$last
-            }
-        ]
+        join [lmap line [split $text \n] {
+            string range $line $max end
+        }] \n
     }
 
     # Format text for URL slug. E.g., "Hello, World!" becomes "hello-world".
