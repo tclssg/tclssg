@@ -682,6 +682,77 @@ foo {
     -result {can't merge*}
 
 
+    tcltest::test trim-indentation-1.1 {empty string} \
+    -body {
+        utils::trim-indentation {}
+    } \
+    -result {}
+
+    tcltest::test trim-indentation-1.2 {one level} \
+    -body {
+        list \
+            [utils::trim-indentation " a\n b\n c"] \
+            [utils::trim-indentation "    a\n    b\n    c"] \
+            [utils::trim-indentation "\ta\n\tb\n\tc" " \t"] \
+    } \
+    -result [list a\nb\nc a\nb\nc a\nb\nc]
+
+    tcltest::test trim-indentation-1.3 {different levels} \
+    -body {
+        list \
+            [utils::trim-indentation " a\n  b\n c"] \
+            [utils::trim-indentation "    a\n            b\n        c"] \
+            [utils::trim-indentation "\ta\n\t\tb\n\tc" " \t"] \
+    } \
+    -result [list "a\n b\nc" "a\n        b\n    c" a\n\tb\nc]
+
+    tcltest::test trim-indentation-1.5 {trailing newlines} \
+    -body {
+        list \
+            [utils::trim-indentation " a\n  b\n c\n"] \
+            [utils::trim-indentation "    a\n            b\n        c\n"] \
+            [utils::trim-indentation "\ta\n\t\tb\n\tc" " \t\n"] \
+    } \
+    -result [list "a\n b\nc" "a\n        b\n    c" a\n\tb\nc]
+
+    tcltest::test trim-indentation-1.6 {leading newlines} \
+    -body {
+        list \
+            [utils::trim-indentation "\n a\n  b\n c"] \
+            [utils::trim-indentation "\n    a\n            b\n        c"] \
+            [utils::trim-indentation "\n\ta\n\t\tb\n\tc" " \t"] \
+    } \
+    -result [list "a\n b\nc" "a\n        b\n    c" a\n\tb\nc]
+
+    tcltest::test trim-indentation-1.7 {empty lines} \
+    -body {
+        list \
+            [utils::trim-indentation " a\n\n  b\n c"] \
+            [utils::trim-indentation "    a\n            b\n\n        c"] \
+            [utils::trim-indentation "\ta\n\n\t\tb\n\n\tc" " \t"] \
+    } \
+    -result [list "a\n\n b\nc" "a\n        b\n\n    c" a\n\n\tb\n\nc]
+
+    tcltest::test trim-indentation-1.8 {non-leading whitespace} \
+    -body {
+        list \
+            [utils::trim-indentation "a  a\nb  b\nc  c"] \
+            [utils::trim-indentation " a \n b \n c"] \
+            [utils::trim-indentation "a     "] \
+    } \
+    -result [list "a  a\nb  b\nc  c" "a \nb \nc" "a     "]
+
+    tcltest::test trim-indentation-1.9 {trailing whitespace line} \
+    -body {
+        utils::trim-indentation {
+            foo
+            bar
+            baz
+        }
+    } \
+    -result foo\nbar\nbaz
+
+
 
     ### Tool tests.
 
