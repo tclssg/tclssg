@@ -62,7 +62,7 @@ namespace eval ::tclssg::utils {
         foreach line [split $text \n] {
             if {$line eq {}} continue
 
-            regexp -indices ^\[$chars\]* $line idc
+            regexp -indices $r2 $line idc
             set count [expr {[lindex $idc 1] + 1}]
 
             set max [expr {min($max,$count)}]
