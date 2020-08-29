@@ -759,7 +759,24 @@ foo {
             [utils::trim-indentation " \n "] \
             [utils::trim-indentation \nxx\nxxxx\nxx\nx x] \
     } \
-    -result "{} {} {\nxx\n}"
+    -result "{} {} {\n\n}"
+
+    tcltest::test trim-indentation-1.11 {ignoreIndentOnlyLines false} \
+    -body {
+        list \
+            [utils::trim-indentation \nxx\nxxxx\nxx\nx x false] \
+            [utils::trim-indentation ----A\n--\n----B - false] \
+            [utils::trim-indentation ----A\n--\n----B - true] \
+    } \
+    -result "{x\nxxx\nx\n} {--A\n\n--B} {A\n\nB}"
+
+    tcltest::test trim-indentation-1.12 {max < inf} \
+    -body {
+        list \
+            [utils::trim-indentation "  a\n  b\n  c" { } true 1] \
+            [utils::trim-indentation "  a\n  b\n  c" { } true 2] \
+    } \
+    -result "{ a\n b\n c} {a\nb\nc}"
 
 
 

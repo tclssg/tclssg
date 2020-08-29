@@ -52,18 +52,32 @@ namespace eval ::tclssg::utils {
     }
 
     # Trim indentation in multiline quoted text. Unlike textutil::undent, this
-    # does not trip up on a leading blank line common in text embedded in Tcl
-    # code. It removes a leading blank line and a trailing blank or
-    # whitespace-only ($chars-only) line if they are present.
-    proc trim-indentation {text {chars { }} {max inf}} {
-        set r [format {^\n?(.*?)(?:\n[%1$s]*?$)?} $chars]
-        regexp $r $text _ text
+    # proc does not stop on a leading blank line common in text embedded in Tcl
+    # code. It removes a leading and a trailing blank line. If
+    # $ignoreIndentOnlyLines is true, it does not count indentation-only lines
+    # in $text and removes an indentation-only trailing line if it is present.
+    proc trim-indentation {
+        text
+        {chars { }}
+        {ignoreIndentOnlyLines true}
+        {max inf}
+    } {
+        regsub ^\n $text {} text
+        if {$ignoreIndentOnlyLines} {
+            regsub \n\[$chars\]*?$ $text {} text
+        } else {
+            regsub \n$ $text {} text
+        }
 
-        set r2 ^\[$chars\]*
+        set rLeading ^\[$chars\]*
+        set rBlankLine $rLeading$
+
         foreach line [split $text \n] {
-            if {$line eq {}} continue
+            if {$line eq {}
+                || ($ignoreIndentOnlyLines
+                    && [regexp $rBlankLine $line])} continue
 
-            regexp -indices $r2 $line idc
+            regexp -indices $rLeading $line idc
             set count [expr {[lindex $idc 1] + 1}]
 
             set max [expr {min($max,$count)}]
