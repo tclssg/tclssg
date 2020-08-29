@@ -59,7 +59,7 @@ namespace eval ::tclssg::utils {
         regexp $r $text _ text
 
         if {$max < 0} {
-            set max [expr {(1 << 63) - 1}]
+            set max inf
         }
 
         foreach line [split $text \n] {
@@ -71,8 +71,10 @@ namespace eval ::tclssg::utils {
             set max [expr {min($max,$count)}]
         }
 
+        set start [expr { $max == inf ? {end+1} : $max }]
+
         join [lmap line [split $text \n] {
-            string range $line $max end
+            string range $line $start end
         }] \n
     }
 

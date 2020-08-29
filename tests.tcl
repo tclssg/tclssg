@@ -752,6 +752,14 @@ foo {
     } \
     -result foo\nbar\nbaz
 
+    tcltest::test trim-indentation-1.10 {only whitespace} \
+    -body {
+        list \
+            [utils::trim-indentation { }] \
+            [utils::trim-indentation " \n "] \
+    } \
+    -result {{} {}}
+
 
 
     ### Tool tests.
