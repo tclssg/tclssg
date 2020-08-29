@@ -54,7 +54,7 @@ namespace eval ::tclssg::utils {
     # Trim indentation in multiline quoted text. Unlike textutil::undent, this
     # does not trip up on a leading blank line common in text embedded in Tcl
     # code. It removes a leading and a trailing blank line if they are present.
-    proc trim-indentation {text {chars {\s}} {max -1}} {
+    proc trim-indentation {text {chars { }} {max -1}} {
         set r [format {^(?:[%1$s]*?\n)?(.*?)(?:\n[%1$s]*)?$} $chars]
         regexp $r $text _ text
 
