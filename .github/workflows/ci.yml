@@ -1,0 +1,12 @@
+name: CI
+on: [push]
+jobs:
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: sudo apt install tcl tcllib libsqlite3-tcl
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Run tests
+      run: tclsh tests.tcl
