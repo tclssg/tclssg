@@ -195,8 +195,8 @@ namespace eval ::dmsnit {
         }
         set contentLength [expr { $lastByte - $firstByte + 1 }]
 
-        set contentRange "Content-Range:\
-                          bytes $firstByte-$lastByte/$contentLength"
+        set contentRange \
+            "Content-Range: bytes $firstByte-$lastByte/$fileSize"
         send $conn [header \
             {206 Partial Content} \
             [mime::type $filename] \
