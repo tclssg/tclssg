@@ -51,9 +51,8 @@ namespace eval ::tclssg::utils {
         }
     }
 
-    # Trim indentation in multiline quoted text. Unlike textutil::undent, this
-    # proc does not stop on a leading blank line common in text embedded in Tcl
-    # code. It removes a leading and a trailing blank line. If
+    # Trim indentation in multiline quoted text. Unlike [textutil::undent],
+    # this proc removes a leading and a trailing blank line. If
     # $ignoreIndentOnlyLines is true, it does not count indentation-only lines
     # in $text and removes an indentation-only trailing line if it is present.
     proc trim-indentation {
