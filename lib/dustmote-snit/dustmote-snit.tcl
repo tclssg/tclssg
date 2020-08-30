@@ -146,7 +146,7 @@ namespace eval ::dmsnit {
 
     # Handle a new connection.
     method answer {conn host2 port2} {
-        fconfigure $conn -blocking 0 -encoding utf-8
+        fconfigure $conn -blocking 0 -translation binary
         $self wire-channel-reader $conn
     }
 
@@ -154,7 +154,7 @@ namespace eval ::dmsnit {
         set fileSize [file size $filename]
         set fileChannel [open $filename RDONLY]
         fconfigure $fileChannel -translation binary
-        fconfigure $conn -translation binary -buffering full
+        fconfigure $conn -buffering full
 
         set contentLength $fileSize
         send $conn [header \
@@ -174,7 +174,7 @@ namespace eval ::dmsnit {
         set fileSize [file size $filename]
         set fileChannel [open $filename RDONLY]
         fconfigure $fileChannel -translation binary
-        fconfigure $conn -translation binary -buffering full
+        fconfigure $conn -buffering full
 
         if {$firstByte >= $fileSize} {
             send $conn [header \
@@ -444,7 +444,6 @@ proc ::dmsnit::response {code type data args} {
 
 
 proc ::dmsnit::send {channel data} {
-    fconfigure $channel -translation binary
     puts -nonewline $channel $data
 }
 
