@@ -1,7 +1,5 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-[![Build Status](https://travis-ci.org/tclssg/tclssg.svg)](https://travis-ci.org/tclssg/tclssg)
-
 Tclssg is a static site generator with template support written in Tcl. It is intended to make it easy to manage a small to medium-sized website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
 
 Features
