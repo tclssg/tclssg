@@ -69,7 +69,7 @@ namespace eval ::dmsnit {
     # Private methods.
 
     method Assert-file-exists {option value} {
-        if { ![file isfile $value] } {
+        if {![file isfile $value]} {
             error "file \"$value\" used for option $option doesn't exist"
         }
     }
@@ -79,10 +79,11 @@ namespace eval ::dmsnit {
     }
 
     method Set-tls {option value} {
-        if { $option ne {-tls} } {
+        if {$option ne {-tls}} {
             error {Set-tls is only for setting the option -tls}
         }
-        if { $value } {
+
+        if {$value} {
             package require tls 1.6.7
             ::tls::init \
                     -certfile [$self cget -certfile] \
@@ -96,6 +97,7 @@ namespace eval ::dmsnit {
         } else {
             set socketCommand socket
         }
+
         set options(-tls) $value
     }
 
@@ -111,107 +113,108 @@ namespace eval ::dmsnit {
         set port [$self cget -port]
         set tls [$self cget -tls]
 
-        if { $root eq {} } {
+        if {$root eq {}} {
             error {no root set}
         }
 
         set message "serving path $root on $host port $port"
-        if { $tls } {
+        if {$tls} {
             append message { with TLS}
         }
         $self log $message
 
         set socketChannel [$socketCommand \
-                -server "$self answer" \
-                -myaddr $host $port]
+            -server "$self answer" \
+            -myaddr $host $port \
+        ]
     }
 
     # Print $message to standard output if logging is enabled.
     method log message {
         variable verbose
-        if { [$self cget -verbose] } {
+        if {[$self cget -verbose]} {
             puts $message
         }
     }
 
     # Set up event to run method read-request on $channel when it is readable.
     method wire-channel-reader channel {
-        fileevent $channel readable \
-                [list $self read-request $channel]
+        fileevent $channel \
+            readable \
+            [list $self read-request $channel]
     }
 
     # Handle a new connection.
-    method answer {connectChannel host2 port2} {
-        fconfigure $connectChannel -blocking 0 -encoding utf-8
-        $self wire-channel-reader $connectChannel
+    method answer {conn host2 port2} {
+        fconfigure $conn -blocking 0 -encoding utf-8
+        $self wire-channel-reader $conn
     }
 
-    method return-file {connectChannel filename} {
+    method return-file {conn filename} {
         set fileSize [file size $filename]
         set fileChannel [open $filename RDONLY]
         fconfigure $fileChannel -translation binary
-        fconfigure $connectChannel -translation binary -buffering full
+        fconfigure $conn -translation binary -buffering full
 
         set contentLength $fileSize
-        send $connectChannel [header \
+        send $conn [header \
             {200 OK} \
             [mime::type $filename] \
             $contentLength \
             {Accept-Ranges: bytes} \
         ]
 
-        set cleanUpCommand [list $self clean-up $connectChannel $fileChannel]
-        fcopy $fileChannel $connectChannel -command $cleanUpCommand
+        set cleanUpCommand [list $self clean-up $conn $fileChannel]
+        fcopy $fileChannel $conn -command $cleanUpCommand
 
         $self log "200 $filename"
     }
 
-    method return-file-range {connectChannel filename firstByte lastByte} {
+    method return-file-range {conn filename firstByte lastByte} {
         set fileSize [file size $filename]
         set fileChannel [open $filename RDONLY]
         fconfigure $fileChannel -translation binary
-        fconfigure $connectChannel -translation binary -buffering full
+        fconfigure $conn -translation binary -buffering full
 
         if {$firstByte >= $fileSize} {
-            send $connectChannel [header \
+            send $conn [header \
                 {416 Range Not Satisfiable} \
                 [mime::type $filename] \
                 0 \
                 "Content-Range: bytes */$fileSize"
             ]
 
-            $self clean-up $connectChannel $fileChannel
+            $self clean-up $conn $fileChannel
             $self log "416 $filename"
 
             return
         }
 
-        if { $lastByte eq {} } {
+        if {$lastByte eq {}} {
             set lastByte [expr { $fileSize - 1 }]
         }
         set contentLength [expr { $lastByte - $firstByte + 1 }]
 
         set contentRange "Content-Range:\
                           bytes $firstByte-$lastByte/$contentLength"
-        send $connectChannel [header \
+        send $conn [header \
             {206 Partial Content} \
             [mime::type $filename] \
             $contentLength \
             $contentRange
         ]
 
-        set cleanUpCommand [list $self \
-                clean-up $connectChannel $fileChannel]
+        set cleanUpCommand [list $self clean-up $conn $fileChannel]
         seek $fileChannel $firstByte
-        fcopy $fileChannel $connectChannel \
-                -size $contentLength \
-                -command $cleanUpCommand
+        fcopy $fileChannel $conn \
+            -size $contentLength \
+            -command $cleanUpCommand
 
         $self log "206 $filename"
     }
 
-    method return-404 {connectChannel path} {
-        send $connectChannel [response \
+    method return-404 {conn path} {
+        send $conn [response \
             {404 Not Found} \
             text/html \
             [notice-page \
@@ -220,24 +223,27 @@ namespace eval ::dmsnit {
                 {<h1>The URL you requested does not exist.</h1>} \
             ] \
         ]
-        $self clean-up $connectChannel
+
+        $self clean-up $conn
         $self log "404 $path"
     }
 
-    # Write to the channel $connectChannel the list of files and directories at
+    # Write to the channel $conn the list of files and directories at
     # the local path $path formatted as HTML. $path should be an absolute path
     # and *not* one relative to -root.
-    method return-dir-list {connectChannel path} {
-        set titlePath [file join / \
-                [::fileutil::relative [$self cget -root] $path]]
-        if { $titlePath eq {/.} } {
+    method return-dir-list {conn path} {
+        set titlePath [file join \
+            / \
+            [::fileutil::relative [$self cget -root] $path] \
+        ]
+        if {$titlePath eq {/.}} {
             set titlePath /
         }
 
         # Redirect the client to "$path/" if necessary to ensure relative links
         # work correctly.
-        if { ($titlePath ne {/}) && ![string match */ $path] } {
-            send $connectChannel [response \
+        if {$titlePath ne {/} && ![string match */ $path]} {
+            send $conn [response \
                 {302 Found} \
                 text/html \
                 [notice-page \
@@ -247,25 +253,32 @@ namespace eval ::dmsnit {
                 ] \
                 "Location: $titlePath/" \
             ]
-            $self clean-up $connectChannel
+
+            $self clean-up $conn
             $self log "302 $path -> $path/"
+
             return
         }
 
         foreach varName {dirList fileList} types {d {b c f l p s}} {
-            set $varName [lsort -dictionary \
-                    [glob -directory $path -nocomplain -tails -types $types *]]
+            set $varName [lsort \
+                -dictionary \
+                [glob -directory $path -nocomplain -tails -types $types *] \
+            ]
         }
 
         set formatLink {{path {endSlash 0}} {
             set href [::html::html_entities [::dmsnit::url::encode $path]]
             set text [::html::html_entities $path]
+
             if {$endSlash} {
                 append href /
                 append text /
             }
+
             return "\n            <li><a href=\"$href\">$text</a></li>"
         }}
+
         set links {}
         foreach dir $dirList {
             lappend links [apply $formatLink $dir 1]
@@ -284,38 +297,38 @@ namespace eval ::dmsnit {
              </ul>" \
         ]
 
-        send $connectChannel [response \
+        send $conn [response \
             {200 OK} \
             text/html \
             $doc \
         ]
 
-        $self clean-up $connectChannel
+        $self clean-up $conn
         $self log "200 $path"
     }
 
     # Read an HTTP request from a channel and respond once it can be processed.
-    method read-request {connectChannel} {
+    method read-request {conn} {
         variable handlers
-        fileevent $connectChannel readable {}
+        fileevent $conn readable {}
 
         # Read and store a request fragment.
-        if { [dict exists $connectState $connectChannel request] } {
-            set request [dict get $connectState $connectChannel request]
+        if {[dict exists $connectState $conn request]} {
+            set request [dict get $connectState $conn request]
         } else {
             set request {}
         }
-        while { [gets $connectChannel line] >= 0 } {
+        while { [gets $conn line] >= 0 } {
             lappend request $line
         }
-        dict set connectState $connectChannel request $request
+        dict set connectState $conn request $request
 
         # Return if the request is incomplete. Try again later if the channel is
         # open.
-        if { ([llength $request] == 0) ||
-             ![string is space [lindex $request end]] } {
-            if { ![eof $connectChannel] } {
-                $self wire-channel-reader $connectChannel
+        if {[llength $request] == 0
+             || ![string is space [lindex $request end]] } {
+            if {![eof $conn]} {
+                $self wire-channel-reader $conn
             }
             return
         }
@@ -324,49 +337,57 @@ namespace eval ::dmsnit {
         set shortName /
         regexp {GET /([^ ]*)} $request _ shortName
         set gotRange [regexp \
-                {Range: bytes=([0-9]+)(?:-([0-9]+))?} $request \
-                _ firstByte lastByte]
+            {Range: bytes=([0-9]+)(?:-([0-9]+))?} \
+            $request \
+            _ firstByte lastByte \
+        ]
         set wholeName [::fileutil::jail \
-                [$self cget -root] [::dmsnit::url::decode $shortName]]
-        if { [string match */ $shortName] && ![string match */ $wholeName] } {
+            [$self cget -root] \
+            [url::decode $shortName] \
+        ]
+        if {[string match */ $shortName] && ![string match */ $wholeName]} {
             append wholeName /
         }
-        if { ![string match /* $shortName] } {
+        if {![string match /* $shortName]} {
             set shortName /$shortName
         }
+
         # Return data.
-        if { [dict exists $handlers $shortName] } {
+        if {[dict exists $handlers $shortName]} {
             $self log "Hnd $shortName"
-            apply [dict get $handlers $shortName] $connectChannel
+            apply [dict get $handlers $shortName] $conn
         } else {
             # Default file.
-            if { [file isdir $wholeName] } {
+            if {[file isdir $wholeName]} {
                 set defaultFile [file join $wholeName [$self cget -default]]
-                if { [file isfile $defaultFile] } {
+                if {[file isfile $defaultFile]} {
                     set wholeName $defaultFile
                 }
             }
 
-            if { [file isfile $wholeName] } {
-                if { $gotRange } {
-                    $self return-file-range $connectChannel $wholeName \
-                            $firstByte $lastByte
+            if {[file isfile $wholeName]} {
+                if {$gotRange} {
+                    $self return-file-range $conn \
+                        $wholeName \
+                        $firstByte \
+                        $lastByte
                 } else {
-                    $self return-file $connectChannel $wholeName
+                    $self return-file $conn $wholeName
                 }
-            } elseif { [$self cget -dirlists] && [file isdir $wholeName] } {
-                $self return-dir-list $connectChannel $wholeName
+            } elseif {[$self cget -dirlists] && [file isdir $wholeName]} {
+                $self return-dir-list $conn $wholeName
             } else {
-                $self return-404 $connectChannel $wholeName
+                $self return-404 $conn $wholeName
             }
         }
     }
 
     # Called from read-request to clean up when a file request is completed.
-    method clean-up {connectChannel {fileChannel {}} args} {
-        close $connectChannel
-        dict unset connectState $connectChannel
-        if { $fileChannel ne {} } {
+    method clean-up {conn {fileChannel {}} args} {
+        close $conn
+        dict unset connectState $conn
+
+        if {$fileChannel ne {}} {
             close $fileChannel
         }
     }
@@ -496,7 +517,7 @@ namespace eval ::dmsnit::mime {
     variable byExtension {}
     foreach {mimeType files} $mimeDataInverted {
         foreach file $files {
-            if { [string index $file 0] eq {.} } {
+            if {[string index $file 0] eq {.}} {
                 lappend byExtension $file $mimeType
             } else {
                 lappend byFilename $file $mimeType
@@ -511,9 +532,9 @@ namespace eval ::dmsnit::mime {
         variable byExtension
         set tail [string tolower [file tail $filename]]
         set ext [string tolower [file extension $filename]]
-        if { [dict exists $byFilename $tail] } {
+        if {[dict exists $byFilename $tail]} {
             return [dict get $byFilename $tail]
-        } elseif { [dict exists $byExtension $ext] } {
+        } elseif {[dict exists $byExtension $ext]} {
             return [dict get $byExtension $ext]
         } else {
             return application/octet-stream
@@ -570,11 +591,11 @@ proc ::dmsnit::main {argv0 argv} {
     set httpd [::dmsnit::httpd create %AUTO%]
 
     # Process command line arguments.
-    if { ($argv eq {}) || ([lsearch -regexp $argv {^-(h|-?help)$}] > -1) } {
+    if {($argv eq {}) || ([lsearch -regexp $argv {^-(h|-?help)$}] > -1)} {
         set usageString "usage: $argv0"
         foreach option [$httpd info options] {
             set defaultValue [$httpd cget $option]
-            if { $defaultValue eq {} } {
+            if {$defaultValue eq {}} {
                 append usageString " $option value"
             } else {
                 append usageString " ?$option $defaultValue?"
@@ -588,17 +609,17 @@ proc ::dmsnit::main {argv0 argv} {
     # Sample custom handlers that are used for development.
     if 1 {
         $httpd add-handler /quit {
-            {connectChannel} {
+            {conn} {
                 upvar 1 self self
-                send $connectChannel [response {200 OK} text/html Bye!]
-                $self clean-up $connectChannel
+                send $conn [response {200 OK} text/html Bye!]
+                $self clean-up $conn
                 set [$self wait-var-name] 1
             } ::dmsnit
         }
         $httpd add-handler /reload {
-            {connectChannel} {
+            {conn} {
                 upvar 1 self self
-                send $connectChannel [response \
+                send $conn [response \
                     {202 Accepted} \
                     text/html \
                     [notice-page \
@@ -608,7 +629,7 @@ proc ::dmsnit::main {argv0 argv} {
                     ] \
                     {Refresh: 2000; url=/} \
                 ]
-                $self clean-up $connectChannel
+                $self clean-up $conn
                 set [$self wait-var-name] 1
                 set ::dmsnit::reload 1
             } ::dmsnit
@@ -619,10 +640,10 @@ proc ::dmsnit::main {argv0 argv} {
     vwait [$httpd wait-var-name]
     $httpd destroy
 
-    if { $reload } {
+    if {$reload} {
         # Reload the server script and restart the server.
         uplevel #0 [list source [info script]]
-        if { [info commands tailcall] eq {tailcall} } {
+        if {[info commands tailcall] eq {tailcall}} {
             tailcall ::dmsnit::main $argv0 $argv
         } else {
             ::dmsnit::main $argv0 $argv
@@ -632,10 +653,10 @@ proc ::dmsnit::main {argv0 argv} {
 
 
 # If this is the main script...
-if { [info exists argv0] &&
-        ([file tail [info script]] eq [file tail $argv0]) } {
+if {[info exists argv0]
+    && ([file tail [info script]] eq [file tail $argv0])} {
     # If this is not a reload...
-    if { ![info exists ::dmsnit::reload] || !$::dmsnit::reload } {
+    if {![info exists ::dmsnit::reload] || !$::dmsnit::reload} {
         ::dmsnit::main $argv0 $argv
     }
 }
