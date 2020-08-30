@@ -1157,12 +1157,18 @@ foo {
         ]
 
         tcl ssg.tcl build $project $project/output
-        set serveCommand [list [info nameofexecutable] ssg.tcl serve \
-                                                               -verbose \
-                                                               $project]
+
+        set serveCommand [list \
+            [info nameofexecutable] \
+            ssg.tcl \
+            serve \
+            -verbose \
+            $project \
+        ]
         set ch [open |$serveCommand]
         set foundServerInfo 0
         fconfigure $ch -blocking 0
+
         set i 0
         while 1 {
             if {[gets $ch line] > 0} {
@@ -1186,14 +1192,26 @@ foo {
         if {[eof $ch]} {
             error {the server has quit}
         }
+
+        set result {}
+
         set indexPage [http-get http://$host:$port/]
-        set result \
+        lappend result \
             [regexp {Powered by <a.*?>Tclssg</a> and <a.*?>Bootstrap</a>} \
                     $indexPage]
+
+        set noIndex {<meta name="robots" content="noindex">}
+
+        set blogIndex [http-get http://$host:$port/blog/]
+        lappend result [regexp $noIndex $blogIndex]
+
+        set blogPost [http-get http://$host:$port/blog/test/]
+        lappend result [regexp $noIndex $blogPost]
+
         http-get http://$host:$port/bye
         return $result
     } \
-    -result 1
+    -result {1 1 0}
 
     tcltest::test tclssg-library-1.1 {Tclssg as a library} \
     -cleanup {unset project result file} \
