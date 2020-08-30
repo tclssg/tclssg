@@ -2,6 +2,7 @@
 # DustMote HTTP server originally developed by Harold Kaplan
 # (https://wiki.tcl-lang.org/4333).  Modified by D. Bohdan.
 # This code is in the public domain.
+
 package require Tcl       8.5
 package require fileutil  1
 package require html      1
@@ -9,9 +10,11 @@ package require ncgi      1
 package require snit      2
 package require textutil  0-2
 
+
 namespace eval ::dmsnit {
     variable version 0.15.0
 }
+
 
 ::snit::type ::dmsnit::httpd {
     # Basic web server configuration.
@@ -28,12 +31,12 @@ namespace eval ::dmsnit {
     option -certfile \
             -default public.pem \
             -configuremethod Set-normalized \
-            -validatemethod File-exists
+            -validatemethod Assert-file-exists
 
     option -keyfile \
             -default private.pem \
             -configuremethod Set-normalized \
-            -validatemethod File-exists
+            -validatemethod Assert-file-exists
 
     option -tls \
             -default 0 \
@@ -65,7 +68,7 @@ namespace eval ::dmsnit {
 
     # Private methods.
 
-    method File-exists {option value} {
+    method Assert-file-exists {option value} {
         if { ![file isfile $value] } {
             error "file \"$value\" used for option $option doesn't exist"
         }
@@ -150,16 +153,15 @@ namespace eval ::dmsnit {
         fconfigure $connectChannel -translation binary -buffering full
 
         set contentLength $fileSize
-        puts $connectChannel {HTTP/1.1 200 OK}
-        puts $connectChannel "Content-Type: [mime::type $filename]"
-        puts $connectChannel "Content-Length: $contentLength"
-        puts $connectChannel {Accept-Ranges: bytes}
-        puts $connectChannel {}
+        send $connectChannel [header \
+            {200 OK} \
+            [mime::type $filename] \
+            $contentLength \
+            {Accept-Ranges: bytes} \
+        ]
 
-        set cleanUpCommand [list $self \
-                clean-up $connectChannel $fileChannel]
-        fcopy $fileChannel $connectChannel \
-                -command $cleanUpCommand
+        set cleanUpCommand [list $self clean-up $connectChannel $fileChannel]
+        fcopy $fileChannel $connectChannel -command $cleanUpCommand
 
         $self log "200 $filename"
     }
@@ -175,12 +177,12 @@ namespace eval ::dmsnit {
         }
         set contentLength [expr { $lastByte - $firstByte + 1 }]
 
-        puts $connectChannel {HTTP/1.1 206 Partial Content}
-        puts $connectChannel "Content-Type: [mime::type $filename]"
-        puts $connectChannel "Content-Length: $contentLength"
-        puts $connectChannel \
-                "Content-Range: bytes $firstByte-$lastByte/$contentLength"
-        puts $connectChannel {}
+        send $connectChannel [header \
+            {206 Partial Content} \
+            [mime::type $filename] \
+            $contentLength \
+            "Content-Range: bytes $firstByte-$lastByte/$contentLength" \
+        ]
 
         set cleanUpCommand [list $self \
                 clean-up $connectChannel $fileChannel]
@@ -193,20 +195,21 @@ namespace eval ::dmsnit {
     }
 
     method return-404 {connectChannel path} {
-        puts -nonewline $connectChannel [template::expand {
-            HTTP/1.1 404 Not found
-            Content-Type: text/html
-
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <title>404 Not found</title>
-                </head>
-                <body>
-                    <h1>The URL you requested does not exist.</h1>
-                </body>
-            </html>
-        }]
+        send $connectChannel [response \
+            {404 Not Found} \
+            text/html \
+            [template::expand {
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <title>404 Not found</title>
+                    </head>
+                    <body>
+                        <h1>The URL you requested does not exist.</h1>
+                    </body>
+                </html>
+            }] \
+        ]
         $self clean-up $connectChannel
         $self log "404 $path"
     }
@@ -224,10 +227,12 @@ namespace eval ::dmsnit {
         # Redirect the client to "$path/" if necessary to ensure relative links
         # work correctly.
         if { ($titlePath ne {/}) && ![string match */ $path] } {
-            puts -nonewline $connectChannel [template::expand {
-                HTTP/1.1 302 Found
-                Location: %1$s/
-            } $titlePath]
+            send $connectChannel [response \
+                {302 Found} \
+                text/html \
+                Redirecting... \
+                "Location: $titlePath/" \
+            ]
             $self clean-up $connectChannel
             $self log "302 $path -> $path/"
             return
@@ -257,10 +262,7 @@ namespace eval ::dmsnit {
             lappend links [apply $formatLink $file 0]
         }
 
-        puts -nonewline $connectChannel [template::expand {
-            HTTP/1.1 200 OK
-            Content-Type: text/html
-
+        set doc [template::expand {
             <!DOCTYPE html>
             <html>
                 <head>
@@ -274,6 +276,13 @@ namespace eval ::dmsnit {
                 </body>
             </html>
         } [::html::html_entities $titlePath] [join $links {}]]
+
+        send $connectChannel [response \
+            {200 OK} \
+            text/html \
+            $doc \
+        ]
+
         $self clean-up $connectChannel
         $self log "200 $path"
     }
@@ -371,6 +380,30 @@ namespace eval ::dmsnit {
     }
 }
 
+
+proc ::dmsnit::header {code type length args} {
+    set header {}
+    lappend header "HTTP/1.1 $code"
+    lappend header "Content-Type: $type"
+    lappend header "Content-Length: $length"
+    lappend header {*}$args
+
+    return [join $header \r\n]\r\n\r\n
+}
+
+
+proc ::dmsnit::response {code type data args} {
+    set length [string length $data]
+    return [header $code $type $length {*}$args]$data
+}
+
+
+proc ::dmsnit::send {channel data} {
+    fconfigure $channel -translation binary
+    puts -nonewline $channel $data
+}
+
+
 namespace eval ::dmsnit::mime {
     variable mimeDataInverted {
         text/plain {
@@ -448,6 +481,7 @@ namespace eval ::dmsnit::mime {
     }
     unset mimeDataInverted
 
+
     proc ::dmsnit::mime::type {filename} {
         variable byFilename
         variable byExtension
@@ -463,11 +497,13 @@ namespace eval ::dmsnit::mime {
     }
 }
 
+
 namespace eval ::dmsnit::template {
     proc ::dmsnit::template::expand {template args} {
         return [format [::textutil::undent $template] {*}$args]
     }
 }
+
 
 namespace eval ::dmsnit::url {
     variable reserved {
@@ -491,15 +527,18 @@ namespace eval ::dmsnit::url {
         ]  %5D
     }
 
+
     proc decode str {
         return [::ncgi::decode $str]
     }
+
 
     proc encode str {
         variable reserved
         return [string map $reserved $str]
     }
 }
+
 
 proc ::dmsnit::main {argv0 argv} {
     variable reload 0
@@ -527,38 +566,35 @@ proc ::dmsnit::main {argv0 argv} {
         $httpd add-handler /quit {
             {connectChannel} {
                 upvar 1 self self
-                puts -nonewline $connectChannel [::dmsnit::template::expand {
-                    HTTP/1.1 200 OK
-                    Content-Type: text/html
-
-                }]
+                send $connectChannel [response {200 OK} text/html Bye!]
                 $self clean-up $connectChannel
                 set [$self wait-var-name] 1
-            }
+            } ::dmsnit
         }
         $httpd add-handler /reload {
             {connectChannel} {
                 upvar 1 self self
-                puts -nonewline $connectChannel [::dmsnit::template::expand {
-                    HTTP/1.1 202 Accepted
-                    Refresh: 2000; url=/
-                    Content-Type: text/html
-
-                    <!DOCTYPE html>
-                    <html>
-                        <head>
-                            <meta http-equiv="refresh" content="1; url=/">
-                            <title></title>
-                        </head>
-                        <body>
-                            <h1>Reloading...</h1>
-                        </body>
-                    </html>
-                }]
+                send $connectChannel [response \
+                    {202 Accepted} \
+                    text/html \
+                    [template::expand {
+                        <!DOCTYPE html>
+                        <html>
+                            <head>
+                                <meta http-equiv="refresh" content="1; url=/">
+                                <title></title>
+                            </head>
+                            <body>
+                                <h1>Reloading...</h1>
+                            </body>
+                        </html>
+                    }] \
+                    {Refresh: 2000; url=/} \
+                ]
                 $self clean-up $connectChannel
                 set [$self wait-var-name] 1
                 set ::dmsnit::reload 1
-            }
+            } ::dmsnit
         }
     }
 
