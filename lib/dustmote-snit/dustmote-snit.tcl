@@ -506,7 +506,7 @@ namespace eval ::dmsnit::mime {
     unset mimeDataInverted
 
 
-    proc ::dmsnit::mime::type {filename} {
+    proc type {filename} {
         variable byFilename
         variable byExtension
         set tail [string tolower [file tail $filename]]
@@ -523,7 +523,7 @@ namespace eval ::dmsnit::mime {
 
 
 namespace eval ::dmsnit::template {
-    proc ::dmsnit::template::expand {template args} {
+    proc expand {template args} {
         return [format [::textutil::undent $template] {*}$args]
     }
 }
@@ -629,6 +629,7 @@ proc ::dmsnit::main {argv0 argv} {
         }
     }
 }
+
 
 # If this is the main script...
 if { [info exists argv0] &&
