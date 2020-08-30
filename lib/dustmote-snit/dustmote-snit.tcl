@@ -12,7 +12,7 @@ package require textutil  0-2
 
 
 namespace eval ::dmsnit {
-    variable version 0.15.0
+    variable version 0.16.0
 }
 
 
