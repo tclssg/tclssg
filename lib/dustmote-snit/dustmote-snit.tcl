@@ -198,17 +198,11 @@ namespace eval ::dmsnit {
         send $connectChannel [response \
             {404 Not Found} \
             text/html \
-            [template::expand {
-                <!DOCTYPE html>
-                <html>
-                    <head>
-                        <title>404 Not found</title>
-                    </head>
-                    <body>
-                        <h1>The URL you requested does not exist.</h1>
-                    </body>
-                </html>
-            }] \
+            [notice-page \
+                {404 Not Found} \
+                {} \
+                {<h1>The URL you requested does not exist.</h1>} \
+            ] \
         ]
         $self clean-up $connectChannel
         $self log "404 $path"
@@ -230,7 +224,11 @@ namespace eval ::dmsnit {
             send $connectChannel [response \
                 {302 Found} \
                 text/html \
-                Redirecting... \
+                [notice-page \
+                    Redirecting... \
+                    {} \
+                    <h1>Redirecting...</h1> \
+                ] \
                 "Location: $titlePath/" \
             ]
             $self clean-up $connectChannel
@@ -262,20 +260,13 @@ namespace eval ::dmsnit {
             lappend links [apply $formatLink $file 0]
         }
 
-        set doc [template::expand {
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="utf-8">
-                    <title>Directory listing for %1$s</title>
-                </head>
-                <body>
-                    <a href="..">Up a level</a>
-                    <ul>%2$s
-                    </ul>
-                </body>
-            </html>
-        } [::html::html_entities $titlePath] [join $links {}]]
+        set doc [notice-page \
+            "Directory listing for [::html::html_entities $titlePath]" \
+            {} \
+            "<a href=\"..\">Up a level</a>\n       \
+             <ul>[join $links {}]\n       \
+             </ul>" \
+        ]
 
         send $connectChannel [response \
             {200 OK} \
@@ -389,6 +380,23 @@ proc ::dmsnit::header {code type length args} {
     lappend header {*}$args
 
     return [join $header \r\n]\r\n\r\n
+}
+
+
+proc ::dmsnit::notice-page {title headExtra content} {
+    return [template::expand {
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <meta charset="utf-8">
+                <title>%1$s</title>
+                %2$s
+            </head>
+            <body>
+                %3$s
+            </body>
+        </html>
+    } $title $headExtra $content]
 }
 
 
@@ -577,18 +585,11 @@ proc ::dmsnit::main {argv0 argv} {
                 send $connectChannel [response \
                     {202 Accepted} \
                     text/html \
-                    [template::expand {
-                        <!DOCTYPE html>
-                        <html>
-                            <head>
-                                <meta http-equiv="refresh" content="1; url=/">
-                                <title></title>
-                            </head>
-                            <body>
-                                <h1>Reloading...</h1>
-                            </body>
-                        </html>
-                    }] \
+                    [notice-page \
+                        Reloading... \
+                        {<meta http-equiv="refresh" content="1; url=/">} \
+                        <h1>Reloading...</h1> \
+                    ] \
                     {Refresh: 2000; url=/} \
                 ]
                 $self clean-up $connectChannel
