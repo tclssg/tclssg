@@ -172,16 +172,32 @@ namespace eval ::dmsnit {
         fconfigure $fileChannel -translation binary
         fconfigure $connectChannel -translation binary -buffering full
 
+        if {$firstByte >= $fileSize} {
+            send $connectChannel [header \
+                {416 Range Not Satisfiable} \
+                [mime::type $filename] \
+                0 \
+                "Content-Range: bytes */$fileSize"
+            ]
+
+            $self clean-up $connectChannel $fileChannel
+            $self log "416 $filename"
+
+            return
+        }
+
         if { $lastByte eq {} } {
             set lastByte [expr { $fileSize - 1 }]
         }
         set contentLength [expr { $lastByte - $firstByte + 1 }]
 
+        set contentRange "Content-Range:\
+                          bytes $firstByte-$lastByte/$contentLength"
         send $connectChannel [header \
             {206 Partial Content} \
             [mime::type $filename] \
             $contentLength \
-            "Content-Range: bytes $firstByte-$lastByte/$contentLength" \
+            $contentRange
         ]
 
         set cleanUpCommand [list $self \
