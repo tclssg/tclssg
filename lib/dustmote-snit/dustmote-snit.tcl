@@ -610,7 +610,15 @@ proc ::dmsnit::main {argv0 argv} {
         $httpd add-handler /quit {
             {conn} {
                 upvar 1 self self
-                send $conn [response {200 OK} text/html Bye!]
+                send $conn [response \
+                    {200 OK} \
+                    text/html \
+                    [notice-page \
+                        {Shutting down} \
+                        {} \
+                        <h1>Bye!</h1> \
+                    ] \
+                ]
                 $self clean-up $conn
                 set [$self wait-var-name] 1
             } ::dmsnit
@@ -622,7 +630,7 @@ proc ::dmsnit::main {argv0 argv} {
                     {202 Accepted} \
                     text/html \
                     [notice-page \
-                        Reloading... \
+                        Reloading \
                         {<meta http-equiv="refresh" content="1; url=/">} \
                         <h1>Reloading...</h1> \
                     ] \
