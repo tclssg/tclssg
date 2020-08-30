@@ -41,8 +41,7 @@ template-proc ::document::render {
     <% if {[blog-post?] && [config {rss enable} 0]} { %>
       <link rel="" type="application/rss+xml" href="<%! rss-feed %>">
     <% } %>
-    <% if {$prevPage ne {%NULL%} || $nextPage ne {%NULL%} ||
-           [setting noIndex 0]} {
+    <% if {$prevPage ne {} || $nextPage ne {} || [setting noIndex 0]} {
       # Tell search engines to not index the tag pages or the blog index
       # beyond the first page.
     %>
