@@ -487,6 +487,153 @@ namespace eval ::tclssg::tests {
     } \
     -result <p>hello</p>\n\n<hr/>\n\n<p>world</p>
 
+    tcltest::test markdown-6.2 {<hr> and HTML} \
+    -body {
+        Markdown::convert <table></table>\n\n---\n\n<table></table>
+    } \
+    -result <table></table>\n\n<hr/>\n\n<table></table>\n
+
+    tcltest::test markdown-7.1 {Table} \
+    -body {
+        Markdown::convert [utils::trim-indentation {
+            | Foo | Bar | Baz |
+            |-----|-----|-----|
+            |   1 |   2 |   3 |
+            | 4   |  5  | 6    |
+        }]
+    } \
+    -result [utils::trim-indentation {
+        <table class="table">
+        <thead>
+          <tr>
+            <th>Foo</th>
+            <th>Bar</th>
+            <th>Baz</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>2</td>
+            <td>3</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>5</td>
+            <td>6</td>
+          </tr>
+        </tbody>
+        </table>
+    }]\n
+
+    tcltest::test markdown-7.2 {Table with HTML} \
+    -body {
+        Markdown::convert [utils::trim-indentation {
+            | File name | Description |
+            |-|-|
+            | <a href="download/x.zip">x.zip</a> | Source code. |
+        }]
+    } \
+    -result [utils::trim-indentation {
+        <table class="table">
+        <thead>
+          <tr>
+            <th>File name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="download/x.zip">x.zip</a></td>
+            <td>Source code.</td>
+          </tr>
+        </tbody>
+        </table>
+    }]\n
+
+    tcltest::test markdown-7.3 {Table with a single column} \
+    -body {
+        Markdown::convert [utils::trim-indentation {
+            | Monocolumn |
+            |------------|
+            | Yes.       |
+
+            | <a name="foo">Hook</a> |
+            |-|
+            | <em>Line</em> |
+        }]
+    } \
+    -result [utils::trim-indentation {
+        <table class="table">
+        <thead>
+          <tr>
+            <th>Monocolumn</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Yes.</td>
+          </tr>
+        </tbody>
+        </table>
+
+
+        <table class="table">
+        <thead>
+          <tr>
+            <th><a name="foo">Hook</a></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><em>Line</em></td>
+          </tr>
+        </tbody>
+        </table>
+    }]\n
+
+    tcltest::test markdown-7.4 {Table with only a header} \
+    -body {
+        # This works on GitHub.
+        Markdown::convert "|Hello|\n|-----|"
+    } \
+    -result [utils::trim-indentation {
+        <table class="table">
+        <thead>
+          <tr>
+            <th>Hello</th>
+          </tr>
+        </thead>
+        </table>
+    }]\n
+
+    tcltest::test markdown-7.5 {HTML before a table} \
+    -body {
+        Markdown::convert [utils::trim-indentation {
+            <script>
+                var x = 5;
+                var y = 7;
+            </script>
+
+            | Hello! |
+            |---|
+        }]
+    } \
+    -result [utils::trim-indentation {
+        <script>
+            var x = 5;
+            var y = 7;
+        </script>
+
+        <table class="table">
+        <thead>
+          <tr>
+            <th>Hello!</th>
+          </tr>
+        </thead>
+        </table>
+    }]\n
+
 
     tcltest::test named-args-1.1 named-args \
     -cleanup {unset args foo bar baz} \
