@@ -481,6 +481,13 @@ namespace eval ::tclssg::tests {
     } \
     -result <div>\n\nHello\n\n\n</div>\n
 
+    tcltest::test markdown-6.1 {<hr>} \
+    -body {
+        Markdown::convert hello\n\n---\n\nworld
+    } \
+    -result <p>hello</p>\n\n<hr/>\n\n<p>world</p>
+
+
     tcltest::test named-args-1.1 named-args \
     -cleanup {unset args foo bar baz} \
     -body {
