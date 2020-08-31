@@ -240,17 +240,21 @@ namespace eval ::tclssg::cli::command {
         allow-options {--browse --verbose} $options
 
         set websiteConfig [config::load $inputDir]
-        set host [utils::dict-default-get localhost \
-                                          $websiteConfig \
-                                          server \
-                                          host]
-        set port [utils::dict-default-get 8080 \
-                                          $websiteConfig \
-                                          server \
-                                          port]
+        set host [utils::dict-default-get \
+            localhost \
+            $websiteConfig \
+            server \
+            host \
+        ]
+        set port [utils::dict-default-get \
+            8080 \
+            $websiteConfig \
+            server \
+            port \
+        ]
         set verbose [expr {{--verbose} in $options}]
 
-        package require dmsnit 0.14
+        package require dmsnit 0.16
 
         set httpd [::dmsnit::httpd create %AUTO%]
         $httpd configure \
@@ -260,20 +264,28 @@ namespace eval ::tclssg::cli::command {
                 -verbose $verbose
 
         $httpd add-handler /bye {
-            socketChannel {
+            conn {
                 upvar 1 self self
-                puts "shutting down"
-                puts $socketChannel {HTTP/1.0 204 No Content}
-                puts $socketChannel {}
-                $self clean-up $socketChannel
+
+                $self log {shutting down}
+                send $conn [response \
+                    {200 OK} \
+                    text/html \
+                    [notice-page {Shutting down} {} <h1>Bye!</h1>] \
+                ]
+
+                $self clean-up $conn
                 set [$self wait-var-name] 1
-            }
+            } ::dmsnit
         }
+
         $httpd serve
+
         if {{--browse} in $options} {
             package require tclssg::vendor::browse
             ::browse::url "http://$host:$port/"
         }
+
         vwait [$httpd wait-var-name]
     }
 
