@@ -12,7 +12,7 @@ package require textutil  0-2
 
 
 namespace eval ::dmsnit {
-    variable version 0.16.0
+    variable version 0.17.0
 }
 
 
@@ -26,6 +26,7 @@ namespace eval ::dmsnit {
     option -default index.html
     option -verbose 1
     option -dirlists 1
+    option -logchan stdout
 
     # TLS options.
     option -certfile \
@@ -133,7 +134,7 @@ namespace eval ::dmsnit {
     method log message {
         variable verbose
         if {[$self cget -verbose]} {
-            puts $message
+            puts [$self cget -logchan] $message
         }
     }
 
