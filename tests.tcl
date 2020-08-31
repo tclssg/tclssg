@@ -634,6 +634,41 @@ namespace eval ::tclssg::tests {
         </table>
     }]\n
 
+    tcltest::test markdown-8.1 {HTML blocks} \
+    -body {
+        Markdown::convert "<div>\n</div>\n\n# Hello!"
+    } \
+    -result <div>\n</div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.2 {Newlines after an HTML block} \
+    -body {
+        Markdown::convert "<div></div>\n# Hello!"
+    } \
+    -result <div></div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.3 {Newlines after an HTML block} \
+    -body {
+        Markdown::convert "<div></div>\n\n# Hello!"
+    } \
+    -result <div></div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.4 {Newlines after an HTML block} \
+    -body {
+        Markdown::convert "<div></div>\n\n\n# Hello!"
+    } \
+    -result <div></div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.5 {Text after the opening/closing tag} \
+    -body {
+        Markdown::convert "<div>   <b>\n</b> </div> <!-- -->\n\n# Hello!"
+    } \
+    -result [utils::trim-indentation {
+        <div>   <b>
+        </b> </div> <!-- -->
+
+        <h1>Hello!</h1>
+    }]
+
 
     tcltest::test named-args-1.1 named-args \
     -cleanup {unset args foo bar baz} \
