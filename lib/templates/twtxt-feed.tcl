@@ -17,7 +17,7 @@ template-proc ::twtxt-feed::render {
     -root           root
 } {<% foreach articleInput [lrange $articles 1 end] {
 
-    set title [article-setting title {}]
+    set title [string map [list \n { }] [article-setting title {}]]
     set timestamp [db input get $articleInput timestamp]
     set link [link-path [input-to-output-path $articleInput] 1]
 
