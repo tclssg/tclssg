@@ -81,3 +81,20 @@ proc url-join args {
 proc absolute? link {
     return [regexp {^(?:[a-z]+:)?//} $link]
 }
+
+proc feed-path {input root filename suffix} {
+    set tagPageTag [db settings preset-get $input tagPageTag {}]
+
+    if {$tagPageTag eq {}} {
+        return [file join $root blog $filename]
+    }
+
+    set path [input-to-output-path $input]
+
+    if {[db config get prettyURLs 0]} {
+        return [file join $root [file dirname $path] $filename]
+    } else {
+        # Get the output path without the page number added to it.
+        return [file join $root [file rootname $path]]$suffix
+    }
+}

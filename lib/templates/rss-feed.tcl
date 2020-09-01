@@ -14,14 +14,17 @@ template-proc ::rss-feed::render {
     -pageNumber     {pageNumber 1}
     -prevPage       prevPage
     -root           root
+    -tagPage        {tagPage {}}
 } {<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 
 <channel>
-<atom:link href="<%! rss-feed-path $input $root %>" rel="self" type="application/rss+xml" />
+<atom:link href="<%! link-path $output 1 %>" rel="self" type="application/rss+xml" />
 
 <title><%! entities [::document::document-title] %></title>
-<link><%! link-path [input-to-output-path $input] 1 %></link>
+<link><%! link-path [input-to-output-path [expr {
+    $tagPage eq {} ? $input : $tagPage
+}]] 1 %></link>
 <description><%! entities [config {rss feedDescription} {}] %></description>
 <language><%! lindex [split [setting locale en_US] _] 0 %></language>
 <%! copyright %>
@@ -88,20 +91,7 @@ namespace eval ::rss-feed {
     }
 
     proc rss-feed-path {input root} {
-        set tagPageTag [db settings preset-get $input tagPageTag {}]
-
-        if {$tagPageTag eq {}} {
-            return [file join $root blog/rss.xml]
-        }
-
-        set path [input-to-output-path $input]
-
-        if {[db config get prettyURLs 0]} {
-            return [file join $root [file dirname $path] rss.xml]
-        } else {
-            # Get the output path without the page number added to it.
-            return [file join $root [file rootname $path]].xml
-        }
+        feed-path $input $root rss.xml .xml
     }
 
     proc last-build-date {} {

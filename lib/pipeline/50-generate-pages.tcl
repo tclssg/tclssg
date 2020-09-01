@@ -67,13 +67,14 @@ namespace eval ::tclssg::pipeline::50-generate-pages {
 
     proc gen args {
         utils::named-args {
-            -interp         interp
-            -input          input
-            -output         baseOutput
-            -template       templateProc
-            -extraArticles  {extraArticles {}}
-            -paginate       {paginate 1}
-            -logScript      {logScript {}}
+            -interp          interp
+            -input           input
+            -output          baseOutput
+            -template        templateProc
+            -extraArticles   {extraArticles {}}
+            -paginate        {paginate 1}
+            -logScript       {logScript {}}
+            -templateExtras  {templateExtras {}}
         }
 
         set output $baseOutput
@@ -126,10 +127,14 @@ namespace eval ::tclssg::pipeline::50-generate-pages {
             if {$logScript ne {}} {
                 {*}$logScript $input $output
             }
-            db output add $output \
-                          $input \
-                          [interp eval $interp \
-                                       [list $templateProc {*}$templateArgs]]
+            db output add \
+                $output \
+                $input \
+                [interp eval \
+                    $interp \
+                    [list $templateProc {*}$templateArgs {*}$templateExtras] \
+                ]
+
             incr pageNumber
 
             set prevOutput $output

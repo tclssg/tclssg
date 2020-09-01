@@ -107,7 +107,8 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             [list $feedPath $blogIndexInput {}] \
         ]
 
-        gen -interp $interp \
+        gen \
+            -interp $interp \
             -template $template \
             -input $blogIndexInput \
             -output $output \
@@ -134,12 +135,14 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             [list $feedPath $tagPage {}] \
         ]
 
-        gen -interp $interp \
+        gen \
+            -interp $interp \
             -template $template \
             -input $tagIndexInput \
             -output $output \
             -extraArticles $pages \
             -paginate 0 \
+            -templateExtras [list -tagPage $tagPage] \
             -logScript [format {apply {{input output} {
                 ::tclssg::log::info "generating tag feed [list $output] (%s)"
             }}} $formatName]
