@@ -8,7 +8,7 @@ Features
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](https://github.com/tclssg/tclssg/wiki/Templating);
 * Plain old pages and blog posts [1];
 * Footnotes;
-* RSS feeds;
+* Feeds: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification);
 * SEO and usability features out of the box: site maps, canonical and previous/next links, `noindex` on collection pages.
 * Valid HTML5 and CSS level 3 output;
 * Legacy deployment over FTP;
