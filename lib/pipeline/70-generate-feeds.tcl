@@ -16,6 +16,11 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             lappend formats rss
         }
         set formatInfo {
+            json {
+                template ::json-feed::render
+                feedPath ::json-feed::path
+                name {JSON Feed}
+            }
             rss {
                 template ::rss-feed::render
                 feedPath ::rss-feed::rss-feed-path
@@ -58,7 +63,7 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             }
         }
 
-        if {[rss-setting tagFeeds false]} {
+        if {[db config get {feeds tagFeeds} false]} {
             foreach tagPage [db::input::list tag-page] {
                 set tag [db::settings::raw-mget \
                     [list $tagPage] \
@@ -67,6 +72,10 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
                 set pages [db::tags::inputs-with-tag $tag]
 
                 foreach format $formats {
+                    if {$format eq {rss} && ![rss-setting tagFeeds false]} {
+                        continue
+                    }
+
                     gen-tag-feed \
                         -feedPath [dict get $formatInfo $format feedPath] \
                         -formatName [dict get $formatInfo $format name] \

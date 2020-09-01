@@ -14,6 +14,7 @@ namespace eval ::tclssg::interpreter {
         ::csv::iscomplete                   ::csv::iscomplete
         ::csv::split                        ::csv::split
         ::json::json2dict                   ::json::json2dict
+        ::json::write                       ::json::write
         ::puts                              ::puts
         ::tclssg::converters::markdown::markdown-to-html
                                             markdown-to-html
