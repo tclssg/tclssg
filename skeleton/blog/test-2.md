@@ -33,4 +33,8 @@ Custom template demo: `<%! demo %>`
 
 Custom command from a plugin:
 
-><%! try { foo } on error _ { lindex {Command unavailable!} } %>
+><%! if {[catch { foo } result]} {
+    lindex {Command unavailable!}
+} else {
+    lindex $result
+} %>
