@@ -29,18 +29,5 @@ template-proc ::twtxt-feed::render {
 <% } %>}
 
 proc ::twtxt-feed::path {input root} {
-    set tagPageTag [db settings preset-get $input tagPageTag {}]
-
-    if {$tagPageTag eq {}} {
-        return [file join $root blog/twtxt.txt]
-    }
-
-    set path [input-to-output-path $input]
-
-    if {[db config get prettyURLs 0]} {
-        return [file join $root [file dirname $path] twtxt.txt]
-    } else {
-        # Get the output path without the page number added to it.
-        return [file join $root [file rootname $path]].twtxt.txt
-    }
+    feed-path $input $root twtxt.txt .twtxt.txt
 }
