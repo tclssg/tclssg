@@ -23,7 +23,10 @@ template-proc ::rss-feed::render {
 <% set tagPageOrInput [expr { $tagPage eq {} ? $input : $tagPage }] %>
 <title><%! cdata [document-title $tagPageOrInput $pageNumber] %></title>
 <link><%! link-path [input-to-output-path $tagPageOrInput] 1 %></link>
-<description><%! cdata [config {rss feedDescription} {}] %></description>
+<description><%! cdata [config \
+    {rss feedDescription} \
+    [config {feeds description} {}] \
+] %></description>
 <language><%! lindex [split [setting locale en_US] _] 0 %></language>
 <%! copyright %>
 <%! last-build-date %>

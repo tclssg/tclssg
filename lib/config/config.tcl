@@ -22,7 +22,7 @@ namespace eval ::tclssg::config {
         {deployFTP server}
         {deployFTP user}
         {feeds formats}
-        {feeds feedDescription}
+        {feeds description}
         {feeds posts}
         {feeds tagFeeds}
         inputDir
@@ -63,6 +63,7 @@ namespace eval ::tclssg::config {
                                     "%s %s\n" \
                                     {
                                         converter
+                                        description
                                         end
                                         feedDescription
                                         file

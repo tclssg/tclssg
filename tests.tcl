@@ -1421,7 +1421,7 @@ foo {
             ] \
             feeds {
                 formats {json rss twtxt}
-                feedDescription {This is a only a test.}
+                description {This is a only a test.}
                 posts 5
                 tagFeeds yes
             }

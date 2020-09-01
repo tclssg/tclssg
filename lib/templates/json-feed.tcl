@@ -30,7 +30,7 @@ template-proc ::json-feed::render {
     dict set feed home_page_url [json::write string $homePageURL]
     dict set feed feed_url [json::write string [link-path $output true]]
 
-    set descr [config {feeds feedDescription} {}]
+    set descr [config {feeds description} {}]
     if {$descr ne {}} {
         dict set feed description [json::write string $descr]
     }
