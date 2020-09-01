@@ -63,13 +63,11 @@ namespace eval ::rss-feed {
         set content [db input get $articleInput cooked]
         %>
         <item>
-          <%= $title ne "" ? "<title><!\[CDATA\[$title\]\]></title>" : "" %>
-          <link><%! entities $link %></link>
-          <guid><%! entities $link %></guid>
+          <%= $title ne "" ? "<title>[cdata $title]</title>" : "" %>
+          <link><%! cdata $link %></link>
+          <guid><%! cdata $link %></guid>
           <description>
-            <![CDATA[<%! ::article::abbreviate-article $content \
-                                                       [config abbreviate 1] \
-                                                       1 %>]]>
+            <%! cdata [::article::abbreviate-article $content [config abbreviate 1] 1] %>
           </description>
           <pubDate><%! clock format $timestamp \
                                     -format $rfc822 \
@@ -80,11 +78,11 @@ namespace eval ::rss-feed {
     proc copyright {} {
         upvar 1 input input
 
-        set copyright [entities [setting copyright {}]]
+        set copyright [setting copyright {}]
         return [expr {
-            $copyright eq {} ?
-            {} :
-            "<copyright><!\[CDATA\[$copyright\]\]></copyright>"
+            $copyright eq {}
+            ? {}
+            : "<copyright>[cdata $copyright]</copyright>"
         }]
     }
 
@@ -98,5 +96,23 @@ namespace eval ::rss-feed {
                                -format $rfc822 \
                                -timezone :UTC]
         return <lastBuildDate>$date</lastBuildDate>
+    }
+
+    proc cdata text {
+        if {$text eq {}} {
+            return {}
+        }
+
+        set result {}
+
+        set parts [regexp -all -inline {(.*?)(]]>|$)} $text]
+        foreach {part obst} [lrange $parts 1 end] {
+            append result <!\[CDATA\[$part\]\]>
+            if {$obst eq {]]>}} {
+                append result {<![CDATA[]]]]><![CDATA[>]]>}
+            }
+        }
+
+        return $result
     }
 }
