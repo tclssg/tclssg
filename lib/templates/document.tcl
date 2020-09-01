@@ -38,7 +38,7 @@ template-proc ::document::render {
     <% if {[setting favicon] ne {%NULL%}} { %>
       <link rel="icon" href="<%! file join $root [setting favicon] %>">
     <% } %>
-    <% if {[blog-post?] && [config {rss enable} 0]} { %>
+    <% if {[blog-post?] && [rss-enabled?]} { %>
       <link rel="" type="application/rss+xml" href="<%! rss-feed %>">
     <% } %>
     <% if {$prevPage ne {} || $nextPage ne {} || [setting noIndex 0]} {
@@ -86,9 +86,9 @@ template-proc ::document::render {
             <li><a href="<%! file join $root $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
-        <% if {[blog-post?] && [config {rss enable} 0]
+        <% if {[blog-post?] && [rss-enabled?]
                && ([setting tagPageTag] eq {%NULL%}
-                   || [config {rss tagFeeds} 0])} { %>
+                   || [rss-setting tagFeeds 0])} { %>
           <ul class="nav navbar-nav navbar-right">
             <li><a rel="alternate" type="application/rss+xml" href="<%! rss-feed %>"><%=
               [setting tagPageTag] eq {%NULL%} ? [lc RSS] : [lc "Tag RSS"]
@@ -265,11 +265,22 @@ namespace eval ::document {
         return [entities [join $result $sep]]
     }
 
+    proc rss-enabled? {} {
+        return [expr {
+            [db config get {rss enable} false]
+            || {rss} in [db config get {feeds formats} {}]
+        }]
+    }
+
     proc rss-feed {} {
         upvar 1 input input \
                 root root
 
         return [::rss-feed::rss-feed-path $input $root]
+    }
+
+    proc rss-setting {key default} {
+        return [config [list rss $key] [config [list feeds $key] $default]]
     }
 
     proc navbar-brand {} {

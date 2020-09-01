@@ -11,7 +11,8 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             ::tclssg::pipeline::60-generate-tag-pages
         }
 
-        if {![db config get {rss enable} false]} return
+        if {![db config get {rss enable} false]
+            && {rss} ni [db config get {feeds formats} {}]} return
 
         set interp 70-generate-feeds
         interpreter create $interp
@@ -21,7 +22,7 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
 
         if {$blogIndexInput ne {%NULL%}} {
             set lastFeedPost [expr {
-                [db config get {rss posts} 10] - 1
+                [rss-setting posts 10] - 1
             }]
             set posts [lrange [db settings inputs-with-true-setting \
                                            blogPost \
@@ -41,7 +42,7 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
                 }}}
         }
 
-        if {[db config get {rss tagFeeds} false]} {
+        if {[rss-setting tagFeeds false]} {
             foreach tagPage [db::input::list tag-page] {
                 set tag [db::settings::raw-mget [list $tagPage] \
                                                 tagPageTag]
@@ -67,5 +68,12 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
         }
 
         interp delete $interp
+    }
+
+    proc rss-setting {key default} {
+        return [db config get \
+            [list rss $key] \
+            [db config get [list feeds $key] \
+                           $default]]
     }
 }

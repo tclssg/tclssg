@@ -21,6 +21,10 @@ namespace eval ::tclssg::config {
         {deployFTP port}
         {deployFTP server}
         {deployFTP user}
+        {feeds formats}
+        {feeds feedDescription}
+        {feeds posts}
+        {feeds tagFeeds}
         inputDir
         {markdown converter}
         {markdown tabs}
@@ -85,6 +89,22 @@ namespace eval ::tclssg::config {
         set url [utils::dict-default-get {} $config url]
         if {($url ne {}) && ([string index $url end] ne "/")} {
             error {"url" in the website config does not end with "/"}
+        }
+
+        if {[dict exists $config rss enable]
+            && [dict exists $config feeds formats]} {
+
+            if {[dict get $config rss enable]
+                && {rss} ni [dict get $config feeds formats]} {
+                error {website config error: {rss enable} is true\
+                       but {feeds formats} does not contain "rss"}
+            }
+
+            if {![dict get $config rss enable]
+                && {rss} in [dict get $config feeds formats]} {
+                error {website config error: {rss enable} is false\
+                       but {feeds formats} contains "rss"}
+            }
         }
     }
 
