@@ -360,12 +360,12 @@ namespace eval Markdown {
                 }
                 {^<(?:p|div|h[1-6]|blockquote|pre|table|dl|ol|ul|script|noscript|form|fieldset|iframe|math|ins|del)} {
                     # HTML BLOCKS
+                    set block_tag [string range $line_match 1 end]
                     set re_htmltag {<(/?)(\w+)(?:\s+\w+=(?:\"[^\"]+\"|'[^']+'))*\s*>}
-                    set buffer {}
 
                     set block_lines 0
+                    set buffer {}
                     while {$index < $no_lines} {
-                        set line [lindex $lines $index]
                         append buffer $line \n
 
                         incr block_lines
@@ -375,14 +375,18 @@ namespace eval Markdown {
 
                         set stack_count 0
                         foreach {match type name} $tags {
-                            if {$type eq {}} {
-                                incr stack_count +1
-                            } else {
-                                incr stack_count -1
+                            if {$name eq $block_tag} {
+                                if {$type eq {}} {
+                                    incr stack_count +1
+                                } else {
+                                    incr stack_count -1
+                                }
                             }
                         }
 
                         if {$stack_count == 0} break
+
+                        set line [lindex $lines $index]
                     }
 
                     # Skip empty lines after the block.

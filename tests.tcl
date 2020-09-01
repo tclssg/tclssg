@@ -687,6 +687,20 @@ namespace eval ::tclssg::tests {
         <h1>Hello!</h1>
     }]
 
+    tcltest::test markdown-8.5 {} \
+    -body {
+        Markdown::convert [utils::trim-indentation {
+            <p><img src="https://example.com"></p>
+
+            `broken` markup
+        }]
+    } \
+    -result [utils::trim-indentation {
+        <p><img src="https://example.com"></p>
+
+        <p><code>broken</code> markup</p>
+    }]
+
 
     tcltest::test named-args-1.1 named-args \
     -cleanup {unset args foo bar baz} \
