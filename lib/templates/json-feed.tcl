@@ -23,7 +23,6 @@ template-proc ::json-feed::render {
     dict set feed title [json::write string \
         [document-title $input $pageNumber] \
     ]
-    dict set feed tagPageTag \"[setting tagPageTag WTF]\"
 
     set homePageURL [link-path [input-to-output-path [expr {
         $tagPage eq {} ? $input : $tagPage
@@ -35,10 +34,6 @@ template-proc ::json-feed::render {
     if {$descr ne {}} {
         dict set feed description [json::write string $descr]
     }
-
-    dict set feed language [json::write string \
-        [lindex [split [setting locale en_US] _] 0] \
-    ]
 
     set items {}
     foreach articleInput [lrange $articles 1 end] {
@@ -56,7 +51,15 @@ template-proc ::json-feed::render {
             [link-path [input-to-output-path $articleInput] 1] \
         ]
         dict set item id $link
-        dict set item link $link
+        dict set item url $link
+
+        set content [db input get $articleInput cooked]
+        set abbr [::article::abbreviate-article \
+            $content \
+            [config abbreviate 1] \
+            1 \
+        ]
+        dict set item content_html [json::write string $abbr]
 
         lappend items [json::write object {*}$item]
     }
