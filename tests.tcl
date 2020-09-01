@@ -1419,6 +1419,12 @@ foo {
                 host localhost \
                 port $port \
             ] \
+            feeds {
+                formats {json rss twtxt}
+                feedDescription {This is a only a test.}
+                posts 5
+                tagFeeds yes
+            }
         ]
 
         tcl ssg.tcl build $project $project/output
@@ -1473,10 +1479,17 @@ foo {
         set blogPost [http-get http://$host:$port/blog/test/]
         lappend result [regexp $noIndex $blogPost]
 
+        foreach feed {feed.json rss.xml twtxt.txt} {
+            lappend result [regexp \
+                {Test page 3} \
+                [http-get http://$host:$port/blog/$feed] \
+            ]
+        }
+
         http-get http://$host:$port/bye
         return $result
     } \
-    -result {1 1 0}
+    -result {1 1 0 1 1 1}
 
 
     tcltest::test tclssg-library-1.1 {Tclssg as a library} \
