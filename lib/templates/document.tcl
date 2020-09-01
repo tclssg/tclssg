@@ -86,11 +86,12 @@ template-proc ::document::render {
             <li><a href="<%! file join $root $link %>"><%= $item %></a></li>
           <% } %>
           </ul>
-        <% if {[blog-post?] && [config {rss enable} 0]} { %>
+        <% if {[blog-post?] && [config {rss enable} 0]
+               && ([setting tagPageTag] eq {%NULL%}
+                   || [config {rss tagFeeds} 0])} { %>
           <ul class="nav navbar-nav navbar-right">
             <li><a rel="alternate" type="application/rss+xml" href="<%! rss-feed %>"><%=
-              ([setting tagPageTag] ne {%NULL%}) && ([config {rss tagFeeds} 0]) ?
-              [lc "Tag RSS"] : [lc "RSS"]
+              [setting tagPageTag] eq {%NULL%} ? [lc RSS] : [lc "Tag RSS"]
             %></a></li>
           </ul>
         <% } %>

@@ -11,6 +11,8 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             ::tclssg::pipeline::60-generate-tag-pages
         }
 
+        if {![db config get {rss enable} false]} return
+
         set interp 70-generate-feeds
         interpreter create $interp
 
@@ -39,27 +41,29 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
                 }}}
         }
 
-        foreach tagPage [db::input::list tag-page] {
-            set tag [db::settings::raw-mget [list $tagPage] \
-                                            tagPageTag]
+        if {[db config get {rss tagFeeds} false]} {
+            foreach tagPage [db::input::list tag-page] {
+                set tag [db::settings::raw-mget [list $tagPage] \
+                                                tagPageTag]
 
-            set tagPageOutput [db::output::get-by-input $tagPage file]
-            set rssOutput [interp eval $interp \
-                                       [list ::rss-feed::rss-feed-path \
-                                             $tagPage \
-                                             {}]]
-            set pages [db::tags::inputs-with-tag $tag]
+                set tagPageOutput [db::output::get-by-input $tagPage file]
+                set rssOutput [interp eval $interp \
+                                           [list ::rss-feed::rss-feed-path \
+                                                 $tagPage \
+                                                 {}]]
+                set pages [db::tags::inputs-with-tag $tag]
 
-            gen -interp $interp \
-                -template ::rss-feed::render \
-                -input $tagIndexInput \
-                -output $rssOutput \
-                -extraArticles $pages \
-                -paginate 0 \
-                -logScript {apply {{input output} {
-                    ::tclssg::log::info "generating tag RSS feed\
-                                         [list $output]"
-                }}}
+                gen -interp $interp \
+                    -template ::rss-feed::render \
+                    -input $tagIndexInput \
+                    -output $rssOutput \
+                    -extraArticles $pages \
+                    -paginate 0 \
+                    -logScript {apply {{input output} {
+                        ::tclssg::log::info "generating tag RSS feed\
+                                             [list $output]"
+                    }}}
+            }
         }
 
         interp delete $interp
