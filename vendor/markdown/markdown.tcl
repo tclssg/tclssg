@@ -140,7 +140,7 @@ namespace eval Markdown {
                 {^[ ]{0,3}_[ ]*_[ ]*_[_ ]*$} -
                 {^[ ]{0,3}\*[ ]*\*[ ]*\*[\* ]*$} {
                     # HORIZONTAL RULES
-                    append result "<hr/>"
+                    append result "<hr />"
                     incr index
                 }
                 {^[ ]{0,3}#{1,6}} {

@@ -485,13 +485,13 @@ namespace eval ::tclssg::tests {
     -body {
         Markdown::convert hello\n\n---\n\nworld
     } \
-    -result <p>hello</p>\n\n<hr/>\n\n<p>world</p>
+    -result "<p>hello</p>\n\n<hr />\n\n<p>world</p>"
 
     tcltest::test markdown-6.2 {<hr> and HTML} \
     -body {
         Markdown::convert <table></table>\n\n---\n\n<table></table>
     } \
-    -result <table></table>\n\n<hr/>\n\n<table></table>\n
+    -result "<table></table>\n\n<hr />\n\n<table></table>\n"
 
     tcltest::test markdown-7.1 {Table} \
     -body {
