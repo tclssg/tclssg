@@ -20,12 +20,10 @@ template-proc ::rss-feed::render {
 
 <channel>
 <atom:link href="<%! link-path $output 1 %>" rel="self" type="application/rss+xml" />
-
-<title><%! entities [::document::document-title] %></title>
-<link><%! link-path [input-to-output-path [expr {
-    $tagPage eq {} ? $input : $tagPage
-}]] 1 %></link>
-<description><%! entities [config {rss feedDescription} {}] %></description>
+<% set tagPageOrInput [expr { $tagPage eq {} ? $input : $tagPage }] %>
+<title><%! cdata [document-title $tagPageOrInput $pageNumber] %></title>
+<link><%! link-path [input-to-output-path $tagPageOrInput] 1 %></link>
+<description><%! cdata [config {rss feedDescription} {}] %></description>
 <language><%! lindex [split [setting locale en_US] _] 0 %></language>
 <%! copyright %>
 <%! last-build-date %>

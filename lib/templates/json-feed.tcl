@@ -20,7 +20,9 @@ template-proc ::json-feed::render {
     set feed {}
 
     dict set feed version \"https://jsonfeed.org/version/1.1\"
-    dict set feed title [json::write string [::document::document-title]]
+    dict set feed title [json::write string \
+        [document-title $input $pageNumber] \
+    ]
     dict set feed tagPageTag \"[setting tagPageTag WTF]\"
 
     set homePageURL [link-path [input-to-output-path [expr {

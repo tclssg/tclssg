@@ -47,7 +47,7 @@ template-proc ::document::render {
     %>
       <meta name="robots" content="noindex">
     <% } %>
-    <title><%! document-title %></title>
+    <title><%! entities [document-title $input $pageNumber] %></title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="<%! file join $root vendor/bootstrap/css/bootstrap.min.css %>">
@@ -232,37 +232,6 @@ namespace eval ::document {
         upvar 1 input input
 
         localization get [setting locale en_US] ::document $text
-    }
-
-    proc document-title {} {
-        upvar 1 input input \
-                pageNumber pageNumber
-
-        set websiteTitle [setting websiteTitle {}]
-
-        set sep { | }
-
-        set pageTitle [setting title {}]
-        set showTitle [setting {show title} 1]
-        set tagPageTag [setting tagPageTag {}]
-
-        set result {}
-        if {($showTitle) && ($pageTitle ne "")} {
-            lappend result $pageTitle
-        }
-
-        if {$tagPageTag ne ""} {
-            lappend result [format [lc {Posts tagged "%1$s"}] $tagPageTag]
-        }
-
-        if {[string is integer $pageNumber] && ($pageNumber > 1)} {
-            lappend result [format [lc {page %1$s}] $pageNumber]
-        }
-        if {$websiteTitle ne ""} {
-            lappend result $websiteTitle
-        }
-
-        return [entities [join $result $sep]]
     }
 
     proc rss-enabled? {} {

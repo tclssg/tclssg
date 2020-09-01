@@ -98,3 +98,41 @@ proc feed-path {input root filename suffix} {
         return [file join $root [file rootname $path]]$suffix
     }
 }
+
+proc localized {input text} {
+    localization get [setting locale en_US] ::document $text
+}
+
+proc document-title {input pageNumber} {
+    set websiteTitle [setting websiteTitle {}]
+
+    set sep { | }
+
+    set pageTitle [setting title {}]
+    set showTitle [setting {show title} 1]
+    set tagPageTag [setting tagPageTag {}]
+
+    set result {}
+    if {$showTitle && $pageTitle ne ""} {
+        lappend result $pageTitle
+    }
+
+    if {$tagPageTag ne ""} {
+        lappend result [format \
+            [localized $input {Posts tagged "%1$s"}] \
+            $tagPageTag \
+        ]
+    }
+
+    if {[string is integer $pageNumber] && $pageNumber > 1} {
+        lappend result [format \
+            [localized $input {page %1$s}] \
+            $pageNumber \
+        ]
+    }
+    if {$websiteTitle ne ""} {
+        lappend result $websiteTitle
+    }
+
+    return [join $result $sep]
+}
