@@ -332,26 +332,29 @@ namespace eval ::tclssg::utils {
     # Get variables set in page using Tcl list syntax at the beginning of the
     # post.
     proc separate-frontmatter {rawContent} {
-        global errorInfo
+        if {![regexp ^\{ $rawContent]} {
+            return [list {} $rawContent]
+        }
 
-        set vars {}
         # Find the longest substring of rawContent that is a list.
         set maxListLength [expr {[string length $rawContent] + 1}]
         string is list -failindex maxListLength $rawContent
         set maxList \
-                [string trimleft \
-                        [string range $rawContent 0 \
-                                [expr {$maxListLength - 1}]]]
+            [string trimleft \
+                [string range \
+                    $rawContent \
+                    0 \
+                    [expr {$maxListLength - 1}]]]
 
-        #
-        if {[string index $maxList 0] == "\{"} {
-            set vars [lindex $maxList 0]
-        }
+        set vars [lindex $maxList 0]
 
         # Trim newlines before markup. The "+2" is for the list delimiters.
         set markup \
-                [string trimleft \
-                        [string range $rawContent [string length $vars]+2 end]]
+            [string trimleft \
+                [string range \
+                    $rawContent \
+                    [string length $vars]+2 \
+                    end]]
 
         return [list $vars $markup]
     }

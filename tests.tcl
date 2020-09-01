@@ -331,30 +331,39 @@ namespace eval ::tclssg::tests {
     ]
 
     tcltest::test separate-frontmatter-1.1 separate-frontmatter \
-    -cleanup {unset prased result first elem} \
+    -cleanup {unset parsed result first elem} \
     -body {
-        set prased {}
-        lappend prased [separate-frontmatter {{hello world} Hello, world!}]
-        lappend prased [separate-frontmatter {{ hello world } Hello, world!}]
-        lappend prased [separate-frontmatter {{hello world} Hello, world!}]
-        lappend prased [separate-frontmatter {{hello world}
+        set parsed {}
+        lappend parsed [separate-frontmatter {{hello world} Hello, world!}]
+        lappend parsed [separate-frontmatter {{ hello world } Hello, world!}]
+        lappend parsed [separate-frontmatter {{hello world} Hello, world!}]
+        lappend parsed [separate-frontmatter {{hello world}
 
             Hello, world!}]
-        lappend prased [separate-frontmatter {{
+        lappend parsed [separate-frontmatter {{
                 hello world
             }
 
             Hello, world!}]
 
         set result {}
-        set first [lindex $prased 0]
-        foreach elem [lrange $prased 1 end] {
+        set first [lindex $parsed 0]
+        foreach elem [lrange $parsed 1 end] {
             lappend result [::struct::list equal $first $elem]
         }
 
         return [lsort -unique $result]
     } \
     -result 1
+
+    tcltest::test separate-frontmatter-1.2 {Absent frontmatter} \
+    -cleanup {unset parsed} \
+    -body {
+        set parsed {}
+        lappend parsed [separate-frontmatter {foo bar}]
+        lappend parsed [separate-frontmatter {   {k v} foo bar}]
+    } \
+    -result {{{} {foo bar}} {{} {   {k v} foo bar}}}
 
     tcltest::test group-by-1.1 group-by \
     -cleanup {unset i result} \
