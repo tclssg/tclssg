@@ -19,12 +19,12 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             rss {
                 template ::rss-feed::render
                 feedPath ::rss-feed::rss-feed-path
-                name {RSS feed}
+                name RSS
             }
             twtxt {
                 template ::twtxt-feed::render
                 feedPath ::twtxt-feed::path
-                name {twtxt feed}
+                name twtxt
             }
         }
 
@@ -114,8 +114,7 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             -extraArticles $posts \
             -paginate 0 \
             -logScript [format {apply {{input output} {
-                ::tclssg::log::info "generating blog %s\
-                                     [list $output]"
+                ::tclssg::log::info "generating blog feed [list $output] (%s)"
             }}} $formatName]
     }
 
@@ -142,8 +141,7 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             -extraArticles $pages \
             -paginate 0 \
             -logScript [format {apply {{input output} {
-                ::tclssg::log::info "generating tag %s\
-                                     [list $output]"
+                ::tclssg::log::info "generating tag feed [list $output] (%s)"
             }}} $formatName]
     }
 
