@@ -11,8 +11,17 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             ::tclssg::pipeline::60-generate-tag-pages
         }
 
-        if {![db config get {rss enable} false]
-            && {rss} ni [db config get {feeds formats} {}]} return
+        set formats [db config get {feeds formats} {}]
+        if {[db config get {rss enable} false] && {rss} ni $formats} {
+            lappend formats rss
+        }
+        set formatInfo {
+            rss {
+                template ::rss-feed::render
+                feedPath ::rss-feed::rss-feed-path
+                name {RSS feed}
+            }
+        }
 
         set interp 70-generate-feeds
         interpreter create $interp
@@ -21,53 +30,116 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
         lassign [tag-index] tagIndexInput
 
         if {$blogIndexInput ne {%NULL%}} {
-            set lastFeedPost [expr {
-                [rss-setting posts 10] - 1
-            }]
-            set posts [lrange [db settings inputs-with-true-setting \
-                                           blogPost \
-                                           $blogIndexInput] \
-                              0 \
-                              $lastFeedPost]
+            foreach format $formats {
+                if {![dict exist $formatInfo $format]} {
+                    error "unknown feed format: \"$format\""
+                }
 
-            gen -interp $interp \
-                -template ::rss-feed::render \
-                -input $blogIndexInput \
-                -output blog/rss.xml \
-                -extraArticles $posts \
-                -paginate 0 \
-                -logScript {apply {{input output} {
-                    ::tclssg::log::info "generating blog RSS feed\
-                                         [list $output]"
-                }}}
+                set pcd 10
+                set postCount [expr {
+                    $format eq {rss}
+                    ? [rss-setting posts $pcd]
+                    : [db config get {feeds posts} $pcd]
+                }]
+                unset pcd
+
+                gen-blog-feed \
+                    -blogIndexInput $blogIndexInput \
+                    -feedPath [dict get $formatInfo $format feedPath] \
+                    -formatName [dict get $formatInfo $format name] \
+                    -interp $interp \
+                    -postCount $postCount \
+                    -template [dict get $formatInfo $format template] \
+            }
         }
 
         if {[rss-setting tagFeeds false]} {
             foreach tagPage [db::input::list tag-page] {
-                set tag [db::settings::raw-mget [list $tagPage] \
-                                                tagPageTag]
-
-                set tagPageOutput [db::output::get-by-input $tagPage file]
-                set rssOutput [interp eval $interp \
-                                           [list ::rss-feed::rss-feed-path \
-                                                 $tagPage \
-                                                 {}]]
+                set tag [db::settings::raw-mget \
+                    [list $tagPage] \
+                    tagPageTag \
+                ]
                 set pages [db::tags::inputs-with-tag $tag]
 
-                gen -interp $interp \
-                    -template ::rss-feed::render \
-                    -input $tagIndexInput \
-                    -output $rssOutput \
-                    -extraArticles $pages \
-                    -paginate 0 \
-                    -logScript {apply {{input output} {
-                        ::tclssg::log::info "generating tag RSS feed\
-                                             [list $output]"
-                    }}}
+                foreach format $formats {
+                    gen-tag-feed \
+                        -feedPath [dict get $formatInfo $format feedPath] \
+                        -formatName [dict get $formatInfo $format name] \
+                        -interp $interp \
+                        -pages $pages \
+                        -tagIndexInput $tagIndexInput \
+                        -tagPage $tagPage \
+                        -template [dict get $formatInfo $format template] \
+                }
             }
         }
 
         interp delete $interp
+    }
+
+    proc gen-blog-feed args {
+        utils::named-args {
+            -blogIndexInput blogIndexInput
+            -feedPath feedPath
+            -formatName formatName
+            -interp interp
+            -postCount postCount
+            -template template
+        }
+
+        set lastFeedPost [expr { $postCount - 1 }]
+        set posts [lrange \
+            [db settings inputs-with-true-setting \
+                blogPost \
+                $blogIndexInput \
+            ] \
+            0 \
+            $lastFeedPost \
+        ]
+
+        set output [interp eval \
+            $interp \
+            [list $feedPath $blogIndexInput {}] \
+        ]
+
+        gen -interp $interp \
+            -template $template \
+            -input $blogIndexInput \
+            -output $output \
+            -extraArticles $posts \
+            -paginate 0 \
+            -logScript [format {apply {{input output} {
+                ::tclssg::log::info "generating blog %s\
+                                     [list $output]"
+            }}} $formatName]
+    }
+
+    proc gen-tag-feed args {
+        utils::named-args {
+            -feedPath feedPath
+            -formatName formatName
+            -interp interp
+            -pages pages
+            -tagIndexInput tagIndexInput
+            -tagPage tagPage
+            -template template
+        }
+
+        set output [interp eval \
+            $interp \
+            [list $feedPath $tagPage {}] \
+        ]
+
+        gen -interp $interp \
+            -template $template \
+            -input $tagIndexInput \
+            -output $output \
+            -extraArticles $pages \
+            -paginate 0 \
+            -logScript [format {apply {{input output} {
+                ::tclssg::log::info "generating tag %s\
+                                     [list $output]"
+            }}} $formatName]
     }
 
     proc rss-setting {key default} {
