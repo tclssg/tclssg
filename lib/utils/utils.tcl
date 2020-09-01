@@ -456,16 +456,23 @@ namespace eval ::tclssg::utils {
         return $lol
     }
 
-    proc named-args mapping {
+    proc named-args {mapping {strict true}} {
         upvar 1 args args
+        set argsVarName {}
 
         dict for {key dest} $mapping {
             catch {unset default}
+
             switch -exact -- [llength $dest] {
                 1 { set varName $dest }
                 2 { lassign $dest varName default }
                 default { error "expected \"varName ?default?\",\
                                  but got \"$dest\"" }
+            }
+
+            if {$key eq {args}} {
+                set argsVarName $varName
+                continue
             }
 
             upvar 1 $varName v
@@ -478,9 +485,21 @@ namespace eval ::tclssg::utils {
             }
             dict unset args $key
         }
+
         if {$args ne {}} {
-            error "unknown extra arguments: \"$args\""
+            if {$argsVarName eq {}} {
+                if {$strict} {
+                    error "unknown extra arguments: \"$args\""
+                } else {
+                    return
+                }
+            }
+
+            upvar 1 $argsVarName upArgs
+            set upArgs $args
         }
+
+        return
     }
 
     proc remove-comments data {

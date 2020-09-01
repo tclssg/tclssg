@@ -756,6 +756,30 @@ namespace eval ::tclssg::tests {
     -returnCodes error \
     -result {unknown extra arguments: "-qux wat"}
 
+    tcltest::test named-args-1.4 {named-args extra non-strict} \
+    -cleanup {unset args foo bar} \
+    -body {
+        set args {-foo 1 -bar 5 -qux wat}
+        utils::named-args {
+            -foo  foo
+            -bar  bar
+        } false
+    } \
+    -result {}
+
+    tcltest::test named-args-1.5 {named-args extra strict with "args"} \
+    -cleanup {unset args foo bar blah} \
+    -body {
+        set args {-foo 1 -bar 5 -qux wat}
+        utils::named-args {
+            -foo  foo
+            -bar  bar
+            args blah
+        }
+        return $blah
+    } \
+    -result {-qux wat}
+
 
     tcltest::test remove-comments-1.1 remove-comments \
     -body {
