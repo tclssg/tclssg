@@ -363,21 +363,18 @@ namespace eval Markdown {
                     set re_htmltag {<(/?)(\w+)(?:\s+\w+=(?:\"[^\"]+\"|'[^']+'))*\s*>}
                     set buffer {}
 
-                    while {$index < $no_lines} \
-                    {
-                        while {$index < $no_lines} \
-                        {
-                            incr index
+                    set block_lines 0
+                    while {$index < $no_lines} {
+                        incr block_lines
+                        incr index
 
-                            append buffer $line \n
+                        append buffer $line \n
 
+                        set line [lindex $lines $index]
 
-                            set line [lindex $lines $index]
-                        }
+                        set tags [regexp -inline -all $re_htmltag $buffer]
 
-                        set tags [regexp -inline -all $re_htmltag  $buffer]
                         set stack_count 0
-
                         foreach {match type name} $tags {
                             if {$type eq {}} {
                                 incr stack_count +1
@@ -386,7 +383,22 @@ namespace eval Markdown {
                             }
                         }
 
-                        if {$stack_count == 0} { break }
+                        if {$stack_count == 0} break
+                    }
+
+                    # Skip the line with the closing tag.
+                    if {$block_lines > 1} {
+                        incr index
+                    }
+
+                    # Skip empty lines after the block.
+                    while {$index < $no_lines
+                           && [regexp {^\s*$} [lindex $lines $index]]} {
+                        incr index
+                    }
+
+                    if {$index < $no_lines} {
+                        append buffer \n
                     }
 
                     append result $buffer
