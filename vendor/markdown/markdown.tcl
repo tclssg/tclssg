@@ -365,12 +365,11 @@ namespace eval Markdown {
 
                     set block_lines 0
                     while {$index < $no_lines} {
-                        incr block_lines
-                        incr index
-
+                        set line [lindex $lines $index]
                         append buffer $line \n
 
-                        set line [lindex $lines $index]
+                        incr block_lines
+                        incr index
 
                         set tags [regexp -inline -all $re_htmltag $buffer]
 
@@ -384,11 +383,6 @@ namespace eval Markdown {
                         }
 
                         if {$stack_count == 0} break
-                    }
-
-                    # Skip the line with the closing tag.
-                    if {$block_lines > 1} {
-                        incr index
                     }
 
                     # Skip empty lines after the block.

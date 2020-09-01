@@ -640,25 +640,43 @@ namespace eval ::tclssg::tests {
     } \
     -result <div>\n</div>\n\n<h1>Hello!</h1>
 
-    tcltest::test markdown-8.2 {Newlines after an HTML block} \
+    tcltest::test markdown-8.2.1 {Newlines after a one-line HTML block} \
     -body {
         Markdown::convert "<div></div>\n# Hello!"
     } \
     -result <div></div>\n\n<h1>Hello!</h1>
 
-    tcltest::test markdown-8.3 {Newlines after an HTML block} \
+    tcltest::test markdown-8.2.2 {Newlines after a one-line HTML block} \
     -body {
         Markdown::convert "<div></div>\n\n# Hello!"
     } \
     -result <div></div>\n\n<h1>Hello!</h1>
 
-    tcltest::test markdown-8.4 {Newlines after an HTML block} \
+    tcltest::test markdown-8.2.3 {Newlines after a one-line HTML block} \
     -body {
         Markdown::convert "<div></div>\n\n\n# Hello!"
     } \
     -result <div></div>\n\n<h1>Hello!</h1>
 
-    tcltest::test markdown-8.5 {Text after the opening/closing tag} \
+    tcltest::test markdown-8.3.1 {Newlines after a multiline HTML block} \
+    -body {
+        Markdown::convert "<div>\n</div>\n# Hello!"
+    } \
+    -result <div>\n</div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.3.2 {Newlines after a multiline HTML block} \
+    -body {
+        Markdown::convert "<div>\n</div>\n\n# Hello!"
+    } \
+    -result <div>\n</div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.3.3 {Newlines after a multiline HTML block} \
+    -body {
+        Markdown::convert "<div>\n</div>\n\n\n# Hello!"
+    } \
+    -result <div>\n</div>\n\n<h1>Hello!</h1>
+
+    tcltest::test markdown-8.4 {Text after the opening/closing tag} \
     -body {
         Markdown::convert "<div>   <b>\n</b> </div> <!-- -->\n\n# Hello!"
     } \
