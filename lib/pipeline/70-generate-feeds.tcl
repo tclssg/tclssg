@@ -21,6 +21,11 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
                 feedPath ::rss-feed::rss-feed-path
                 name {RSS feed}
             }
+            twtxt {
+                template ::twtxt-feed::render
+                feedPath ::twtxt-feed::path
+                name {twtxt feed}
+            }
         }
 
         set interp 70-generate-feeds
