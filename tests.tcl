@@ -196,6 +196,7 @@ namespace eval ::tclssg::tests {
     } \
     -result hello-world
 
+
     tcltest::test slug-compare-1.1 {} -body {
         slug-compare {Hello, World!} {hello world}
     } \
@@ -215,6 +216,7 @@ namespace eval ::tclssg::tests {
         slug-compare bar foo
     } \
     -result -1
+
 
     tcltest::test replace-path-root-1.1 {replace-path-root} \
     -body {
@@ -246,6 +248,7 @@ namespace eval ::tclssg::tests {
     } \
     -result /a/b
 
+
     tcltest::test dict-default-get-1.1 {dict-default-get} \
     -body {
         dict-default-get testValue {} someKey
@@ -264,6 +267,7 @@ namespace eval ::tclssg::tests {
                          someKey anotherKey
     } \
     -result testValue
+
 
     tcltest::test add-number-before-extension-1.1 {add-number-before-extension}\
     -body {
@@ -330,6 +334,7 @@ namespace eval ::tclssg::tests {
         filename009.ext filename010.ext \
     ]
 
+
     tcltest::test separate-frontmatter-1.1 separate-frontmatter \
     -cleanup {unset parsed result first elem} \
     -body {
@@ -364,6 +369,7 @@ namespace eval ::tclssg::tests {
         lappend parsed [separate-frontmatter {   {k v} foo bar}]
     } \
     -result {{{} {foo bar}} {{} {   {k v} foo bar}}}
+
 
     tcltest::test group-by-1.1 group-by \
     -cleanup {unset i result} \
@@ -406,6 +412,7 @@ namespace eval ::tclssg::tests {
         group-by 0 {}
     } \
     -returnCodes error -result {expected an integer >= 1 but got "0"}
+
 
     tcltest::test markdown-1.1 {Built-in Markdown converter} \
     -body {
@@ -749,6 +756,7 @@ namespace eval ::tclssg::tests {
     -returnCodes error \
     -result {unknown extra arguments: "-qux wat"}
 
+
     tcltest::test remove-comments-1.1 remove-comments \
     -body {
         utils::remove-comments {
@@ -769,6 +777,7 @@ namespace eval ::tclssg::tests {
     } \
     -match regexp \
     -result {foo 1 # Not actually a comment.\n\s+bar 2}
+
 
     tcltest::test longest-common-list-prefix-1.1 {simple usage} \
     -body {
@@ -1339,6 +1348,7 @@ foo {
     -match glob \
     -result {*usage: ssg.tcl*}
 
+
     tcltest::test command-line-1.2 {Tclssg command line commands} \
     -constraints {unix diff} \
     -cleanup {unset result} \
@@ -1369,6 +1379,7 @@ foo {
         return $result
     } \
     -result {}
+
 
     tcltest::test command-line-1.3 {serve command} \
     -cleanup {
@@ -1442,6 +1453,7 @@ foo {
         return $result
     } \
     -result {1 1 0}
+
 
     tcltest::test tclssg-library-1.1 {Tclssg as a library} \
     -cleanup {unset project result file} \
