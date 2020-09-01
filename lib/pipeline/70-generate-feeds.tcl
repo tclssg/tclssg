@@ -1,9 +1,9 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-namespace eval ::tclssg::pipeline::70-generate-rss {
+namespace eval ::tclssg::pipeline::70-generate-feeds {
     proc transform {} {
         namespace path {
             ::tclssg
@@ -11,7 +11,7 @@ namespace eval ::tclssg::pipeline::70-generate-rss {
             ::tclssg::pipeline::60-generate-tag-pages
         }
 
-        set interp 70-generate-rss
+        set interp 70-generate-feeds
         interpreter create $interp
 
         lassign [templates blog-index] blogIndexInput
