@@ -84,7 +84,7 @@ namespace eval ::tclssg::utils {
 
         set start [expr { $max == inf ? {end+1} : $max }]
 
-        join [lmap line [split $text \n] {
+        join [struct::list mapfor line [split $text \n] {
             string range $line $start end
         }] \n
     }
