@@ -38,12 +38,12 @@ namespace eval ::tclssg::interpreter {
             interp alias $interp $alias {} $command
         }
 
-        # Hack: copy the proc [named-args] because we cannot upvar across
+        # Copy the proc [named-args] because we cannot upvar across
         # interps.  We change $strict to false by default for templates.
-        interp eval $interp [list proc named-args \
-            {mapping {strict false}} \
-            [info body ::tclssg::utils::named-args] \
-        ]
+        set namedArgs [utils::proc-source named-args]
+        lset namedArgs 2 {mapping {strict false}}
+        interp eval $interp $namedArgs
+
 
         set sourced {}
         foreach path $::tclssg::templates::paths {

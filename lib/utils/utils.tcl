@@ -544,6 +544,19 @@ namespace eval ::tclssg::utils {
 
         return $result
     }
+
+    proc proc-source proc {
+        set params {}
+        foreach param [info args $proc] {
+            if {[info default $proc $param default]} {
+                lappend params [list $param $default]
+            } else {
+                lappend params $param
+            }
+        }
+
+        list proc $proc $params [info body $proc]
+    }
 }
 
 package provide tclssg::utils 0
