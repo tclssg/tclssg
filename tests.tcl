@@ -1049,7 +1049,7 @@ foo {
     -body {
         tcl tools/log-search.tcl --help 2>@1
     } \
-    -result {usage: log-search.tcl regexp [file [--no-color]]}
+    -result {usage: log-search.tcl [regexp [file [--no-color]]]}
 
     tcltest::test log-search-1.2 {error message} \
     -cleanup {unset result} \

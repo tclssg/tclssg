@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # A tool for searching logs in Tclssg's indentation-based format.
-# Copyright (c) 2018
+# Copyright (c) 2018, 2020
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -8,8 +8,8 @@ package require try 1
 
 namespace eval ::log-search {
     proc usage {} {
-        puts stderr "usage: [file tail [info script]] regexp \[file\
-                     \[--no-color\]\]"
+        puts stderr "usage: [file tail [info script]] \[regexp \[file\
+                     \[--no-color\]\]\]"
     }
 
     # Find occurrences of $regexp in lines read from $channelId -- with prefix
@@ -110,7 +110,7 @@ namespace eval ::log-search {
         set channelId stdout
         set newline 1
 
-        switch -exact -- [llength $args] {
+        switch [llength $args] {
             2 {
                 lassign $args colorMode list
             }
@@ -155,7 +155,7 @@ namespace eval ::log-search {
         if {$attr ni {bold nobold dim {}}} {
             error "unknown attribute: [list $attr]"
         }
-        switch -exact -- $colorMode {
+        switch -- $colorMode {
             ansi {
                 set seq {}
                 if {$color ne {}} {
@@ -182,7 +182,7 @@ namespace eval ::log-search {
                         -fgbright [expr {$attr eq {dim}}]
                     return
                 }
-                
+
                 if {$color ne {}} {
                     lappend arguments -fg$color 1
                 }
@@ -205,7 +205,7 @@ namespace eval ::log-search {
     # Return the best color mode to use based on the platform and the available
     # packages.
     proc detect-color-mode {} {
-        switch -exact -- $::tcl_platform(platform) {
+        switch -- $::tcl_platform(platform) {
             unix {
                 try {
                     package require term::ansi::code::ctrl 0-2
@@ -235,7 +235,11 @@ namespace eval ::log-search {
             exit 0
         }
 
-        switch -exact -- [llength $argv] {
+        switch [llength $argv] {
+            0 {
+                set regexp {}
+                set file -
+            }
             1 {
                 lassign $argv regexp
                 set file -
