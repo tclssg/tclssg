@@ -11,7 +11,7 @@ namespace eval ::tclssg::pipeline::70-generate-feeds {
             ::tclssg::pipeline::60-generate-tag-pages
         }
 
-        set formats [db config get {feeds formats} {}]
+        set formats [lsort -unique [db config get {feeds formats} {}]]
         if {[db config get {rss enable} false] && {rss} ni $formats} {
             lappend formats rss
         }
