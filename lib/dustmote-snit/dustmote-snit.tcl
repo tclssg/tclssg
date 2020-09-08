@@ -12,7 +12,7 @@ package require textutil  0-2
 
 
 namespace eval ::dmsnit {
-    variable version 0.17.0
+    variable version 0.18.0
 }
 
 
@@ -133,8 +133,12 @@ namespace eval ::dmsnit {
     # Print $message to standard output if logging is enabled.
     method log message {
         variable verbose
+
         if {[$self cget -verbose]} {
-            puts [$self cget -logchan] $message
+            set time [clock format [clock seconds] \
+                -format {%Y-%m-%d %H:%M:%S %z} \
+            ]
+            puts [$self cget -logchan] "$time $message"
         }
     }
 
