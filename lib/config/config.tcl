@@ -87,7 +87,7 @@ namespace eval ::tclssg::config {
     # Check the website config for errors that may not be caught elsewhere.
     proc validate config {
         # Check that the website URL ends with a '/'.
-        set url [utils::dict-default-get {} $config url]
+        set url [utils::dict-getdef $config url {}]
         if {($url ne {}) && ([string index $url end] ne "/")} {
             error {"url" in the website config does not end with "/"}
         }

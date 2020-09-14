@@ -66,14 +66,16 @@ namespace eval ::tclssg::cli::command {
         }
 
         if {{--local} in $options} {
-            set host [utils::dict-default-get localhost \
-                                              $websiteConfig \
-                                              server \
-                                              host]
-            set port [utils::dict-default-get 8080 \
-                                              $websiteConfig \
-                                              server \
-                                              port]
+            set host [utils::dict-getdef \
+                $websiteConfig \
+                server host \
+                localhost \
+            ]
+            set port [utils::dict-getdef \
+                $websiteConfig \
+                server port \
+                8080 \
+            ]
             dict set websiteConfig url http://$host:$port/
         }
 
@@ -195,10 +197,11 @@ namespace eval ::tclssg::cli::command {
                     [dict get $websiteConfig deployFTP server] \
                     [dict get $websiteConfig deployFTP user] \
                     [dict get $websiteConfig deployFTP password] \
-                    -port [utils::dict-default-get 21 \
-                                                   $websiteConfig \
-                                                   deployFTP \
-                                                   port] \
+                    -port [utils::dict-getdef \
+                        $websiteConfig \
+                        deployFTP port \
+                        21 \
+                    ] \
                     -mode passive
         ]
         set deployFTPPath [dict get $websiteConfig deployFTP path]
@@ -240,17 +243,15 @@ namespace eval ::tclssg::cli::command {
         allow-options {--browse --verbose} $options
 
         set websiteConfig [config::load $inputDir]
-        set host [utils::dict-default-get \
+        set host [utils::dict-getdef \
+            $websiteConfig \
+            server host \
             localhost \
-            $websiteConfig \
-            server \
-            host \
         ]
-        set port [utils::dict-default-get \
-            8080 \
+        set port [utils::dict-getdef \
             $websiteConfig \
-            server \
-            port \
+            server port \
+            8080 \
         ]
         set verbose [expr {{--verbose} in $options}]
 

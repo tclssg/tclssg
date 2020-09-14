@@ -45,10 +45,28 @@ namespace eval ::tclssg::utils {
     # Otherwise return the default value.
     proc dict-default-get {default dictionary args} {
         if {[dict exists $dictionary {*}$args]} {
-            dict get $dictionary {*}$args
-        } else {
-            return $default
+            return [dict get $dictionary {*}$args]
         }
+
+        return $default
+    }
+
+    # A version of the above that conforms to the Tcl 8.7 [dict getdef] syntax.
+    proc dict-getdef args {
+        if {[llength $args] < 3} {
+            error {wrong # args: should be "dict-getdef" dictionary ?key ...?\
+                                 key default}
+        }
+
+        set dictionary [lindex $args 0]
+        set default [lindex $args end]
+        set keys [lrange $args 1 end-1]
+
+        if {[dict exists $dictionary {*}$keys]} {
+            return [dict get $dictionary {*}$keys]
+        }
+
+        return $default
     }
 
     # Trim indentation in multiline quoted text. Unlike [textutil::undent],

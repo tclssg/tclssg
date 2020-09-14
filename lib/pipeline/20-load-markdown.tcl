@@ -40,7 +40,7 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
         set id [utils::replace-path-root $file $inputDir {}]
 
         # Skip pages marked as drafts.
-        if {[utils::dict-default-get 0 $frontmatter draft]} {
+        if {[utils::dict-getdef $frontmatter draft 0]} {
             return
         }
 
@@ -55,8 +55,11 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
             # Parse date and modified into a Unix timestamp plus a format
             # string.
             set presetTimezone [db settings preset-get $file {timezone date} {}]
-            set timezone [dict-default-get $presetTimezone \
-                                           $frontmatter timezone date]
+            set timezone [dict-getdef \
+                $frontmatter \
+                timezone date \
+                $presetTimezone \
+            ]
             set clockOptions [expr {
                 $timezone eq {} ? {} : [list -timezone $timezone]
             }]
@@ -89,8 +92,7 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
                 -cooked {} \
                 -timestamp [lindex $timestamp 0]
 
-            db tags add $id \
-                        [dict-default-get {} $frontmatter tags]
+            db tags add $id [dict-getdef $frontmatter tags {}]
             dict unset frontmatter tags
 
             foreach {key value} $frontmatter {
@@ -117,9 +119,7 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
     proc prepare-content {file frontmatter content macros interp
                           extraVariables} {
         if {$macros} {
-            set content [dict-default-get {} \
-                                          $frontmatter \
-                                          prelude]\n$content
+            set content [dict-getdef $frontmatter prelude {}]\n$content
             debugger save-intermediate $file \
                                        content-1-with-prelude.md \
                                        $content

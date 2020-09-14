@@ -269,6 +269,27 @@ namespace eval ::tclssg::tests {
     -result testValue
 
 
+    tcltest::test dict-getdef-1.1 {dict-getdef} \
+    -body {
+        dict-getdef {} someKey testValue
+    } \
+    -result testValue
+
+    tcltest::test dict-getdef-1.2 {dict-getdef} \
+    -body {
+        dict-getdef {someKey testValue} someKey -1
+    } \
+    -result testValue
+
+    tcltest::test dict-getdef-1.3 {dict-getdef} \
+    -body {
+        dict-getdef {someKey {anotherKey testValue}} \
+            someKey anotherKey \
+            -1
+    } \
+    -result testValue
+
+
     tcltest::test add-number-before-extension-1.1 {add-number-before-extension}\
     -body {
         add-number-before-extension "filename.ext" 0
