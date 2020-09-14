@@ -289,6 +289,19 @@ namespace eval ::tclssg::tests {
     } \
     -result testValue
 
+    tcltest::test dict-getdef-2.1 {dict-getdef} \
+    -body {
+        dict-getdef {k {k2 v}} k k3 -1
+    } \
+    -result -1
+
+    tcltest::test dict-getdef-2.2 {dict-getdef} \
+    -body {
+        dict-getdef {k {k2 v}} k k2 k3 -1
+    } \
+    -returnCodes error \
+    -result {missing value to go with key}
+
 
     tcltest::test add-number-before-extension-1.1 {add-number-before-extension}\
     -body {

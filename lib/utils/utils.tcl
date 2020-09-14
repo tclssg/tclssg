@@ -62,8 +62,16 @@ namespace eval ::tclssg::utils {
         set default [lindex $args end]
         set keys [lrange $args 1 end-1]
 
-        if {[dict exists $dictionary {*}$keys]} {
-            return [dict get $dictionary {*}$keys]
+        set error [catch {
+            dict get $dictionary {*}$keys
+        } result opts]
+
+        if {!$error} {
+            return $result
+        }
+
+        if {$error && [dict get $opts -errorcode] eq {TCL VALUE DICTIONARY}} {
+            return {*}$opts $result
         }
 
         return $default
