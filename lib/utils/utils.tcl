@@ -10,7 +10,7 @@ namespace eval ::tclssg::utils {
 
     proc read-file args {
         if {[llength $args] == 0} {
-            error "wrong # args: should be \"read-file ?options? path"
+            error "wrong # args: should be \"[info level 0] ?options? path\""
         }
         set path [lindex $args end]
         set options [lrange $args 0 end-1]
@@ -54,8 +54,8 @@ namespace eval ::tclssg::utils {
     # A version of the above that conforms to the Tcl 8.7 [dict getdef] syntax.
     proc dict-getdef args {
         if {[llength $args] < 3} {
-            error {wrong # args: should be "dict-getdef" dictionary ?key ...?\
-                                 key default}
+            error "wrong # args: should be \"[info level 0] dictionary\
+                   ?key ...? key default\""
         }
 
         set dictionary [lindex $args 0]
@@ -328,7 +328,8 @@ namespace eval ::tclssg::utils {
     # A wrapper for ::sha2::sha256 for safe interps.
     proc sha256 args {
         if {[llength $args] ni {1 2}} {
-            error {wrong # args: should be "sha256" ?-bin|-hex? string}
+            error "wrong # args: should be \"[info level 0] ?-bin|-hex?\
+                   string\""
         }
         if {[llength $args] == 2} {
             lassign $args format string
@@ -423,7 +424,8 @@ namespace eval ::tclssg::utils {
             set widths [dict values $args]
         } on error {} {
             return -code error \
-                   {wrong # args: should be "columns {content width ...}"}
+                   "wrong # args: should be \"[lindex [info level 0] 0]\
+                    {content width ...}\""
         }
 
         # For all columns...
