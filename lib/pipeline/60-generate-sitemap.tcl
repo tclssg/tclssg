@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
+# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -29,14 +29,14 @@ namespace eval ::tclssg::pipeline::60-generate-sitemap {
         <urlset
               xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+              xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9\
                     http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
         %s</urlset>
         }]
 
         set entry [utils::trim-indentation {
             <url>
-              <loc>%s</loc>%s
+              <loc><![CDATA[%s]]></loc>%s
             </url>
         }]
 
