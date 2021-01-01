@@ -39,7 +39,7 @@ set procs {
 
     proc entities text {
         return [string map {
-            & &amp
+            & &amp;
             < &lt;
             > &gt;
             \" &quot;
@@ -59,7 +59,7 @@ set procs {
 
         set output [file rootname $input]
         if {[db config get prettyURLs 0]} {
-            regexp {^(.*?)/?index$} $output _ output 
+            regexp {^(.*?)/?index$} $output _ output
             if {$n > 1} {
                 append output /page/$n
             }
@@ -114,7 +114,7 @@ set procs {
 
         set source "named-args [list $namedArgs]\n$prelude\n[parse $template]"
         uplevel 1 [list proc $name args $source]
-    } 
+    }
 }
 
 # Make this file usable both in the main project and in a safe interpreter.
