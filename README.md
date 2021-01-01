@@ -1,14 +1,14 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-Tclssg is a static site generator with template support written in Tcl. It is intended to make it easy to manage a small to medium-sized website with an optional blog, "small to medium-sized" meaning one with under about 2000 pages. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
+Tclssg is a full-featured extensible static site generator written in Tcl.  Its intent is to make it easy to manage a static website with an optional blog.  It is aimed at Tcl programmers first.  It works best for websites with a page count under 1000.  Websites with a few hundred pages usually build in under a minute on modest hardware.  Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
 
 Features
 --------
 
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](https://github.com/tclssg/tclssg/wiki/Templating);
-* Plain old pages and blog posts [1];
+* Regular pages and blog posts [1];
 * Footnotes;
-* Feeds: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification);
+* New blog post feeds: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification);
 * SEO and usability features out of the box: site maps, canonical and previous/next links, `noindex` on collection pages.
 * Valid HTML5 and CSS level 3 output;
 * Legacy deployment over FTP;
@@ -18,7 +18,7 @@ Features
 * [Reasonably fast](https://github.com/tclssg/tclssg/wiki/Benchmarks);
 * Few dependencies. Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Windows, and Mac.
 
-1\. A blog post differs from a plain old page in that it has a sidebar with links to other blog posts sorted by recency and tags. The latest blog posts are featured on the blog index and tag pages are generated to collect blog posts with the same tag.
+1\. A blog post differs from a plain old page in that it has a sidebar with tags and links to other blog posts sorted by recency. The latest blog posts are featured on the blog index, and tag pages are generated to collect blog posts with the same tag.
 
 Page screenshot
 ---------------
