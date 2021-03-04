@@ -4,7 +4,6 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require tcltest   2
-package require textutil
 
 if {![namespace exists ::tclssg]} {
     namespace eval ::tclssg {}
