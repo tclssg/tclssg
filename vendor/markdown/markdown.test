@@ -52,6 +52,7 @@ tcltest::test markdown-3.1 {Tabs in Markdown} \
     "<pre><code>target:\n\tcommand foo bar</code></pre>" \
 ]
 
+
 tcltest::test markdown-4.1 {Fenced code block language 1} \
 -cleanup {unset md} \
 -body {
@@ -72,6 +73,7 @@ tcltest::test markdown-4.3 {Fenced code block language 3} \
     Markdown::convert "```foo bar baz\nhi\n```"
 } \
 -result "<pre><code class=\"language-foo\">hi</code></pre>"
+
 
 tcltest::test markdown-5.1 {Newlines in HTML tag 1} \
 -body {
@@ -106,6 +108,7 @@ tcltest::test markdown-5.5 {Newlines in HTML tag 5} \
 } \
 -result <div>\n\nHello\n\n\n</div>\n
 
+
 tcltest::test markdown-6.1 {<hr>} \
 -body {
     Markdown::convert hello\n\n---\n\nworld
@@ -117,6 +120,7 @@ tcltest::test markdown-6.2 {<hr> and HTML} \
     Markdown::convert <table></table>\n\n---\n\n<table></table>
 } \
 -result "<table></table>\n\n<hr />\n\n<table></table>\n"
+
 
 tcltest::test markdown-7.1 {Table} \
 -body {
@@ -259,6 +263,7 @@ tcltest::test markdown-7.5 {HTML before a table} \
     </table>
 }]\n
 
+
 tcltest::test markdown-8.1 {HTML blocks} \
 -body {
     Markdown::convert "<div>\n</div>\n\n# Hello!"
@@ -324,6 +329,29 @@ tcltest::test markdown-8.5 {} \
     <p><img src="https://example.com"></p>
 
     <p><code>broken</code> markup</p>
+}]
+
+
+tcltest::test markdown-9.1 {Indented code block} \
+-body {
+    Markdown::convert "    foo\n    bar\n    baz"
+} \
+-result [unindent {
+    <pre><code>foo
+    bar
+    baz
+    </code></pre>
+}]
+
+tcltest::test markdown-9.2 {Indented code block} \
+-body {
+    Markdown::convert "    foo\n    bar\n    baz\n"
+} \
+-result [unindent {
+    <pre><code>foo
+    bar
+    baz
+    </code></pre>
 }]
 
 
