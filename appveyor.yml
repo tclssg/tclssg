@@ -6,14 +6,5 @@ build_script:
   - cmd: tclkit.exe appveyor.tcl
 test_script:
   - cmd: tclkit.exe tests.tcl
-deploy:
-  - provider: BinTray
-    username: dbohdan
-    api_key:
-      secure: ozw96x1eb8jSUjZWB3NtAeExwJJh7ELyI/mQed79YG6wRtXKps3D4Efr34b8RQDJ
-    subject: dbohdan
-    repo: tclssg
-    package: starpacks
-    publish: true
 artifacts:
   - path: artifacts\*
