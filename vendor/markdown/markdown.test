@@ -34,9 +34,12 @@ proc unindent text {
 
     set start [expr { $max == inf ? {end+1} : $max }]
 
-    join [lmap line [split $text \n] {
-        string range $line $start end
-    }] \n
+    set result {}
+    foreach line [split $text \n] {
+        lappend result [string range $line $start end]
+    }
+
+    return [join $result \n]
 }
 
 
