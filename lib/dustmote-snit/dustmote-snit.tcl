@@ -1,6 +1,6 @@
 #!/usr/bin/env tclsh
 # DustMote HTTP server originally developed by Harold Kaplan
-# (https://wiki.tcl-lang.org/4333).  Modified by D. Bohdan.
+# (https://wiki.tcl-lang.org/4333). Modified by D. Bohdan.
 # This code is in the public domain.
 
 package require Tcl       8.5
@@ -12,7 +12,7 @@ package require textutil  0-2
 
 
 namespace eval ::dmsnit {
-    variable version 0.18.0
+    variable version 0.19.0
 }
 
 
@@ -218,6 +218,18 @@ namespace eval ::dmsnit {
         $self log "206 $filename"
     }
 
+    method return-302 {conn path dest} {
+        send $conn [response \
+            {302 Found} \
+            text/html \
+            {} \
+            "Location: $dest" \
+        ]
+
+        $self clean-up $conn
+        $self log "302 $path -> $dest"
+    }
+
     method return-404 {conn path} {
         send $conn [response \
             {404 Not Found} \
@@ -364,6 +376,10 @@ namespace eval ::dmsnit {
         } else {
             # Default file.
             if {[file isdir $wholeName]} {
+                if {![string match */ $shortName]} {
+                    $self return-302 $conn $wholeName $shortName/
+                    return
+                }
                 set defaultFile [file join $wholeName [$self cget -default]]
                 if {[file isfile $defaultFile]} {
                     set wholeName $defaultFile
