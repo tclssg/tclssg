@@ -1,6 +1,6 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-Tclssg is a full-featured extensible static site generator written in Tcl.  Its intent is to make it easy to manage a static website with an optional blog.  It is aimed at Tcl programmers first.  It works best for websites with a page count under 1000.  Websites with a few hundred pages usually build in under a minute on modest hardware.  Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
+Tclssg is a full-featured extensible static site generator written in Tcl. Its intent is to make it easy to manage a static website with an optional blog. It is aimed at Tcl programmers first. It works best for websites with a page count under 1000. Websites with a few hundred pages usually build in under a minute on modest hardware. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
 
 Features
 --------
@@ -29,7 +29,7 @@ Getting started
 
 Tclssg is known to run on Linux, FreeBSD, OpenBSD, NetBSD, macOS, and Windows 2000/XP/7/8.x/10.
 
-To use it you will need Tcl 8.5 or newer, Tcllib, and SQLite version 3 bindings for Tcl installed.  Tclssg can use [tidy-html5](https://www.html-tidy.org) to make HTML prettier, but it is not required.
+To use it you will need Tcl 8.5 or newer (Tcl 9 is supported), Tcllib, and SQLite version 3 bindings for Tcl installed. Tclssg can use [tidy-html5](https://www.html-tidy.org) to make HTML prettier, but it is not required.
 
 To install those on **Debian** or **Ubuntu** run the following command:
 
