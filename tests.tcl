@@ -1264,7 +1264,7 @@ foo {
 
 
     # Exit with a nonzero status if there are failed tests.
-    set failed [expr {$tcltest::numTests(Failed) > 0}]
+    set failed [expr {$::tcltest::numTests(Failed) > 0}]
 
     tcltest::cleanupTests
     if {$failed} {

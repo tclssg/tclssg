@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2019
+# Copyright (c) 2013-2019, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -296,6 +296,7 @@ namespace eval ::tclssg::utils {
                     log::debug match
                     log::debug [clock format $scan {*}$options]
                 }
+                break
             } on error {} {}
         }
 
