@@ -170,19 +170,19 @@ namespace eval ::tclssg::tests {
 
     tcltest::test incremental-clock-scan-5.0 {with options} \
     -body {
-        incremental-clock-scan {2014-05-06 17:08} {-timezone Europe/Kiev}
+        incremental-clock-scan {2014-05-06 17:08} {-timezone EET}
     } \
     -result {1399385280 %Y-%m-%dT%H:%M}
 
     tcltest::test incremental-clock-scan-5.1 {with options} \
     -body {
-        incremental-clock-scan {2014-06-26 20:10:00} {-timezone Europe/Kiev}
+        incremental-clock-scan {2014-06-26 20:10:00} {-timezone EET}
     } \
     -result [list [clock add $correctSecondsUTC -3 hours] %Y-%m-%dT%H:%M:%S]
 
     tcltest::test incremental-clock-scan-5.2 {with options} \
     -body {
-        incremental-clock-scan {2014-06-26 20:10:00Z} {-timezone Europe/Kiev}
+        incremental-clock-scan {2014-06-26 20:10:00Z} {-timezone EET}
     } \
     -result [list $correctSecondsUTC %Y-%m-%dT%H:%M:%S%z]
 
