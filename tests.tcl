@@ -9,7 +9,7 @@ package require struct    2
 package require tcltest   2
 
 namespace eval ::tclssg::tests {
-    variable path [file dirname [file dirname [file normalize $argv0/___]]]
+    variable path [file dirname [file dirname [file normalize $::argv0/___]]]
 
     lappend ::auto_path $path
     namespace eval ::tclssg [list variable path $path]
@@ -36,8 +36,8 @@ namespace eval ::tclssg::tests {
 
     ::logger::initNamespace ::tclssg error
 
-    if {[llength $argv] > 0} {
-        tcltest::configure -match $argv
+    if {[llength $::argv] > 0} {
+        tcltest::configure -match $::argv
     }
 
     proc tcl args {
