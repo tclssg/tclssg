@@ -3,7 +3,7 @@
 # (https://wiki.tcl-lang.org/4333). Modified by D. Bohdan.
 # This code is in the public domain.
 
-package require Tcl       8.5
+package require Tcl       8.5 9
 package require fileutil  1
 package require html      1
 package require ncgi      1
@@ -12,7 +12,7 @@ package require textutil  0-2
 
 
 namespace eval ::dmsnit {
-    variable version 0.19.0
+    variable version 0.19.1
 }
 
 
