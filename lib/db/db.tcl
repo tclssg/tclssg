@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013, 2014, 2015, 2016, 2017, 2018, 2019
+# Copyright (c) 2013-2019
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -253,7 +253,7 @@ namespace eval ::tclssg::db::settings {
             tclssg-db eval {
                 INSERT OR REPLACE INTO settings(file, key, value)
                 VALUES (:file, :key, :value);
-            }            
+            }
         }
     }
 

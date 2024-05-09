@@ -1,7 +1,7 @@
 #! /usr/bin/env tclsh
 # This tool will help you migrate a typical project for Tclssg 1.0.x or earlier
 # to Tclssg 2.x.
-# Copyright (c) 2019, 2020
+# Copyright (c) 2019-2020
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -44,7 +44,7 @@ namespace eval migrate::dsl {
     }
 
     proc comment-out text {
-        upvar 1 indent indent 
+        upvar 1 indent indent
         return "# [join [split $text \n] "\n$indent# "]"
     }
 
@@ -244,24 +244,24 @@ proc migrate::page {settings {indent {}}} {
 
         transform hideFromCollections collections negate
 
-        transform hideFromSidebar sidebarLinks negate    
+        transform hideFromSidebar sidebarLinks negate
 
         transform hideFromSidebarLinks sidebarLinks negate
     }
 
     group show {
         transform hideArticleTitle articleTitle negate
-        
+
         transform hideAuthor author negate
-        
+
         transform hideDate date negate
-        
+
         transform hideFooter footer negate
 
         transform hideModifiedDate modified negate
 
         transform hidePostTags postTags negate
-        
+
         transform hideTitle title negate
     }
 
@@ -309,7 +309,7 @@ proc migrate::page {settings {indent {}}} {
         }
 
         renamed sidebarPosition position
-        
+
         group tagCloud {
             transform hideTagCloud enable negate
 
@@ -402,7 +402,7 @@ proc migrate::config settings {
 
     group rss {
         id {rss enable}
-        
+
         id {rss feedDescription}
 
         removed {rss feedFilename}
@@ -431,7 +431,7 @@ proc migrate::config settings {
 
     id url
 
-    drain 
+    drain
 
     return [dict create config [join $acc {}] \
                         presets $presets]
@@ -561,7 +561,7 @@ if {[info exists argv0] && ([file tail [info script]] eq [file tail $argv0])} {
         namespace path [namespace parent]
 
         variable location [file dirname [file dirname [file normalize $argv0/___]]]
-        
+
         lappend ::auto_path [file join $location ../lib]
         package require tclssg::utils
     }
