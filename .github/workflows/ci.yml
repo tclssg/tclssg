@@ -31,6 +31,7 @@ jobs:
           run: |
             ci/install-deps.sh
             make test
+  
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -42,6 +43,15 @@ jobs:
     - name: Test
       run: |
         make test
+    - name: Build artifacts
+      run: |
+        ci/build-artifacts.tcl
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: artifacts
+        path: |
+          artifacts/
 
   macos:
     runs-on: macos-latest
@@ -63,19 +73,6 @@ jobs:
     - name: Download dependencies
       run: |
         Invoke-WebRequest http://kitcreator.rkeene.org/kits/ae78c6ebb1cca64104a326db1be0110e8b2457c9/tclkit.exe -OutFile tclkit.exe
-
-        Set-Location ..
-        git clone https://github.com/tclssg/packer
-        Set-Location tclssg
-    - name: Build
-      run: |
-        .\tclkit.exe ci\windows.tcl
     - name: Test
       run: |
         .\tclkit.exe tests.tcl
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: artifacts
-        path: |
-          artifacts/
