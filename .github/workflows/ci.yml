@@ -9,7 +9,8 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get install -y cmark tcl tcllib libsqlite3-tcl
     - name: Test
-      run: tclsh tests.tcl
+      run: |
+        make test
 
   windows:
     runs-on: windows-latest
