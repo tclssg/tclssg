@@ -70,10 +70,6 @@ namespace eval ::tclssg::utils {
             return $result
         }
 
-        if {$error && [dict get $opts -errorcode] eq {TCL VALUE DICTIONARY}} {
-            return {*}$opts $result
-        }
-
         return $default
     }
 
