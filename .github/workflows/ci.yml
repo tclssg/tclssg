@@ -7,7 +7,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Install dependencies
-      run: sudo apt-get install -y cmark tcl tcllib libsqlite3-tcl
+      run: |
+        sudo apt-get install -y cmark tcl tcllib libsqlite3-tcl
+    - name: Test
+      run: |
+        make test
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+        brew install cmark tcl-tk
     - name: Test
       run: |
         make test
