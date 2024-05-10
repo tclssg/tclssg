@@ -29,7 +29,9 @@ jobs:
           version: ${{ matrix.os.version }}
           shell: bash
           run: |
-            ci/install-deps.sh
+            # doas(1) isn't configured OpenBSD.
+            # See https://github.com/cross-platform-actions/action/issues/75
+            sudo ci/install-deps.sh
             make test
   
   linux:
@@ -39,7 +41,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Install dependencies
       run: |
-        ci/install-deps.sh
+        sudo ci/install-deps.sh
     - name: Test
       run: |
         make test
