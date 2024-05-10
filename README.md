@@ -42,7 +42,13 @@ On **Fedora**, **RHEL** or **CentOS**:
 
 On **Windows 7 and later** the recommended way to run Tclssg is to install [Magicsplat Tcl/Tk for Windows](https://www.magicsplat.com/tcl-installer/). The copy of Tcl that comes with [Git for Windows](http://msysgit.github.io/) does not include Tcllib or an SQLite 3 module, so it will not run Tclssg out of the box.
 
-On **macOS** use [MacPorts](https://www.macports.org/) or install ActiveTcl for Mac. With MacPorts:
+On **macOS** use [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/).
+
+Homebrew:
+
+    brew install tcl-tk
+
+MacPorts:
 
     sudo port install tcllib tcl-sqlite3
 
