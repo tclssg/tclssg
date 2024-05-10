@@ -1,6 +1,6 @@
 ![Tclssg](./logo/tclssg-logo-text-small.png)
 
-Tclssg is a full-featured extensible static site generator written in Tcl. Its intent is to make it easy to manage a static website with an optional blog. It is aimed at Tcl programmers first. It works best for websites with a page count under 1000. Websites with a few hundred pages usually build in under a minute on modest hardware. Tclssg uses Markdown for content formatting, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
+Tclssg is a full-featured extensible static site generator written in Tcl. Its intent is to make it easy to manage a static website with an optional blog. It is aimed at Tcl programmers first. It works best for websites with a page count under 1000. Websites with a few hundred pages usually build in under a minute on modest hardware. Tclssg uses Markdown for content markup, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) for layout (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
 
 Features
 --------
@@ -8,13 +8,13 @@ Features
 * [Markdown](#markup), Bootstrap themes, Tcl code for [templates](https://github.com/tclssg/tclssg/wiki/Templating);
 * Regular pages and blog posts [1];
 * Footnotes;
-* New blog post feeds: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification);
+* Feeds with new blog posts: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification);
 * SEO and usability features out of the box: site maps, canonical and previous/next links, `noindex` on collection pages.
 * Valid HTML5 and CSS level 3 output;
 * Legacy deployment over FTP;
-* Deployment over SCP or other protocols with a [custom deployment command](https://github.com/tclssg/tclssg/wiki/Using-deployCustom);
+* Deployment over SCP and in other ways with a [custom deployment command](https://github.com/tclssg/tclssg/wiki/Using-deployCustom);
 * Support for external comment engines (currently: Disqus);
-* Relative links in the HTML output, which make it suitable for viewing over *file://*;
+* Relative links in the HTML output, which make it suitable for browsing over *file://*;
 * [Reasonably fast](https://github.com/tclssg/tclssg/wiki/Benchmarks);
 * Few dependencies. Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Windows, and Mac.
 
@@ -64,7 +64,7 @@ This will create a new website project in the directory `website/` based on the 
 Markup
 ------
 
-Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate the break between the teaser (the part of the article shown on the blog index and on tag pages) and the rest of the content. Use page settings to customize the page's output. Example:
+Write [Markdown](http://daringfireball.net/projects/markdown/syntax) and use `<!-- more -->` to designate a break between the teaser (the part of the article shown on the blog index and on tag pages) and the rest of the content. Use page settings to customize the page's output. Example:
 
 ```markdown
 {
@@ -104,4 +104,4 @@ The Tclssg logo images are copyright (c) 2014 D. Bohdan and are licensed under [
 
 The [stackato-cli](https://github.com/ActiveState/stackato-cli) browse package is copyright (c) 2011-2012 ActiveState Software Inc. and is distributed under the Apache License, Version 2.0. See [`vendor/browse/license.txt`](vendor/browse/license.txt).
 
-The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project and is distributed under the MIT license. See [`vendor/markdown/markdown.tcl`](vendor/markdown/markdown.tcl).
+The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project and is distributed under the MIT License. See [`vendor/markdown/markdown.tcl`](vendor/markdown/markdown.tcl).
