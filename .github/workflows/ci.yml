@@ -1,6 +1,36 @@
 name: CI
 on: [push, pull_request]
 jobs:
+  bsd:
+    runs-on: ${{ matrix.os.host }}
+    strategy:
+      matrix:
+        os:
+          - name: freebsd
+            architecture: x86-64
+            version: '14.0'
+            host: ubuntu-latest
+          - name: netbsd
+            architecture: x86-64
+            version: '10.0'
+            host: ubuntu-latest
+          - name: openbsd
+            architecture: x86-64
+            version: '7.4'
+            host: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run CI script on ${{ matrix.os.name }}
+        uses: cross-platform-actions/action@v0.24.0
+        with:
+          operating_system: ${{ matrix.os.name }}
+          architecture: ${{ matrix.os.architecture }}
+          version: ${{ matrix.os.version }}
+          shell: bash
+          run: |
+            ci/install-deps.sh
+            make test
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -8,7 +38,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Install dependencies
       run: |
-        sudo apt-get install -y cmark tcl tcllib libsqlite3-tcl
+        ci/install-deps.sh
     - name: Test
       run: |
         make test
@@ -39,7 +69,7 @@ jobs:
         Set-Location tclssg
     - name: Build
       run: |
-        .\tclkit.exe windows-ci.tcl
+        .\tclkit.exe ci\windows.tcl
     - name: Test
       run: |
         .\tclkit.exe tests.tcl
