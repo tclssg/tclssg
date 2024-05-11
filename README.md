@@ -2,7 +2,7 @@
 
 Tclssg is a full-featured extensible static site generator designed for Tcl programmers.
 It aims to make it easy to manage a static website with an optional blog.
-Tclssg works best for sites with under 1000 pages.
+Tclssg works best for small-to-medium-sized sites with under 1000 pages.
 Site projects with a few hundred pages usually build in under a minute on modest hardware.
 Tclssg uses Markdown, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
 
