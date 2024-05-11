@@ -2,13 +2,14 @@
 
 Tclssg is a full-featured extensible static site generator designed for Tcl programmers.
 It aims to make it easy to manage a static website with an optional blog.
-Website projects with a few hundred pages usually build in under a minute on modest hardware.
-Tclssg uses Markdown, [Bootstrap 3](http://getbootstrap.com/docs/3.4/) (with Bootstrap theme support), and Tcl code embedded in HTML for templating.
+Tclssg website projects with a few hundred pages usually build in under a minute on modest hardware.
 
 Features
 --------
 
-- [Markdown](#markup), Bootstrap themes, and Tcl code for [templates](https://github.com/tclssg/tclssg/wiki/Templating)
+- [Markdown](#markup)
+- [Bootstrap 3](http://getbootstrap.com/docs/3.4/) (with Bootstrap theme support)
+- Tcl code embedded in HTML for [templates](https://github.com/tclssg/tclssg/wiki/Templating)
 - Regular pages and blog posts [1]
 - Footnotes
 - Feeds with new blog posts: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification)
