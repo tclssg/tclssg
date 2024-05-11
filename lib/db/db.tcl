@@ -13,7 +13,6 @@ namespace eval ::tclssg::db {
     proc init {} {
         sqlite3 tclssg-db :memory:
 
-        tclssg-db collate SLUG ::tclssg::utils::slug-compare
         tclssg-db nullvalue %NULL%
 
         # Do not store page settings as columns to allow pages to set
@@ -47,8 +46,9 @@ namespace eval ::tclssg::db {
             );
             CREATE TABLE tags(
                 file TEXT,
-                tag TEXT COLLATE SLUG,
-                PRIMARY KEY (file, tag),
+                tag TEXT,
+                slug TEXT,
+                PRIMARY KEY (file, slug),
                 FOREIGN KEY(file) REFERENCES input(file)
             );
         }
@@ -124,8 +124,8 @@ namespace eval ::tclssg::db::input {
             SELECT :file2, key, value FROM settings
             WHERE file = :file1;
 
-            INSERT INTO tags(file, tag)
-            SELECT :file2, tag FROM tags
+            INSERT INTO tags(file, tag, slug)
+            SELECT :file2, tag, slug FROM tags
             WHERE file = :file1;
         }
 
@@ -333,9 +333,11 @@ namespace eval ::tclssg::db::tags {
     proc add {file tags} {
         tclssg-db transaction {
             foreach tag $tags {
+                set slug [tclssg::utils::slugify $tag]
+
                 tclssg-db eval {
-                    INSERT OR REPLACE INTO tags(file, tag)
-                    VALUES (:file, :tag);
+                    INSERT OR REPLACE INTO tags(file, tag, slug)
+                    VALUES (:file, :tag, :slug);
                 }
             }
         }

@@ -116,11 +116,6 @@ namespace eval ::tclssg::utils {
         string trim [regsub -all {[^[:alnum:]]+} [string tolower $text] "-"] "-"
     }
 
-    proc slug-compare {a b} {
-        if {$a eq $b} { return 0 }
-        return [string compare [slugify $a] [slugify $b]]
-    }
-
     # Return dictionary with values or every key with "password" in its name
     # recursively replaced with stars.
     proc obscure-password-values {dictionary} {
