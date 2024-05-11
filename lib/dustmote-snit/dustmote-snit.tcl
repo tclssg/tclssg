@@ -23,12 +23,12 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-package require Tcl       8.5 9
-package require fileutil      1
-package require html          1
-package require ncgi          1
-package require snit          2
-package require textutil    0 1
+package require Tcl 8.5 9
+package require fileutil 1
+package require html 1
+package require ncgi 1
+package require snit 2
+package require textutil 0 1
 
 
 namespace eval ::dmsnit {

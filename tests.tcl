@@ -4,9 +4,9 @@
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-package require fileutil  1
-package require struct    2
-package require tcltest   2
+package require fileutil 1
+package require struct 2
+package require tcltest 2
 
 namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $::argv0/___]]]
