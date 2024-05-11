@@ -5,18 +5,18 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require Tcl          8.5 9
-package require base64       2
-package require csv          0-2
-package require fileutil     1
-package require json         1
-package require json::write  1
-package require logger       0-2
-package require msgcat       1
-package require sha256       1
-package require sqlite3      3
-package require struct       2
-package require textutil     0-2
-package require try          1
+package require base64           2
+package require csv            0 1
+package require fileutil         1
+package require json             1
+package require json::write      1
+package require logger         0 1
+package require msgcat           1
+package require sha256           1
+package require sqlite3          3
+package require struct           2
+package require textutil       0 1
+package require try              1
 
 set PROFILE 0
 if {$PROFILE} {

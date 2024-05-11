@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2020
+# Copyright (c) 2013-2020, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 

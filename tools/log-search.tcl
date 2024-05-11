@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # A tool for searching logs in Tclssg's indentation-based format.
-# Copyright (c) 2018, 2020
+# Copyright (c) 2018, 2020, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
