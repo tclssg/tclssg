@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2020
+# Copyright (c) 2013-2020, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -56,9 +56,7 @@ namespace eval ::tclssg::interpreter {
             foreach file $files {
                 if {$file in $sourced} continue
                 lappend sourced $file
-                interp eval $interp [utils::read-file -encoding binary \
-                                                      -translation auto \
-                                                      $file]
+                interp eval $interp [utils::read-file -translation binary $file]
             }
         }
 

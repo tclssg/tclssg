@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2019
+# Copyright (c) 2013-2019, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -15,9 +15,7 @@ namespace eval ::tclssg::pipeline::10-load-presets {
                 if {[regexp {^/?presets} $id]} {
                     log::info "reading preset file [list $file]"
 
-                    set bin [utils::read-file -encoding binary \
-                                              -translation auto \
-                                              $file]
+                    set bin [utils::read-file -translation binary $file]
 
                     set settings [utils::dict-expand-shorthand \
                         [utils::remove-comments $bin]]

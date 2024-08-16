@@ -33,7 +33,7 @@ jobs:
             # See https://github.com/cross-platform-actions/action/issues/75
             sudo ci/install-deps.sh
             make test
-  
+
   linux:
     runs-on: ubuntu-latest
     steps:
@@ -70,6 +70,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
+    - name: 'Disable `autocrlf` in Git'
+      run: git config --global core.autocrlf false
     - name: Checkout
       uses: actions/checkout@v4
     - name: Download dependencies

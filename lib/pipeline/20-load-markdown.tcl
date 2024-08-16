@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2020
+# Copyright (c) 2013-2020, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -27,7 +27,7 @@ namespace eval ::tclssg::pipeline::20-load-markdown {
 
     # Load the content of the file $file into the input database.
     proc load-page file {
-        set bin [utils::read-file -encoding binary -translation auto $file]
+        set bin [utils::read-file -translation binary $file]
         lassign [utils::separate-frontmatter $bin] \
                 frontmatterWithComments \
                 raw
