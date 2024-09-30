@@ -35,7 +35,7 @@ Getting started
 
 Tclssg is known to work on Linux, FreeBSD, NetBSD, OpenBSD, macOS, and Windows 2000/XP/7/8.x/10.
 
-To use Tclssg, you will need Tcl 8.5 or newer (Tcl 9 is supported), Tcllib, and SQLite 3 bindings for Tcl.
+To use Tclssg, you will need Tcl 8.5 or newer (Tcl 9 is supported), Tcllib 1.21 or newer, and SQLite 3 bindings for Tcl.
 Tclssg can optionally use [cmark](https://github.com/commonmark/cmark) and [tidy-html5](https://www.html-tidy.org).
 
 To install the dependencies on **Debian** or **Ubuntu**, run the following command:
@@ -121,7 +121,3 @@ The Tclssg logo images are copyright (c) 2014 D. Bohdan and are distributed unde
 The [stackato-cli](https://github.com/ActiveState/stackato-cli) browse package is copyright (c) 2011-2012 ActiveState Software Inc.
 It is distributed under the Apache License, Version 2.0.
 See [`vendor/browse/license.txt`](vendor/browse/license.txt).
-
-The [Caius](https://github.com/tobijk/caius) Markdown package 1.0 is copyright (c) 2014 Caius Project.
-It is distributed under the MIT License.
-See [`vendor/markdown/markdown.tcl`](vendor/markdown/markdown.tcl).

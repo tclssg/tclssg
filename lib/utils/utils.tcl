@@ -539,7 +539,6 @@ namespace eval ::tclssg::utils {
         return $common
     }
 
-
     proc dict-expand-shorthand dict {
         set result {}
 

@@ -5,8 +5,10 @@
 # the terms of the MIT license. See the file LICENSE for details.
 
 package require fileutil 1
+package require Markdown 1.2
 package require struct 2
 package require tcltest 2
+package require textutil 0 1
 
 namespace eval ::tclssg::tests {
     variable path [file dirname [file dirname [file normalize $::argv0/___]]]
@@ -28,8 +30,6 @@ namespace eval ::tclssg::tests {
     package require tclssg::pipeline
     package require tclssg::templates
     package require tclssg::utils
-
-    package require tclssg::vendor::Markdown
 
     namespace path ::tclssg
     namespace import ::tclssg::utils::*
@@ -85,9 +85,6 @@ namespace eval ::tclssg::tests {
 
 
     ### Unit tests.
-
-    source $path/vendor/markdown/markdown.test
-
 
     set correctSeconds [clock scan {2014-06-26-20-10} \
             -format {%Y-%m-%d-%H-%M}]

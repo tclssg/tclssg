@@ -11,6 +11,7 @@ package require fileutil 1
 package require json 1
 package require json::write 1
 package require logger 0 1
+package require Markdown 1.2
 package require msgcat 1
 package require sha256 1
 package require sqlite3 3
@@ -108,8 +109,6 @@ namespace eval tclssg {
         package require tclssg::pipeline
         package require tclssg::templates
         package require tclssg::utils
-
-        package require tclssg::vendor::Markdown
 
         namespace import utils::dict-getdef
 
