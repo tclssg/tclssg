@@ -38,7 +38,7 @@ namespace eval tclssg {
     namespace export *
     namespace ensemble create
 
-    variable version 2.3.1
+    variable version 3.0.0
     variable debugMode 1
     variable path
 
