@@ -1,3 +1,9 @@
 @echo off
-tclsh %~dp0/ssg.tcl %*
+setlocal
 
+if "%TCLSH%"=="" (
+    set TCLSH=tclsh
+)
+%TCLSH% %~dp0/ssg.tcl %*
+
+endlocal
