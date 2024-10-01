@@ -32,7 +32,7 @@ jobs:
             # doas(1) isn't configured on OpenBSD.
             # See https://github.com/cross-platform-actions/action/issues/75
             sudo ci/install-deps.sh
-            make test
+            TCLLIBPATH=/usr/local/lib/tcllib2.0 make test
 
   linux:
     runs-on: ubuntu-latest
@@ -42,6 +42,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo ci/install-deps.sh
+        echo TCLLIBPATH=/usr/local/lib/tcllib2.0 >> "$GITHUB_ENV"
     - name: Test
       run: |
         make test
