@@ -20,6 +20,7 @@ namespace eval ::tclssg::utils {
         close $ch
         return $data
     }
+
     interp alias {} ::tclssg::utils::write-file {} ::fileutil::writeFile
 
     proc normalize-relative-path path {
@@ -41,7 +42,23 @@ namespace eval ::tclssg::utils {
         ]
     }
 
-    # A version of the above that conforms to the Tcl 8.7 [dict getdef] syntax.
+    # Add a subcommand to a namespace ensemble map
+    # if the map doesn't contain it.
+    proc ensemble-extend-if-absent {ensemble subcommand command} {
+        set map [namespace ensemble configure $ensemble -map]
+
+        if {[dict exists $map $subcommand]} {
+            return
+        }
+
+        dict set map $subcommand $command
+        namespace ensemble configure $ensemble -map $map
+
+        return
+    }
+
+    # An implementation of Tcl 9 [dict getdef].
+    # Likely to differ in minor ways.
     proc dict-getdef args {
         if {[llength $args] < 3} {
             error "wrong # args: should be \"[info level 0] dictionary\
@@ -62,6 +79,8 @@ namespace eval ::tclssg::utils {
 
         return $default
     }
+
+    ensemble-extend-if-absent ::dict getdef [namespace current]::dict-getdef
 
     # Trim indentation in multiline quoted text. Unlike [textutil::undent],
     # this proc removes a leading and a trailing blank line. If

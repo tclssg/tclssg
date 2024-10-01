@@ -66,12 +66,12 @@ namespace eval ::tclssg::cli::command {
         }
 
         if {{--local} in $options} {
-            set host [utils::dict-getdef \
+            set host [dict getdef \
                 $websiteConfig \
                 server host \
                 localhost \
             ]
-            set port [utils::dict-getdef \
+            set port [dict getdef \
                 $websiteConfig \
                 server port \
                 8080 \
@@ -197,7 +197,7 @@ namespace eval ::tclssg::cli::command {
                     [dict get $websiteConfig deployFTP server] \
                     [dict get $websiteConfig deployFTP user] \
                     [dict get $websiteConfig deployFTP password] \
-                    -port [utils::dict-getdef \
+                    -port [dict getdef \
                         $websiteConfig \
                         deployFTP port \
                         21 \
@@ -243,12 +243,12 @@ namespace eval ::tclssg::cli::command {
         allow-options {--browse --verbose} $options
 
         set websiteConfig [config::load $inputDir]
-        set host [utils::dict-getdef \
+        set host [dict getdef \
             $websiteConfig \
             server host \
             localhost \
         ]
-        set port [utils::dict-getdef \
+        set port [dict getdef \
             $websiteConfig \
             server port \
             8080 \
