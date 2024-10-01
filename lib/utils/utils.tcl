@@ -41,16 +41,6 @@ namespace eval ::tclssg::utils {
         ]
     }
 
-    # Return a value from dictionary like dict get would if it is there.
-    # Otherwise return the default value.
-    proc dict-default-get {default dictionary args} {
-        if {[dict exists $dictionary {*}$args]} {
-            return [dict get $dictionary {*}$args]
-        }
-
-        return $default
-    }
-
     # A version of the above that conforms to the Tcl 8.7 [dict getdef] syntax.
     proc dict-getdef args {
         if {[llength $args] < 3} {
