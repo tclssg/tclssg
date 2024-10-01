@@ -21,7 +21,6 @@ namespace eval ::tclssg::interpreter {
         ::tclssg::converters::markdown::inline-markdown-to-html
                                             inline-markdown-to-html
         ::tclssg::db                        db
-        ::tclssg::utils::dict-default-get   dict-default-get
         ::tclssg::utils::dict-getdef        dict-getdef
         ::tclssg::utils::replace-path-root  replace-path-root
         ::tclssg::utils::slugify            slugify

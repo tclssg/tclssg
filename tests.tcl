@@ -228,26 +228,6 @@ namespace eval ::tclssg::tests {
     -result /a/b
 
 
-    tcltest::test dict-default-get-1.1 {dict-default-get} \
-    -body {
-        dict-default-get testValue {} someKey
-    } \
-    -result testValue
-
-    tcltest::test dict-default-get-1.2 {dict-default-get} \
-    -body {
-        dict-default-get -1 {someKey testValue} someKey
-    } \
-    -result testValue
-
-    tcltest::test dict-default-get-1.3 {dict-default-get} \
-    -body {
-        dict-default-get -1 {someKey {anotherKey testValue}} \
-                         someKey anotherKey
-    } \
-    -result testValue
-
-
     tcltest::test dict-getdef-1.1 {dict-getdef} \
     -body {
         dict-getdef {} someKey testValue
