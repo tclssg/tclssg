@@ -33,9 +33,9 @@ Page screenshot
 Getting started
 ---------------
 
-Tclssg is known to work on Linux, FreeBSD, NetBSD, OpenBSD, macOS, and Windows 2000/XP/7/8.x/10.
+Tclssg is known to work on Linux, FreeBSD, NetBSD, OpenBSD, macOS, and Windows 7/8.x/10/11.
 
-To use Tclssg, you will need Tcl 8.5 or newer (Tcl 9 is supported), Tcllib 1.21 or newer, and SQLite 3 bindings for Tcl.
+To use Tclssg, you will need Tcl 8.6 or 9, Tcllib 1.21 or later, and SQLite 3 bindings for Tcl.
 Tclssg can optionally use [cmark](https://github.com/commonmark/cmark) and [tidy-html5](https://www.html-tidy.org).
 
 To install the dependencies on **Debian** or **Ubuntu**, run the following command:

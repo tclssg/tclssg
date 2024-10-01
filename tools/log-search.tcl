@@ -4,8 +4,6 @@
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
-package require try 1
-
 namespace eval ::log-search {
     proc usage {} {
         puts stderr "usage: [file tail [info script]] \[regexp \[file\
