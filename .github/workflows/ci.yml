@@ -8,7 +8,7 @@ jobs:
         os:
           - name: freebsd
             architecture: x86-64
-            version: '14.0'
+            version: '14.1'
             host: ubuntu-latest
           - name: netbsd
             architecture: x86-64
@@ -16,13 +16,13 @@ jobs:
             host: ubuntu-latest
           - name: openbsd
             architecture: x86-64
-            version: '7.4'
+            version: '7.5'
             host: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Run CI script on ${{ matrix.os.name }}
-        uses: cross-platform-actions/action@v0.24.0
+        uses: cross-platform-actions/action@v0.25.0
         with:
           operating_system: ${{ matrix.os.name }}
           architecture: ${{ matrix.os.architecture }}
