@@ -327,22 +327,8 @@ namespace eval ::tclssg::utils {
     }
 
     # A wrapper for ::sha2::sha256 for safe interps.
-    proc sha256 args {
-        if {[llength $args] ni {1 2}} {
-            error "wrong # args: should be \"[info level 0] ?-bin|-hex?\
-                   string\""
-        }
-        if {[llength $args] == 2} {
-            lassign $args format string
-            if {$format ni {-bin -hex}} {
-                error "unexpected format argument \"$format\";\
-                       must be \"-bin\" or \"-hex\""
-            }
-        } else {
-            set format -hex
-            lassign $args string
-        }
-        return [::sha2::sha256 $format -- $string]
+    proc sha256 string {
+        return [::sha2::sha256 -hex -- $string]
     }
 
     # Return fileName with the number n inserted before its extension.
