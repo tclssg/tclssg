@@ -22,4 +22,4 @@ Consequat consectetur elit exercitation. Excepteur consectetur proident elit vel
 
 <!--  more  -->
 
-Nothing much here expect for the sidebar.
+Nothing much here except for the sidebar.
