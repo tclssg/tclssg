@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2019
+# Copyright (c) 2013-2019, 2024
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -22,7 +22,7 @@ proc footnote-id {label {link 0}} {
     if {![dict exists $::footnoteSuffixes $::input]} {
         dict set ::footnoteSuffixes \
                  $::input \
-                 -[string range [sha256 -hex $::input] end-3 end]
+                 -[string range [sha256 $::input] end-3 end]
     }
 
     set suffix [dict get $::footnoteSuffixes $::input]
