@@ -67,8 +67,8 @@ namespace eval tclssg {
             set timestamp [clock format $time -format {%Y-%m-%d %H:%M:%S %Z}]
 
             set printPrefix [expr {
-                [dict-getdef $lastSeen level {}] ne $level ||
-                $time - [dict-getdef $lastSeen time -1] >= 10
+                [dict getdef $lastSeen level {}] ne $level ||
+                $time - [dict getdef $lastSeen time -1] >= 10
             }]
 
             # Check that the text is a valid list.
@@ -79,7 +79,7 @@ namespace eval tclssg {
                 dict set lastSeen level $level
                 dict set lastSeen time $time
             } else {
-                set lastText [dict-getdef $lastSeen text {}]
+                set lastText [dict getdef $lastSeen text {}]
                 try {
                     lindex $text 0
                     lindex $lastText 0
@@ -108,8 +108,6 @@ namespace eval tclssg {
         package require tclssg::pipeline
         package require tclssg::templates
         package require tclssg::utils
-
-        namespace import utils::dict-getdef
 
         return
     }
@@ -176,7 +174,7 @@ namespace eval tclssg {
         } trap {POSIX ENOENT} {} - trap {POSIX EISDIR} {} {
             return {}
         } on ok config {}
-        set value [dict-getdef $config $settingName {}]
+        set value [dict getdef $config $settingName {}]
         # Make a relative path from the config relative to $inputDir.
         if {$value ne {} && [utils::path-is-relative? $value]} {
             set value [utils::normalize-relative-path [file join $inputDir \
