@@ -10,7 +10,7 @@ Features
 - [Markdown](#markup)
 - [Bootstrap 3](http://getbootstrap.com/docs/3.4/) (with Bootstrap theme support)
 - Tcl code embedded in HTML for [templates](https://github.com/tclssg/tclssg/wiki/Templating)
-- Regular pages and blog posts [1]
+- Regular pages and blog posts[^1]
 - Footnotes
 - Feeds with new blog posts: RSS, [JSON Feed](https://jsonfeed.org/version/1.1), and [twtxt](https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html#format-specification)
 - SEO and usability features out of the box: site maps, canonical and previous/next links, `noindex` on collection pages
@@ -18,13 +18,13 @@ Features
 - Legacy deployment over FTP
 - Deployment over SCP and in other ways with a [custom deployment command](https://github.com/tclssg/tclssg/wiki/Using-deployCustom)
 - Support for external comment engines (currently: Disqus)
-- Relative links in the HTML output, which make it browsable over *file://*
+- Relative links in the HTML output that make it browsable over *file://*
 - [Pretty fast](https://github.com/tclssg/tclssg/wiki/Benchmarks)
 - Few dependencies.
   Experimental self-contained [binaries](https://github.com/tclssg/tclssg/wiki/Binaries) are available for Linux, Mac, and Windows.
 
-1\. Unlike a regular page, a blog post has a sidebar with tags and links to other blog posts sorted by recency.
-  The latest posts are featured in the blog index, and tag pages are generated to collect blog posts with the same tag.
+[^1]: Unlike a regular page, a blog post has a sidebar with tags and links to other blog posts sorted by recency.
+      The latest posts are featured in the blog index, and tag pages are generated to collect blog posts with the same tag.
 
 Page screenshot
 ---------------
