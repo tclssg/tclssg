@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2019
+# Copyright (c) 2013-2019, 2025
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -354,14 +354,16 @@ namespace eval ::tclssg::db::tags {
         switch -exact -- $sortBy {
             frequency {
                 set result [tclssg-db eval {
-                    SELECT DISTINCT tag FROM tags
-                    GROUP BY tag ORDER BY count(file) DESC
+                    SELECT min(tag) FROM tags
+                    GROUP BY slug
+                    ORDER BY count(file) DESC
                     LIMIT :limit;
                 }]
             }
             name {
                 set result [tclssg-db eval {
-                    SELECT DISTINCT tag FROM tags
+                    SELECT min(tag) FROM tags
+                    GROUP BY slug
                     ORDER BY tag
                     LIMIT :limit;
                 }]
@@ -374,10 +376,12 @@ namespace eval ::tclssg::db::tags {
     }
 
     proc inputs-with-tag tag {
+        set slug [tclssg::utils::slugify $tag]
+
         tclssg-db eval {
             SELECT input.file FROM input
             JOIN tags ON input.file = tags.file
-            WHERE tag = :tag
+            WHERE slug = :slug
             ORDER BY timestamp DESC;
         }
     }

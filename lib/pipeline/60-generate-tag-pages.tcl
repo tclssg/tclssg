@@ -1,5 +1,5 @@
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2019
+# Copyright (c) 2013-2019, 2025
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -37,10 +37,12 @@ namespace eval ::tclssg::pipeline::60-generate-tag-pages {
                 -input $input \
                 -output $output \
                 -extraArticles $pages \
-                -logScript {apply {{input output} {
-                    ::tclssg::log::info "generating tag page\
-                                         [list $output]"
-                }}}
+                -logScript {apply {
+                    {input output} {
+                        ::tclssg::log::info \
+                            "generating tag page [list $output]"
+                    }
+                }}
 
         }
 

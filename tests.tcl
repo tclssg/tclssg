@@ -1,6 +1,6 @@
 #! /usr/bin/env tclsh
 # Tclssg, a static website generator.
-# Copyright (c) 2013-2020, 2024
+# Copyright (c) 2013-2020, 2024-2025
 # D. Bohdan and contributors listed in AUTHORS. This code is released under
 # the terms of the MIT license. See the file LICENSE for details.
 
@@ -1055,8 +1055,6 @@ foo {
         return $tempProjectDir
     }
 
-    variable project [make-temporary-project]
-
     proc modify-config {inputDir updates} {
         set config [config load $inputDir]
         ::fileutil::writeFile $inputDir/website.conf \
@@ -1072,12 +1070,11 @@ foo {
     -match glob \
     -result {*usage: ssg.tcl*}
 
-
     tcltest::test command-line-1.2 {Tclssg command line commands} \
     -constraints {unix diff} \
     -cleanup {unset result} \
     -body {
-        variable project
+        set project [make-temporary-project]
         set tclssgArguments [list $project]
 
         # Set deployment options in the website config.
@@ -1089,6 +1086,26 @@ foo {
                 end {} \
             ] \
         ]
+
+        ::fileutil::updateInPlace $project/blog/test.md {apply
+            {contents {
+                regsub \
+                    {tags .*?\n} \
+                    $contents \
+                    {tags {test {a long tag with spaces} Tcl/Tk}} \
+                    ;
+            }
+        }}
+
+        ::fileutil::updateInPlace $project/blog/test-2.md {apply
+            {contents {
+                regsub \
+                    {tags .*?\n} \
+                    $contents \
+                    {tags {test something Tcl_Tk}} \
+                    ;
+            }
+        }}
 
         tcl ssg.tcl build {*}$tclssgArguments
         tcl ssg.tcl update --yes {*}$tclssgArguments
@@ -1111,7 +1128,7 @@ foo {
         unset ch foundServerInfo i indexPage serveCommand
     } \
     -body {
-        variable project
+        set project [make-temporary-project]
 
         set port [unused-port]
         modify-config $project [dict create \
