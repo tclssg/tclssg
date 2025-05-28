@@ -1042,7 +1042,7 @@ foo {
 
 
 
-    # Integration tests.
+    # End-to-end tests.
 
     proc make-temporary-project {} {
         set tempProjectDir [::fileutil::tempfile]
