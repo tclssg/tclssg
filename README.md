@@ -46,7 +46,7 @@ On **Fedora**:
 
     sudo dnf install sqlite-tcl tcl tcllib
 
-On **Windows 7 and later**, the recommended way to run Tclssg is to install [Magicsplat Tcl/Tk for Windows](https://www.magicsplat.com/tcl-installer/).
+On **Windows 10 and later**, the recommended way to run Tclssg is to install [Magicsplat Tcl/Tk for Windows](https://www.magicsplat.com/tcl-installer/).
 The copy of Tcl that comes with [Git for Windows](https://gitforwindows.org/) does not include Tcllib or the SQLite 3 extension, so it will not run Tclssg out of the box.
 
 On **macOS**, use [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/).
